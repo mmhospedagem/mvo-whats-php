@@ -6,8 +6,8 @@ declare(strict_types=1);
 $options=getopt('', ['help','session:','auth-dir:','mode:','phone:','duration:']);
 if(isset($options['help'])){
     echo "Eventos de sessão diretamente pela biblioteca PHP\n"
-        ."php -c .dev/php.ini examples/session-events.php --session=cliente-123\n"
-        ."php -c .dev/php.ini examples/session-events.php --session=cliente-123 --mode=code --phone=5511999999999\n"
+        ."php examples/session-events.php --session=cliente-123\n"
+        ."php examples/session-events.php --session=cliente-123 --mode=code --phone=5511999999999\n"
         ."--auth-dir=PASTA: armazenamento persistente privado (padrão: .auth do projeto)\n"
         ."--duration=SEGUNDOS: duração limitada; 0 mantém o worker ativo\n"
         ."A mesma sessão/pasta restaura as credenciais; não execute junto de outro worker dessa sessão.\n"

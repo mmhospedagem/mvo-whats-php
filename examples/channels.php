@@ -5,10 +5,10 @@ declare(strict_types=1);
 $options=getopt('',['help','session:','auth-dir:','operation:','channel:','invite:','count:','timeout:']);
 if(isset($options['help']) || !isset($options['operation'])) {
     echo "Canais pela biblioteca MVO PHP\n"
-        ."php -c .dev/php.ini examples/channels.php --session=cliente-123 --operation=list\n"
-        ."php -c .dev/php.ini examples/channels.php --session=cliente-123 --operation=metadata --channel=123456789@newsletter\n"
-        ."php -c .dev/php.ini examples/channels.php --session=cliente-123 --operation=metadata --invite=https://whatsapp.com/channel/CONVITE\n"
-        ."php -c .dev/php.ini examples/channels.php --session=cliente-123 --operation=messages --channel=123456789@newsletter --count=25\n"
+        ."php examples/channels.php --session=cliente-123 --operation=list\n"
+        ."php examples/channels.php --session=cliente-123 --operation=metadata --channel=123456789@newsletter\n"
+        ."php examples/channels.php --session=cliente-123 --operation=metadata --invite=https://whatsapp.com/channel/CONVITE\n"
+        ."php examples/channels.php --session=cliente-123 --operation=messages --channel=123456789@newsletter --count=25\n"
         ."A sessão deve estar vinculada e não pode estar aberta em outro worker.\n"
         ."--auth-dir=PASTA: armazenamento privado persistente; --timeout=60: espera pela conexão.\n"
         ."Este exemplo consulta canais. Publicação/administração estão disponíveis em \$client->channels().\n";
