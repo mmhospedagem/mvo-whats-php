@@ -70,6 +70,7 @@ def embed_local_image(match, source):
     return match.group(1) + 'data:' + media + ';base64,' + data + match.group(3)
 
 logo_data='data:image/png;base64,'+base64.b64encode((ROOT/'docs/assets/mvo-logo.png').read_bytes()).decode('ascii')
+brand_data='data:image/png;base64,'+base64.b64encode((ROOT/'docs/assets/mvo-brand.png').read_bytes()).decode('ascii')
 pages=[]
 for group, entries in GROUPS.items():
     for id, title, source in entries:
@@ -104,7 +105,7 @@ for weight in (400,600,800):
     font=base64.b64encode((ROOT/f'docs/assets/fonts/manrope-{weight}.ttf').read_bytes()).decode('ascii')
     css=css.replace(f'fonts/manrope-{weight}.ttf','data:font/ttf;base64,'+font)
 app=(ROOT/'docs/assets/docs.js').read_text(encoding='utf-8')
-output=template.replace('/*DOC_DATA*/',payload).replace('/*MVO_LOGO_DATA*/',json.dumps(logo_data)).replace('/*MVO_STYLES*/',css).replace('/*MVO_APP*/',app)
+output=template.replace('/*DOC_DATA*/',payload).replace('/*MVO_LOGO_DATA*/',json.dumps(logo_data)).replace('/*MVO_BRAND_DATA*/',json.dumps(brand_data)).replace('/*MVO_STYLES*/',css).replace('/*MVO_APP*/',app)
 (ROOT/'docs/index.html').write_bytes(output.encode('utf-8'))
 for filename in ('llms.txt','llms-full.txt'):
     (ROOT/'docs'/filename).write_bytes((ROOT/filename).read_text(encoding='utf-8').encode('utf-8'))

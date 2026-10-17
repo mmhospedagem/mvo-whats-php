@@ -137,10 +137,16 @@
     if (!feedback.isConnected) document.body.append(feedback);
 
     function bindLogo() {
-      if (typeof mvoLogo === 'undefined' || !mvoLogo) return;
-      document.querySelectorAll('[data-mvo-logo]').forEach(element => {
-        if (element.tagName === 'LINK') element.href = mvoLogo;
-        else if (element.tagName === 'IMG') element.src = mvoLogo;
+      const assets = [
+        ['[data-mvo-logo]', typeof mvoLogo === 'undefined' ? null : mvoLogo],
+        ['[data-mvo-brand]', typeof mvoBrand === 'undefined' ? null : mvoBrand],
+      ];
+      assets.forEach(([selector, data]) => {
+        if (!data) return;
+        document.querySelectorAll(selector).forEach(element => {
+          if (element.tagName === 'LINK') element.href = data;
+          else if (element.tagName === 'IMG') element.src = data;
+        });
       });
     }
 

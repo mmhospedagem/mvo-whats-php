@@ -1,3 +1,7 @@
 Logo MVO WHATS PHP fornecida pela MVO para uso no repositório e na documentação do projeto.
 O PNG foi preservado sem alterar pixels, transparência ou proporção.
 As fontes e suas licenças estão documentadas em fonts/PROVENANCE.txt e fonts/OFL.txt.
+
+mvo-brand.png: logo institucional MVO fornecida pela MVO para o cabeçalho da documentação.
+O arquivo original foi copiado sem alterar pixels, transparência ou proporção.
+Usada sobre o fundo do próprio tema, sem placa branca, filtros ou recoloração.
