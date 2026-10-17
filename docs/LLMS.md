@@ -10,20 +10,19 @@ Este guia descreve o SDK público PHP e o servidor MCP distribuído neste reposi
 | Permitir que um cliente de agentes execute ferramentas WhatsApp | Configure o servidor MCP PHP abaixo em um cliente compatível com MCP. As ferramentas executam operações reais quando chamadas. |
 | Receber mensagens, consultar um modelo e responder em seu produto | Mantenha um worker PHP, processe os eventos e invoque o provedor de modelo escolhido na sua aplicação. O SDK não inclui um modelo nem credenciais desse provedor. |
 
-O nome do pacote é `mvo/mvo-php`, o namespace é `MVO` e o cliente é `MVO\WaClient`. O protocolo e o loop executam em PHP; Node.js e npm não fazem parte da instalação.
+O nome do pacote é `mmhospedagem/mvo-whats-php`, o namespace é `MVO` e o cliente é `MVO\WaClient`. O protocolo e o loop executam em PHP; Node.js e npm não fazem parte da instalação.
 
 ## Instalar o SDK em uma aplicação PHP
 
 Requisitos de execução: PHP 8.2+ de 64 bits e extensões `openssl`, `sodium`, `pdo`, `pdo_sqlite`, `json`, `zlib`, `gmp`, `curl`, `fileinfo` e `xmlwriter`. XMLWriter é usado para gerar o QR em SVG e faz parte dos requisitos de instalação. Recursos adicionais podem precisar de GD, FFI, codecs nativos ou FFmpeg; esses componentes adicionais não são necessários para texto, QR e MCP básico. A fonte dos requisitos é [composer.json](../composer.json).
 
-Adicione o repositório VCS ao projeto consumidor e selecione a versão:
+No diretório da aplicação, instale pelo [Packagist](https://packagist.org/packages/mmhospedagem/mvo-whats-php):
 
 ```sh
-composer config repositories.mvo vcs https://github.com/mmhospedagem/mvo-whats-php
-composer require "mvo/mvo-php:^1.0"
+composer require "mmhospedagem/mvo-whats-php:^1.0"
 ```
 
-`^1.0` seleciona tags compatíveis com a série 1.x disponíveis no repositório. Para acompanhar explicitamente a branch de desenvolvimento, use `composer require "mvo/mvo-php:dev-main"`. Esta instalação usa o GitHub como repositório Composer; não pressupõe publicação no Packagist. Faça o commit de `composer.lock` na aplicação.
+`^1.0` seleciona versões estáveis compatíveis da série 1.x; a primeira distribuição no Packagist é `1.0.1`. Não é necessário configurar um repositório VCS. Para acompanhar explicitamente a branch de desenvolvimento, use `composer require "mmhospedagem/mvo-whats-php:dev-main"`. Faça o commit de `composer.lock` na aplicação. Instalações iniciais com `mvo/mvo-php` devem migrar a dependência para o nome novo, preservando o namespace `MVO\` e o armazenamento das sessões; veja a seção de migração no [guia de instalação](INSTALLATION.md).
 
 Carregue `vendor/autoload.php` da aplicação. Não copie classes para outro namespace nem substitua o SDK por um serviço intermediário para executar estes exemplos.
 

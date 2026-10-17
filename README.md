@@ -8,6 +8,7 @@
 <p align="center">Biblioteca nativa para integrar o protocolo WhatsApp a workers, aplicações e APIs PHP.</p>
 
 <p align="center">
+  <a href="https://packagist.org/packages/mmhospedagem/mvo-whats-php"><img src="https://img.shields.io/packagist/v/mmhospedagem/mvo-whats-php" alt="Versão no Packagist"></a>
   <a href="https://github.com/mmhospedagem/mvo-whats-php/actions/workflows/ci.yml"><img src="https://github.com/mmhospedagem/mvo-whats-php/actions/workflows/ci.yml/badge.svg" alt="PHP CI"></a>
   <a href="composer.json"><img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4" alt="PHP 8.2 ou superior"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-009ee3" alt="Licença MIT"></a>
@@ -41,7 +42,13 @@ php examples/connect.php --session=demo --mode=qr
 
 Escaneie o QR em **WhatsApp → Aparelhos conectados → Conectar um aparelho**. O exemplo atualiza o QR enquanto ele muda e mantém o processo conectado. Execute novamente com a mesma sessão para restaurar um vínculo válido.
 
-Para usar no seu próprio projeto, instale o pacote **`mvo/mvo-php`** pelo repositório VCS. A instalação está descrita no [guia Composer](docs/INSTALLATION.md#instalar-no-seu-projeto-com-composer); o pacote ainda não foi registrado no Packagist.
+Para usar no seu próprio projeto, instale o pacote [**`mmhospedagem/mvo-whats-php`**](https://packagist.org/packages/mmhospedagem/mvo-whats-php) pelo Composer:
+
+```sh
+composer require "mmhospedagem/mvo-whats-php:^1.0"
+```
+
+O Composer encontra o pacote no Packagist, sem configurar repositório VCS. Veja os requisitos e a configuração completa no [guia de instalação](docs/INSTALLATION.md#instalar-no-seu-projeto-com-composer).
 
 ## Integre diretamente no PHP
 

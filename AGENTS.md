@@ -1,6 +1,6 @@
 # Trabalho no SDK MVO Whats PHP
 
-Este repositório contém a biblioteca pública PHP, exemplos e documentação. O pacote Composer é `mvo/mvo-php`, com namespace `MVO`. O projeto consumidor pode construir sua própria API; rotas REST, credenciais de servidor e infraestrutura privada não fazem parte deste contrato.
+Este repositório contém a biblioteca pública PHP, exemplos e documentação. O pacote Composer é `mmhospedagem/mvo-whats-php`, com namespace `MVO`. O projeto consumidor pode construir sua própria API; rotas REST, credenciais de servidor e infraestrutura privada não fazem parte deste contrato.
 
 ## Antes de alterar
 

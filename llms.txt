@@ -1,8 +1,8 @@
 # MVO Whats PHP
 
-> SDK nativo PHP 8.2+ de 64 bits para conectar contas WhatsApp, manter sessões, trocar mensagens e gerenciar recursos da conta. Composer: mvo/mvo-php. Namespace: MVO. Inclui servidor MCP PHP por stdio e Streamable HTTP.
+> SDK nativo PHP 8.2+ de 64 bits para conectar contas WhatsApp, manter sessões, trocar mensagens e gerenciar recursos da conta. Composer: mmhospedagem/mvo-whats-php. Namespace: MVO. Inclui servidor MCP PHP por stdio e Streamable HTTP.
 
-Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protocolo executa em PHP, sem Node.js. Instale via repositório Composer VCS do GitHub; não presuma disponibilidade no Packagist. As extensões obrigatórias estão em composer.json, incluindo XMLWriter para QR SVG. Uma instalação suporta várias sessões isoladas; cada sessão ativa precisa de um worker/loop persistente e lock exclusivo.
+Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protocolo executa em PHP, sem Node.js. Instale pelo Packagist com `composer require "mmhospedagem/mvo-whats-php:^1.0"`, sem configurar repositório VCS. As extensões obrigatórias estão em composer.json, incluindo XMLWriter para QR SVG. Uma instalação suporta várias sessões isoladas; cada sessão ativa precisa de um worker/loop persistente e lock exclusivo.
 
 ## Começar
 

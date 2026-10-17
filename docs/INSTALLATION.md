@@ -87,17 +87,16 @@ Para desenvolvimento com Xdebug, o repositório também oferece `tools/setup.ps1
 
 ## Instalar no seu projeto com Composer
 
-O nome do pacote é **`mvo/mvo-php`** e o namespace é **`MVO\`**. O pacote ainda não está registrado no Packagist; configure o repositório VCS **no `composer.json` da sua aplicação**. Repositórios declarados por dependências não são herdados pelo projeto consumidor, conforme a [documentação do Composer](https://getcomposer.org/doc/05-repositories.md#vcs).
+O nome do pacote é **`mmhospedagem/mvo-whats-php`** e o namespace é **`MVO\`**. O pacote está disponível no [Packagist](https://packagist.org/packages/mmhospedagem/mvo-whats-php), repositório padrão do Composer. A instalação não exige adicionar `repositories` ao `composer.json` da aplicação.
 
 No diretório de um projeto que já possui `composer.json`:
 
 ```sh
-composer config repositories.mvo-whats-php vcs https://github.com/mmhospedagem/mvo-whats-php
-composer require "mvo/mvo-php:^1.0"
+composer require "mmhospedagem/mvo-whats-php:^1.0"
 composer check-platform-reqs
 ```
 
-O requisito `^1.0` seleciona as tags compatíveis publicadas a partir de `v1.0.0`. Se você estiver avaliando a branch `main` antes de uma tag, ou quiser acompanhar essa branch explicitamente, use `composer require "mvo/mvo-php:dev-main"` no lugar do segundo comando. A branch de desenvolvimento pode mudar; mantenha o `composer.lock` da aplicação versionado para reproduzir a revisão instalada.
+O requisito `^1.0` seleciona versões estáveis compatíveis da série 1.x. A primeira versão publicada com esse nome no Packagist é `1.0.1`. Para acompanhar explicitamente a branch `main`, use `composer require "mmhospedagem/mvo-whats-php:dev-main"`. A branch de desenvolvimento pode mudar; mantenha o `composer.lock` da aplicação versionado para reproduzir a revisão instalada.
 
 Configuração equivalente para uma aplicação nova:
 
@@ -105,15 +104,9 @@ Configuração equivalente para uma aplicação nova:
 {
   "name": "minha-empresa/whatsapp-app",
   "type": "project",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/mmhospedagem/mvo-whats-php"
-    }
-  ],
   "require": {
     "php": "^8.2",
-    "mvo/mvo-php": "^1.0"
+    "mmhospedagem/mvo-whats-php": "^1.0"
   }
 }
 ```
@@ -129,7 +122,11 @@ $client = new MVO\WaClient(
 );
 ```
 
-Não renomeie o pacote ou o namespace ao integrar: `mvo/mvo-php` e `MVO\WaClient` mantêm a identidade técnica da biblioteca.
+Use `mmhospedagem/mvo-whats-php` na dependência Composer e `MVO\WaClient` no código PHP. O nome do pacote e o namespace têm funções diferentes.
+
+### Migrar a instalação inicial por VCS
+
+Se você instalou a distribuição inicial como `mvo/mvo-php`, substitua essa dependência por `mmhospedagem/mvo-whats-php` no `composer.json` da aplicação e remova a entrada VCS desta biblioteca em `repositories`, caso exista. Atualize o lock com `composer update` e confira as alterações antes do deployment. As classes `MVO\`, os IDs de sessão e os caminhos de credenciais permanecem os mesmos; preserve o armazenamento da aplicação. Veja a nota da versão [1.0.1 no changelog](../CHANGELOG.md).
 
 ## Clonar para executar os exemplos
 

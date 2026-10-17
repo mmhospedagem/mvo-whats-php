@@ -2,6 +2,14 @@
 
 As versões da biblioteca seguem versionamento semântico. Mudanças no protocolo do WhatsApp podem exigir atualizações de compatibilidade, independentemente da versão da biblioteca.
 
+## 1.0.1 — 2026-10-17
+
+Primeira distribuição no [Packagist](https://packagist.org/packages/mmhospedagem/mvo-whats-php), com o nome Composer **`mmhospedagem/mvo-whats-php`**.
+
+- Instalação direta com `composer require "mmhospedagem/mvo-whats-php:^1.0"`, sem configurar repositório VCS.
+- Guias de instalação, contexto para LLMs e referência de agentes atualizados para o nome público do pacote.
+- As classes e o namespace `MVO\` permanecem iguais. Instalações iniciais por VCS com `mvo/mvo-php` devem atualizar a dependência Composer; a mudança não exige recriar as sessões nem alterar os caminhos de credenciais.
+
 ## 1.0.0 — 2026-10-17
 
 Primeira distribuição pública da **MVO WHATS PHP**.
