@@ -21,6 +21,6 @@ final class WaVersion
             if (curl_exec($curl)===false) throw new \RuntimeException('Cannot fetch WhatsApp version: '.curl_error($curl));
             if (curl_getinfo($curl,CURLINFO_RESPONSE_CODE)!==200) throw new \RuntimeException('WhatsApp version source refused request');
             return self::fromServiceWorker($body);
-        } finally { curl_close($curl); }
+        } finally { unset($curl); }
     }
 }

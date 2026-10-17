@@ -46,6 +46,6 @@ final class RegistrationHttpTransport
             if(curl_exec($curl)===false)throw new \RuntimeException('Registration HTTPS transfer did not produce a confirmed result');$status=(int)curl_getinfo($curl,CURLINFO_RESPONSE_CODE);
             $decoded=json_decode($received,true,32,JSON_THROW_ON_ERROR|JSON_BIGINT_AS_STRING);if(!is_array($decoded) || array_is_list($decoded))throw new \UnexpectedValueException('Registration HTTPS response is not a JSON object');
             return new RegistrationResponse($decoded,$status,$retryAfter);
-        }finally{curl_close($curl);}
+        }finally{unset($curl);}
     }
 }
