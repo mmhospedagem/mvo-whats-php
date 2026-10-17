@@ -158,9 +158,26 @@
         groups.get(page.group).push(page);
       });
       nav.innerHTML = [...groups].map(([group, entries], index) =>
-        `<section class="nav-group" aria-labelledby="nav-group-${index}"><h2 id="nav-group-${index}">${escape(group)}</h2>` +
-        entries.map(page => `<a href="${routeHref(page)}" data-page="${escape(page.id)}">${escape(page.title)}</a>`).join('') + '</section>'
+        `<details class="nav-group"${group === home.group ? ' open' : ''}><summary id="nav-group-${index}"><span>${escape(group)}</span><svg class="nav-chevron" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="nav-items" aria-labelledby="nav-group-${index}">` +
+        entries.map(page => `<a href="${routeHref(page)}" data-page="${escape(page.id)}">${escape(page.title)}</a>`).join('') + '</div></details>'
       ).join('');
+    }
+
+    function revealActiveNavigation() {
+      const link = sidebar?.querySelector('a[data-page].active');
+      if (!link) return;
+      const group = link.closest('details.nav-group');
+      if (group) group.open = true;
+      requestAnimationFrame(() => {
+        if (!link.isConnected || !sidebar?.clientHeight) return;
+        const bounds = sidebar.getBoundingClientRect();
+        const current = link.getBoundingClientRect();
+        const top = bounds.top + sidebar.clientTop + 12;
+        const bottom = bounds.top + sidebar.clientTop + sidebar.clientHeight - 12;
+        // Adjust only the navigation scroller; the reader's document position stays put.
+        if (current.top < top) sidebar.scrollTop += current.top - top;
+        else if (current.bottom > bottom) sidebar.scrollTop += current.bottom - bottom;
+      });
     }
 
     function setSidebar(open, restore = false) {
@@ -171,7 +188,8 @@
       if (menu) menu.setAttribute('aria-label', sidebarIsOpen ? 'Fechar navegação' : 'Abrir navegação');
       if (overlay) overlay.hidden = !sidebarIsOpen;
       if (sidebarIsOpen) {
-        requestAnimationFrame(() => (sidebar.querySelector('a.active') || sidebar.querySelector('a'))?.focus());
+        revealActiveNavigation();
+        requestAnimationFrame(() => (sidebar.querySelector('a.active') || sidebar.querySelector('summary') || sidebar.querySelector('a'))?.focus({ preventScroll: true }));
       } else if (restore) menu?.focus();
     }
 
@@ -348,7 +366,7 @@
       const toc = $('toc');
       const links = toc ? [...toc.querySelectorAll('a[href]')] : [];
       const outline = $('page-outline');
-      if (outline) outline.hidden = active.id === home.id || !links.length;
+      if (outline) outline.hidden = !links.length;
       if (!links.length || !('IntersectionObserver' in window)) return;
       const targets = links.map(link => $(decode(link.hash.slice(link.hash.indexOf('/') + 1)))).filter(element => element && article.contains(element));
       const visible = new Set();
@@ -407,6 +425,9 @@
         const source = $('source');
         if (source) { source.hidden = !page.source; if (page.source) source.href = sourceHref(page.source); else source.removeAttribute('href'); }
         document.title = page.title + ' · MVO WhatsApp';
+        document.querySelectorAll('.header-link').forEach(link => {
+          link.classList.toggle('selected', link.hash === (page.id === 'api' ? '#api' : '#inicio'));
+        });
         document.querySelectorAll('[data-page]').forEach(link => {
           const current = link.dataset.page === page.id;
           link.classList.toggle('active', current);
@@ -423,6 +444,7 @@
           (index < documents.length - 1 ? `<a class="paging-next" href="${routeHref(documents[index + 1])}"><span>Próximo</span><strong>${escape(documents[index + 1].title)}</strong></a>` : '');
         prepareOutline();
       }
+      revealActiveNavigation();
       scrollToAnchor(anchor, !initial || fragment === 'content');
     }
 
@@ -515,7 +537,7 @@
           if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); const next = event.key === 'ArrowDown' ? (index + 1) % searchLinks.length : (index < 0 ? searchLinks.length - 1 : (index + searchLinks.length - 1) % searchLinks.length); searchLinks[next].focus(); }
           else if (event.key === 'Enter' && document.activeElement === search) { event.preventDefault(); searchLinks[0].click(); }
         }
-      } else if (sidebarIsOpen && event.key === 'Tab') trapTab(event, [menu, ...sidebar.querySelectorAll('a[href], button')].filter(Boolean));
+      } else if (sidebarIsOpen && event.key === 'Tab') trapTab(event, [menu, ...sidebar.querySelectorAll('summary, a[href], button')].filter(Boolean));
     });
     menu?.addEventListener('click', () => setSidebar(!sidebarIsOpen, sidebarIsOpen));
     overlay?.addEventListener('click', () => setSidebar(false, true));
@@ -532,7 +554,7 @@
     $('theme')?.addEventListener('click', () => {
       const light = !document.body.classList.contains('light');
       setTheme(light);
-      try { localStorage.setItem('mvo-docs-theme-v2', light ? 'light' : 'dark'); } catch { /* Private/offline storage may be unavailable. */ }
+      try { localStorage.setItem('mvo-docs-theme-v3', light ? 'light' : 'dark'); } catch { /* Private/offline storage may be unavailable. */ }
     });
     window.addEventListener('hashchange', () => route());
     window.addEventListener('resize', () => {
@@ -548,8 +570,8 @@
     bindLogo();
     syncHeaderHeight();
     let saved;
-    try { saved = localStorage.getItem('mvo-docs-theme-v2'); } catch { /* Default dark is available without storage. */ }
-    setTheme(saved === 'light');
+    try { saved = localStorage.getItem('mvo-docs-theme-v3'); } catch { /* The light theme is available without storage. */ }
+    setTheme(saved !== 'dark');
     route(true);
   }
 

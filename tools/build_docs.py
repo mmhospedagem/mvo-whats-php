@@ -2,6 +2,36 @@
 from pathlib import Path
 import base64, re, html, json
 import markdown
+from html.parser import HTMLParser
+
+
+class HtmlOutline(HTMLParser):
+    """Collect authored section headings without changing the HTML source."""
+    def __init__(self):
+        super().__init__()
+        self.headings = []
+        self.current = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'h2':
+            anchor = dict(attrs).get('id')
+            self.current = (anchor, []) if anchor else None
+
+    def handle_data(self, data):
+        if self.current is not None:
+            self.current[1].append(data)
+
+    def handle_endtag(self, tag):
+        if tag == 'h2' and self.current is not None:
+            anchor, parts = self.current
+            self.headings.append((anchor, ''.join(parts)))
+            self.current = None
+
+    def render(self):
+        return '<ul>' + ''.join(
+            '<li><a href="#' + html.escape(anchor, quote=True) + '">' + html.escape(title) + '</a></li>'
+            for anchor, title in self.headings
+        ) + '</ul>' if self.headings else ''
 
 ROOT = Path(__file__).resolve().parents[1]
 GROUPS = {
@@ -20,6 +50,7 @@ GROUPS['Conta e estado'].append(('ACCOUNT-EXTENSIONS','Preferências e novos rec
 GROUPS['Conta e estado'].extend([('ACCOUNT-FEATURES','Atendentes e organização','docs/ACCOUNT_FEATURES.md'), ('AGENDAMENTOS','Agendar mensagens','docs/AGENDAMENTOS.md')])
 GROUPS['Começar'][1:1] = [('INSTALLATION','Instalar a biblioteca','docs/INSTALLATION.md'), ('GETTING-STARTED','Primeira integração','docs/GETTING_STARTED.md'), ('EXAMPLES','Exemplos em PHP','docs/EXAMPLES.md')]
 GROUPS['Ferramentas'].insert(0, ('LLMS','LLMs e agentes MCP','docs/LLMS.md'))
+GROUPS['Começar'][0] = ('inicio','Introdução','docs/INICIO.html')
 
 def embed_local_image(match, source):
     """Embed documentation images so the generated HTML also works offline."""
@@ -53,12 +84,19 @@ for group, entries in GROUPS.items():
                     ns=re.search(r'namespace\s+([^;]+);',code)
                     raw+='\n## '+(ns[1]+'\\' if ns else '')+file.stem+'\n\nFonte: `'+file.relative_to(ROOT).as_posix()+'`\n\n```php\n'+'\n'.join(' '.join(s.split()) for s in signatures)+'\n```\n'
         converter=markdown.Markdown(extensions=['fenced_code','tables','toc','sane_lists'])
-        body=raw if source and source.endswith('.html') else converter.convert(raw)
+        if source and source.endswith('.html'):
+            body = raw
+            outline = HtmlOutline()
+            outline.feed(body)
+            toc = outline.render()
+        else:
+            body = converter.convert(raw)
+            toc = converter.toc
         # Keep the HTML portable/offline, including the supplied logo in the README.
         body=body.replace('src="docs/assets/mvo-logo.png"','data-mvo-logo')
         if source:
             body=re.sub(r'(<img\b[^>]*?\bsrc=")([^"]+)(")',lambda match: embed_local_image(match,source),body,flags=re.I)
-        pages.append(dict(id=id,title=title,group=group,source=source,body=body,toc=converter.toc))
+        pages.append(dict(id=id,title=title,group=group,source=source,body=body,toc=toc))
 template=(ROOT/'docs/template.html').read_text(encoding='utf-8')
 payload=json.dumps(pages,ensure_ascii=False).replace('</','<\\/')
 css=(ROOT/'docs/assets/docs.css').read_text(encoding='utf-8')
