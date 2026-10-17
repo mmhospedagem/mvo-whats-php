@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/mvo-logo.png" width="240" alt="MVO">
+  <img src="docs/assets/mvo-logo.png" width="460" alt="MVO WHATS PHP">
 </p>
 
 <h1 align="center">MVO WHATS PHP</h1>
