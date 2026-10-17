@@ -1,5 +1,5 @@
 {
-  "name": "mvo/mvo-php",
+  "name": "mmhospedagem/mvo-whats-php",
   "description": "Biblioteca PHP nativa para WhatsApp: QR Code, sessões persistentes, mensagens, mídia, grupos e MCP.",
   "type": "library",
   "license": "MIT",
