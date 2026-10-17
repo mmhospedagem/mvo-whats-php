@@ -91,9 +91,16 @@ final class AppStateServiceTest extends TestCase
     public function testPatchMacFailureDoesNotAdvanceVersion(): void
     {
         $service=$this->keyed();$service->applySnapshot('regular_low',self::snapshot($service));
-        $input=AppStateSchema::mutation('Pin',['chatJid'=>'123'],['pinned'=>true],3);$patch=$service->buildPatch('regular_low',[$input])['patch']+['version'=>['version'=>2]];$patch['patchMac'][0]='x';
-        try{$service->applyPatch('regular_low',$patch);self::fail();}catch(\UnexpectedValueException){}
-        self::assertSame(1,$service->collectionState('regular_low')['version']);self::assertSame([],$service->collectionState('regular_low')['indexValueMap']);
+        $before=$service->collectionState('regular_low');
+        $input=AppStateSchema::mutation('Pin',['chatJid'=>'123'],['pinned'=>true],3);
+        $patch=$service->buildPatch('regular_low',[$input])['patch']+['version'=>['version'=>2]];
+        $validMac=$patch['patchMac'];
+        // Flip a bit: replacing a random byte with a constant can leave the MAC unchanged.
+        $patch['patchMac'][0]=chr(ord($patch['patchMac'][0])^1);
+        self::assertNotSame($validMac,$patch['patchMac']);
+        try{$service->applyPatch('regular_low',$patch);self::fail('Accepted a patch with an invalid MAC');}
+        catch(\UnexpectedValueException $error){self::assertStringContainsString('patch MAC mismatch',$error->getMessage());}
+        self::assertSame($before,$service->collectionState('regular_low'));
     }
     public function testPatchRejectsSkippedVersionBeforeApplyingAnyRecord(): void
     {
