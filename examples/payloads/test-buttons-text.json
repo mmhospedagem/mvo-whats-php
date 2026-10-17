@@ -1,0 +1,12 @@
+{
+  "type": "buttons",
+  "buttonMode": "text",
+  "data": {
+    "contentText": "Teste da biblioteca PHP. Escolha uma opção:",
+    "footerText": "Menu em texto para clientes sem exibição de botões",
+    "buttons": [
+      {"buttonId": "teste_confirmar", "buttonText": {"displayText": "Confirmar"}},
+      {"buttonId": "teste_ajuda", "buttonText": {"displayText": "Ajuda"}}
+    ]
+  }
+}

@@ -1,0 +1,113 @@
+<section class="home-hero">
+  <div class="hero-copy">
+    <h1>Conecte o WhatsApp.<br><span>Construa em PHP.</span></h1>
+    <p class="hero-description">Crie uma sessão, acompanhe o QR e troque mensagens pela biblioteca MVO. Integre os eventos ao fluxo da sua aplicação.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="#CONEXAO/gatilhos-publicos-para-integrar-uma-api">Começar integração <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="button button-secondary" href="#api">Explorar API</a>
+    </div>
+    <ul class="hero-facts">
+      <li>PHP 8.2+</li>
+      <li>QR ou código</li>
+      <li>Sessão persistente</li>
+    </ul>
+  </div>
+  <div class="code-workbench" aria-label="Exemplos de integração em PHP">
+    <div class="workbench-tabs" role="tablist" aria-label="Etapas da integração">
+      <button type="button" id="tab-conectar" role="tab" data-code-tab="conectar" aria-controls="panel-conectar" aria-selected="true" tabindex="0">Conectar</button>
+      <button type="button" id="tab-receber" role="tab" data-code-tab="receber" aria-controls="panel-receber" aria-selected="false" tabindex="-1">Receber</button>
+      <button type="button" id="tab-enviar" role="tab" data-code-tab="enviar" aria-controls="panel-enviar" aria-selected="false" tabindex="-1">Enviar</button>
+    </div>
+    <div class="code-panel" id="panel-conectar" data-code-panel="conectar" role="tabpanel" aria-labelledby="tab-conectar" tabindex="0">
+      <div class="workbench-bar"><span class="workbench-filename">conectar.php</span><button type="button" data-copy-target="code-conectar" aria-label="Copiar exemplo de conexão">Copiar</button></div>
+      <pre><code id="code-conectar" class="language-php">&lt;?php
+require 'vendor/autoload.php';
+
+use MVO\WaClient;
+use MVO\Auth\QrCode;
+
+$client = new WaClient('minha-sessao');
+$client-&gt;on('auth_qr', function (array $event) use ($client): void {
+    file_put_contents(
+        $client-&gt;sessionDirectory().'/qr.svg',
+        QrCode::svg($event['qr'])
+    );
+});
+
+try {
+    $client-&gt;connect();
+    $client-&gt;run();
+} finally {
+    $client-&gt;disconnect();
+}</code></pre>
+    </div>
+    <div class="code-panel" id="panel-receber" data-code-panel="receber" role="tabpanel" aria-labelledby="tab-receber" tabindex="0" hidden>
+      <div class="workbench-bar"><span class="workbench-filename">receber.php</span><button type="button" data-copy-target="code-receber" aria-label="Copiar exemplo de recebimento">Copiar</button></div>
+      <pre><code id="code-receber" class="language-php">&lt;?php
+require 'vendor/autoload.php';
+
+use MVO\WaClient;
+
+// Use uma sessão já vinculada.
+$client = new WaClient('minha-sessao');
+$client-&gt;on('message', function (array $event): void {
+    $text = $event['text'] ?? null;
+    if (is_string($text)) echo $text.PHP_EOL;
+    // Use chat e ID para evitar repetir ações externas.
+});
+
+try {
+    $client-&gt;connect();
+    $client-&gt;run();
+} finally {
+    $client-&gt;disconnect();
+}</code></pre>
+    </div>
+    <div class="code-panel" id="panel-enviar" data-code-panel="enviar" role="tabpanel" aria-labelledby="tab-enviar" tabindex="0" hidden>
+      <div class="workbench-bar"><span class="workbench-filename">enviar.php</span><button type="button" data-copy-target="code-enviar" aria-label="Copiar exemplo de envio">Copiar</button></div>
+      <pre><code id="code-enviar" class="language-php">&lt;?php
+require 'vendor/autoload.php';
+
+use MVO\WaClient;
+
+// Use uma sessão vinculada e substitua o destinatário.
+$client = new WaClient('minha-sessao');
+try {
+    $client-&gt;connect();
+    while ($client-&gt;isRunning()) {
+        $client-&gt;poll(0.5);
+        if (!$client-&gt;isConnected()) continue;
+
+        $result = $client-&gt;sendText('5511999999999', 'Olá pela MVO!');
+        echo 'Aceita pelo servidor: '.$result['id'].PHP_EOL;
+        break;
+    }
+} finally {
+    $client-&gt;disconnect();
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="start-flow">
+  <div class="section-heading">
+    <h2>Da primeira sessão à sua aplicação.</h2>
+    <p>Prepare o ambiente, vincule o aparelho e mantenha o processo PHP ativo para acompanhar as mensagens.</p>
+  </div>
+  <ol class="flow-list">
+    <li><a href="#introducao/instalacao"><strong>Prepare seu ambiente</strong><p>Instale as dependências e configure as extensões do PHP.</p></a></li>
+    <li><a href="#CONEXAO/qr-code"><strong>Conecte uma sessão</strong><p>Acompanhe cada QR ou solicite um código de vinculação.</p></a></li>
+    <li><a href="#MENSAGENS/api-php"><strong>Envie e receba</strong><p>Ouça o evento de mensagem e envie depois que a conexão estiver pronta.</p></a></li>
+    <li><a href="#CONEXAO/reutilizar-a-sessao"><strong>Retome quando precisar</strong><p>Reabra com a mesma sessão e pasta para restaurar um vínculo válido.</p></a></li>
+  </ol>
+</section>
+
+<section class="docs-paths">
+  <h2>Continue construindo.</h2>
+  <div class="path-list">
+    <a class="path-link" href="#MIDIA/api-php"><strong>Imagens, áudio e arquivos</strong><span>Envie mídia e faça downloads com verificação de integridade.</span></a>
+    <a class="path-link" href="#SERVICOS/grupos-e-comunidades"><strong>Grupos e serviços da conta</strong><span>Consulte participantes e integre as operações disponíveis para sua conta.</span></a>
+    <a class="path-link" href="#APPSTATE/operacoes"><strong>Estado das conversas</strong><span>Sincronize leitura, arquivamento e silenciamento entre aparelhos.</span></a>
+    <a class="path-link" href="#FAKE-WHATSAPP/executar-o-exemplo"><strong>Teste no ambiente local</strong><span>Exercite pareamento, mensagens e persistência com aparelhos simulados.</span></a>
+  </div>
+</section>

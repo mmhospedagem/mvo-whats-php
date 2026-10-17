@@ -1,0 +1,77 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Depurar conexao WhatsApp (QR)",
+      "type": "php",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/connect.php",
+      "args": ["--mode=qr", "--session=debug", "--timeout=300", "--verbose"],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${config:php.validate.executablePath}",
+      "runtimeArgs": ["-c", "${workspaceFolder}/.dev/php.ini"],
+      "env": {"XDEBUG_MODE": "debug,develop", "XDEBUG_TRIGGER": "mvo"},
+      "port": 9003,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Depurar exemplo PHP",
+      "type": "php",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/debug.php",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${config:php.validate.executablePath}",
+      "runtimeArgs": ["-c", "${workspaceFolder}/.dev/php.ini"],
+      "env": {"XDEBUG_MODE": "debug,develop", "XDEBUG_TRIGGER": "mvo"},
+      "port": 9003,
+      "stopOnEntry": true
+    },
+    {
+      "name": "Depurar teste PHPUnit",
+      "type": "php",
+      "request": "launch",
+      "program": "${workspaceFolder}/vendor/bin/phpunit",
+      "args": ["--filter", "${input:testFilter}"],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${config:php.validate.executablePath}",
+      "runtimeArgs": ["-c", "${workspaceFolder}/.dev/php.ini"],
+      "env": {"XDEBUG_MODE": "debug,develop", "XDEBUG_TRIGGER": "mvo"},
+      "port": 9003,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Depurar cliente WhatsApp local (QR)",
+      "type": "php",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/fake-whatsapp.php",
+      "args": ["client"],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${config:php.validate.executablePath}",
+      "runtimeArgs": ["-c", "${workspaceFolder}/.dev/php.ini"],
+      "env": {"XDEBUG_MODE": "debug,develop", "XDEBUG_TRIGGER": "mvo"},
+      "port": 9003,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Depurar testes VoIP locais",
+      "type": "php",
+      "request": "launch",
+      "program": "${workspaceFolder}/vendor/bin/phpunit",
+      "args": ["--filter", "Voip|NativeWebRtc|RelayPool|CallMediaEngine"],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${config:php.validate.executablePath}",
+      "runtimeArgs": ["-c", "${workspaceFolder}/.dev/php.ini"],
+      "env": {"XDEBUG_MODE": "debug,develop", "XDEBUG_TRIGGER": "mvo"},
+      "port": 9003,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Escutar Xdebug (composer debug)",
+      "type": "php",
+      "request": "launch",
+      "hostname": "127.0.0.1",
+      "port": 9003
+    }
+  ],
+  "inputs": [{"id": "testFilter", "type": "promptString", "description": "Classe ou metodo do teste", "default": "CryptoTest"}]
+}

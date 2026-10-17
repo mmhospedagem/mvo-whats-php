@@ -1,0 +1,23 @@
+name: Propor um recurso
+description: Descreva uma melhoria para o SDK.
+title: '[Recurso]: '
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema você quer resolver?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Comportamento proposto
+      description: Explique como o recurso seria usado em PHP.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Referências e limites conhecidos
+      description: Prefira documentação e evidências públicas. Não envie capturas privadas de contas.

@@ -1,0 +1,3 @@
+Marca MVO fornecida pela MVO para uso na documentação do projeto.
+O PNG foi preservado sem alterar pixels, transparência ou proporção.
+As fontes e suas licenças estão documentadas em fonts/PROVENANCE.txt e fonts/OFL.txt.

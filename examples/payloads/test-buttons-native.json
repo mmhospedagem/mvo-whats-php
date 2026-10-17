@@ -1,0 +1,16 @@
+{
+  "type": "raw",
+  "message": {
+    "interactiveMessage": {
+      "header": {"hasMediaAttachment": false},
+      "body": {"text": "Teste de botões interativos da biblioteca PHP. Escolha uma opção:"},
+      "footer": {"text": "Confirmar / Ajuda"},
+      "nativeFlowMessage": {
+        "buttons": [
+          {"name": "quick_reply", "buttonParamsJson": "{\"display_text\":\"Confirmar\",\"id\":\"teste_confirmar\"}"},
+          {"name": "quick_reply", "buttonParamsJson": "{\"display_text\":\"Ajuda\",\"id\":\"teste_ajuda\"}"}
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "list",
+  "data": {
+    "title": "Teste da biblioteca PHP",
+    "description": "Escolha uma opção de atendimento para testar a lista.",
+    "footerText": "Mensagem de teste autorizada",
+    "buttonText": "Ver opções",
+    "listType": "SINGLE_SELECT",
+    "sections": [
+      {
+        "title": "Atendimento",
+        "rows": [
+          {"rowId": "teste_suporte", "title": "Suporte", "description": "Testar a opção de suporte"},
+          {"rowId": "teste_vendas", "title": "Vendas", "description": "Testar a opção de vendas"}
+        ]
+      }
+    ]
+  }
+}

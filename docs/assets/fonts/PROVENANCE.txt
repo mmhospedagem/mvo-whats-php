@@ -1,0 +1,38 @@
+Manrope - fontes locais da documentacao MVO
+Obtidas em 2026-10-14.
+Distribuicao dos binarios: site publico oficial MVO, arquivos usados pela homepage.
+Fontes preservadas byte a byte; nenhum desenho, tabela ou nome interno foi modificado.
+Familia de origem: Manrope. A folha CSS do site usa o alias MVO Manrope.
+Licenca: SIL Open Font License 1.1. Texto integral em OFL.txt.
+O copyright e o link de licenca embutidos nos TTF permanecem preservados.
+
+manrope-400.ttf
+URL: https://mvo.host/assets/addons/mvo-site/legacy/fontes/manrope-400.ttf
+Familia/peso: Manrope / 400
+Copyright embutido: Copyright 2019 The Manrope Project Authors (https://github.com/sharanda/manrope)
+URL de licenca embutida: http://scripts.sil.org/OFL
+Tamanho: 94972 bytes
+SHA-256: a13d9b41b0a471ce58f0e46d377fa3cc76615e4632c3b15eb397caadf7a13f0a
+
+manrope-600.ttf
+URL: https://mvo.host/assets/addons/mvo-site/legacy/fontes/manrope-600.ttf
+Familia/peso: Manrope SemiBold / 600
+Copyright embutido: Copyright 2019 The Manrope Project Authors (https://github.com/sharanda/manrope)
+URL de licenca embutida: http://scripts.sil.org/OFL
+Tamanho: 95096 bytes
+SHA-256: 6bad1a774228464cc88b8b0271555b266f7a3c64a7bedf15e165fdab4f6ac0ce
+
+manrope-800.ttf
+URL: https://mvo.host/assets/addons/mvo-site/legacy/fontes/manrope-800.ttf
+Familia/peso: Manrope ExtraBold / 800
+Copyright embutido: Copyright 2019 The Manrope Project Authors (https://github.com/sharanda/manrope)
+URL de licenca embutida: http://scripts.sil.org/OFL
+Tamanho: 95688 bytes
+SHA-256: b8f802f05b322a7345805f5b89f8bb976604cc719a91530918d5ce3c47160950
+
+OFL.txt
+Fonte primaria: https://raw.githubusercontent.com/google/fonts/16c2976c68c3137c09c69c8e9d3deada699d157e/ofl/manrope/OFL.txt
+Repositorio: https://github.com/google/fonts/tree/main/ofl/manrope
+Commit do documento: 16c2976c68c3137c09c69c8e9d3deada699d157e
+Tamanho: 4387 bytes
+SHA-256: 58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b

@@ -1,0 +1,95 @@
+{
+  "environment": {
+    "os": "Windows",
+    "php": "8.4.25",
+    "xdebug_mode": "off",
+    "logical_processors": 32,
+    "test_messages_sent": 0,
+    "opcache_enable_cli": false,
+    "sessions": 1,
+    "poll_seconds": 0.5
+  },
+  "startup": {
+    "seconds": 15.441,
+    "samples": 16,
+    "cpu_seconds": 3.45312,
+    "cpu_percent_one_core": 22.3639,
+    "cpu_percent_machine_32_logical": 0.69887,
+    "peak_cpu_percent_one_second": 57.692,
+    "working_set": {
+      "min_mib": 10.66,
+      "median_mib": 41.16,
+      "max_mib": 41.63
+    },
+    "private_commit": {
+      "min_mib": 4.72,
+      "median_mib": 23.54,
+      "max_mib": 23.54
+    }
+  },
+  "steady_connected": {
+    "seconds": 45.305,
+    "samples": 45,
+    "cpu_seconds": 1.07812,
+    "cpu_percent_one_core": 2.3797,
+    "cpu_percent_machine_32_logical": 0.07437,
+    "peak_cpu_percent_one_second": 15.358,
+    "working_set": {
+      "min_mib": 39.56,
+      "median_mib": 41.67,
+      "max_mib": 41.67
+    },
+    "private_commit": {
+      "min_mib": 21.47,
+      "median_mib": 23.6,
+      "max_mib": 23.6
+    }
+  },
+  "steady_php": {
+    "used_mib": {
+      "min": 9.292,
+      "max": 9.292
+    },
+    "allocated_mib": [
+      12
+    ],
+    "peak_mib_entire_probe": 14,
+    "message_events_in_php_window": 2,
+    "node_events_in_php_window": 135
+  },
+  "session_after_probe": {
+    "phase": "finished",
+    "elapsed_seconds": 81.292,
+    "connected_seconds": 80.405,
+    "php_used_mib": 8.811,
+    "php_allocated_mib": 12,
+    "php_peak_mib": 14,
+    "messages": 276,
+    "nodes": 2124,
+    "completed": true,
+    "error_class": null,
+    "registered": true,
+    "identity_preserved": true,
+    "noise_key_preserved": true
+  },
+  "sampling": {
+    "process_samples": 80,
+    "php_snapshots": 77,
+    "process_sample_span_seconds": 81.3387145,
+    "collector_elapsed_seconds_reported": 82.379,
+    "collector_exit_code_reported": 0,
+    "connected_event_php_clock_seconds": 0.887,
+    "before_disconnect_connected_seconds": 80.394,
+    "steady_process_window": {
+      "from_seconds": 36.036476,
+      "to_seconds": 81.3415022,
+      "samples": 45
+    },
+    "steady_php_window": {
+      "from_seconds": 37.13,
+      "to_seconds": 81.28,
+      "seconds": 44.15,
+      "snapshots": 40
+    }
+  }
+}

@@ -1,0 +1,1689 @@
+{
+  "schema": "mvo.channels.protocol-research.v1",
+  "written_at_utc": "2026-10-15T10:57:13.208580+00:00",
+  "scope": {
+    "primary_source": "public WhatsApp Web bootstrap captured 2026-10-15",
+    "authenticated_account_access": false,
+    "remote_channel_operations_executed": false,
+    "phone_access": false,
+    "analysis": "Focused inert source parsing and manual exact module observation",
+    "copyright": "Public source retained only in private cache; ledger contains formats, hashes and citations.",
+    "node_runtime_required": false,
+    "current_server_acceptance_verified": false,
+    "real_channel_mutations_executed": false
+  },
+  "sources_consulted_live": [
+    {
+      "url": "https://web.whatsapp.com/",
+      "type": "primary-official",
+      "consulted_date": "2026-10-15"
+    },
+    {
+      "url": "https://faq.whatsapp.com/549900560675125",
+      "type": "primary-official",
+      "consulted_date": "2026-10-15",
+      "limitation": "Help page content not returned by browser tool; no protocol claim based on it."
+    }
+  ],
+  "provenance": {
+    "public_startup_evidence_id": "ev_088eec34482038e70f158d19a1750b426c3f58cc984290d414abd315983790a9",
+    "rea_parent_evidence_id": "ev_6ea7a8907b7f33b69bbe5b3153984008ffde39614b4e98b46d94f75d1107572a",
+    "rea_summary_evidence_id": "ev_2ae33c0794718fcb4cd8e9806766cb322bc36f82bedda4d5c2adddf547ff1781",
+    "rea_directory_sha256": "e086f18aadeb507ef86a04c017a774d79869d7eefbf5a65ca90e4d58aedf47ba",
+    "rea_files": 34,
+    "rea_bytes": 68012,
+    "rea_parse_failures": 0,
+    "rea_semantic_coverage": "unknown; conservative graph contains unresolved obfuscated calls",
+    "extra_modules": "Additional named modules manually inspected from the same hash-verified public capture; not attributed to the 34-file REA graph."
+  },
+  "sources": {
+    "WAWebMexUpdateNewsletterJob": {
+      "module_sha256": "61b2a1d98310c19c6af97f78da0dff0ab734f820575c6861b7c2979728ba2a6b",
+      "module_bytes": 750,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2427917,
+        "end": 2428667,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterUtils": {
+      "module_sha256": "b7d5c820890371ca04db3b9c2b5dedd6e3a5ed6981ebe71a20eac4929b7c3159",
+      "module_bytes": 1343,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2423678,
+        "end": 2425021,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterMetadataQueryJob": {
+      "module_sha256": "199c76d99935d044e96e4515e30d868706f703464fdf9124571ec62ff0f815e9",
+      "module_bytes": 2741,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2441173,
+        "end": 2443914,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterPinMessagesJob": {
+      "module_sha256": "22e8ef17ec42d9ff70c307d70d7846f4e46a0dfff8a3339e7380972573b2e7f4",
+      "module_bytes": 1066,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1836331,
+        "end": 1837397,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterUnpinMessagesJob": {
+      "module_sha256": "3fc085e1988287ecfafbd5656d238291902df8d3622acc63810f8f7725c0591e",
+      "module_bytes": 1082,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1839839,
+        "end": 1840921,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterPinMessagesJobMutation.graphql": {
+      "module_sha256": "4dafc1d62c32f7f1d2c982fd7fc9dde4cbd095ec22a8b9b46900c05971e8e2f4",
+      "module_bytes": 1470,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1834861,
+        "end": 1836331,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterUnpinMessagesJobMutation.graphql": {
+      "module_sha256": "2d79651d79bce452e5aef5637a4b2a729c88e40f6e2f835fd064f69f8b9bc858",
+      "module_bytes": 1480,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1838359,
+        "end": 1839839,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterPinMessageAction": {
+      "module_sha256": "0b2b64dcb3811a10e75a53a1d8fdd30de3b869887645fe5ff4a8719bcc459213",
+      "module_bytes": 1437,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1841899,
+        "end": 1843336,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterParseUtils": {
+      "module_sha256": "d096df655ab6b4e178ec2f84d6242fb08cd3c269a575212ab5f3109efb0efbb1",
+      "module_bytes": 5021,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2400355,
+        "end": 2405376,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterAddPaidPartnershipLabelJob": {
+      "module_sha256": "ad4a2de1f32b0df63123a9ec601c335e02a6c55ec0292f0e2b61737cfaf36c53",
+      "module_bytes": 904,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1684889,
+        "end": 1685793,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterAddPaidPartnershipLabelJobMutation.graphql": {
+      "module_sha256": "beafda025aff7abdf1050ca099e3fbe4be426a2cfa548f22b679e8d2fc1a0f27",
+      "module_bytes": 1243,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1683646,
+        "end": 1684889,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterLabelAiContentJob": {
+      "module_sha256": "ef48857af6aa17bc4e2799a83aa011dd8d2c0ffbfdc0af655e3f3e676950a7a4",
+      "module_bytes": 890,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1675443,
+        "end": 1676333,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterLabelAiContentJobMutation.graphql": {
+      "module_sha256": "8685f0d7a780dae310546423e894244ab3b4af2244b3527f501383451f7dc6c3",
+      "module_bytes": 1201,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1674242,
+        "end": 1675443,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebCommonNewsletterEnums": {
+      "module_sha256": "ad37f5d4ba7daade61bd8751c21d11df32c408a66b6e855b19ec7a67122440ed",
+      "module_bytes": 2291,
+      "public_bundle_sha256": "eea816e26bf3e5718574e1b2d547a8b29f3794e1498879e264be5feae0fed05e",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4/y2/r/0x125YhtgZ1S9zWqG1yTK7Qp1sDjuF5SmT-AuBCH3JSvNP9da5at6xnv-3MS2LngLEyPiijlEH8daP17R_g10IG7RbmtPZeCQ-8AjAOrFD_pFvqPQ_K7BJvZrwyy1OJvCTTXrSl2CXOXS4z_23LEffI1_XLzAWDo_lWkSowE4uaUmpoaR-vjbVqw8VsZCHZTz4hagG3hpaoOUJoGRh4v13xIpzOynYJ7RuO74fKt5zGfVPbdsQUQ8uarnQi2NO2WMSUVsbCdhC4sM8pHXEUUHs8kc2wW6vm-5IQ-8Bk2SBy57olT7s-X.js",
+      "byte_range": {
+        "start": 2286378,
+        "end": 2288669,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterSendVoteMsgAction": {
+      "module_sha256": "4f9aa8acc6c7fdf5d0f206cf44386d4ecc80324eeffdac732524fea85d44ac83",
+      "module_bytes": 5152,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 2334058,
+        "end": 2339210,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishNewsletterPollVoteMixin": {
+      "module_sha256": "af6399bff34399b2e1fee47200bfe42df772016e7b0d9b8474e6b66604c19138",
+      "module_bytes": 649,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 178076,
+        "end": 178725,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexFetchNewsletterDirectoryListJob": {
+      "module_sha256": "66c0d0bd95efe816c4b83c84c8711e1dfef6c77fe9d98630412e5e2bf1197b25",
+      "module_bytes": 1535,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 2254745,
+        "end": 2256280,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterDirectoryFilterUtils": {
+      "module_sha256": "540b16553bc4595b56f42ae28bc530640279842792da04938d611816b2bf8a3a",
+      "module_bytes": 1502,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2344947,
+        "end": 2346449,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterDirectoryCategoryUtils": {
+      "module_sha256": "ae4a2a894ad290a61f6b9fcf28929918387afa28acb33d1dbabc6da4a65ea173",
+      "module_bytes": 3595,
+      "public_bundle_sha256": "eea816e26bf3e5718574e1b2d547a8b29f3794e1498879e264be5feae0fed05e",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4/y2/r/0x125YhtgZ1S9zWqG1yTK7Qp1sDjuF5SmT-AuBCH3JSvNP9da5at6xnv-3MS2LngLEyPiijlEH8daP17R_g10IG7RbmtPZeCQ-8AjAOrFD_pFvqPQ_K7BJvZrwyy1OJvCTTXrSl2CXOXS4z_23LEffI1_XLzAWDo_lWkSowE4uaUmpoaR-vjbVqw8VsZCHZTz4hagG3hpaoOUJoGRh4v13xIpzOynYJ7RuO74fKt5zGfVPbdsQUQ8uarnQi2NO2WMSUVsbCdhC4sM8pHXEUUHs8kc2wW6vm-5IQ-8Bk2SBy57olT7s-X.js",
+      "byte_range": {
+        "start": 2290577,
+        "end": 2294172,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterHandleMexGetNewsletter": {
+      "module_sha256": "4a366500cd13a4d4840eee1a9028cd082fed0c9616e90268ff474649c6c30435",
+      "module_bytes": 2992,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2438181,
+        "end": 2441173,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutNewslettersQueryNewsletterJIDParamsMixin": {
+      "module_sha256": "0fad5e0cc518031f9eff3b29d21515e7a2efddb8c6d346ea43db877accfcaf67",
+      "module_bytes": 435,
+      "public_bundle_sha256": "ae81536923eba9f83f03891a2523fca6ace3179977ba0fe7e779d734e6202bf3",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iENn4/yU/l/en_US-j/S9zWqG1yTK7Pt07UVlUtCrsSlDJ0QAshBNw1HOrRSHFsUQ21KyPensuQp1sDjuF5SmuF7b8Wy6t6Dmx3k5U0rxBJT-AuBCH3JSv9wOG39rwPJYC_eT_kt-WFDOuB-q6QYhl2_DIjxa0l60WNP9da5at6xncKtz8dRBnPrv-3MS2LngLEXCrEeLHuYRqNDmRzvuTFbc.js",
+      "byte_range": {
+        "start": 3233400,
+        "end": 3233835,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterUpdateUserSettingJob": {
+      "module_sha256": "a161e3d2e38d63fe6bd31664560593501396e2dd63ea1f05512ad34a8fd1fa1a",
+      "module_bytes": 2235,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2494595,
+        "end": 2496830,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexUpdateNewsletterUserSetting": {
+      "module_sha256": "cb34fed416a1fbc6f3e887b5c9ad9ca4e2c0486414a9af5b4b01cf3184e0c33f",
+      "module_bytes": 904,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2493691,
+        "end": 2494595,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersGetNewsletterMessagesResponseSuccess": {
+      "module_sha256": "06ab78973d0f9a83e35fd5b667bb87f4f76b6bab8c5df43deef4b1b6ba715bf3",
+      "module_bytes": 1133,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 105243,
+        "end": 106376,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersGetNewsletterMessageUpdatesResponseSuccess": {
+      "module_sha256": "79bbf8e39343c2a67cbcae8d65d602014caabaaa65189e784998a0b7032c5f66",
+      "module_bytes": 944,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 100650,
+        "end": 101594,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersNewsletterMessageResponsePayloadMixin": {
+      "module_sha256": "9fd99cdc420dd243739a802bf52d194e4e84faf47d2e144cb57d5c5dba7de251",
+      "module_bytes": 1000,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 99650,
+        "end": 100650,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersNewsletterMessageHistoryMixin": {
+      "module_sha256": "0be6d4033f9d4f75ece9407d946958327c289dd178aadb0d61ae8fed6365c22f",
+      "module_bytes": 1995,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 90711,
+        "end": 92706,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutNewslettersMyAddOnsRequest": {
+      "module_sha256": "ff01c4ffbf2d07bc7f0c83fad1861bba688f370416ca7e7dfd85b313a74b826d",
+      "module_bytes": 454,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 212152,
+        "end": 212606,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebGetMyAddOnsRPC": {
+      "module_sha256": "8fa47edabb96845f544b1c0f5a5dbbc582fbcf10024bb94055b2fd79deee3024",
+      "module_bytes": 1469,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2353598,
+        "end": 2355067,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersMyAddOnsResponseSuccess": {
+      "module_sha256": "0a4e540cb6da56029f5eb6743ec5b80d3869b5005d263bc9a81ab69617e4e9b4",
+      "module_bytes": 1359,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 112080,
+        "end": 113439,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterGetStatusesQuery": {
+      "module_sha256": "8a7e3d0528903272c712761b314176918d436284e298984cd7252d9572a78cdb",
+      "module_bytes": 2558,
+      "public_bundle_sha256": "7a7b2db4d739f3996851a7df53c61cbc2a8a0530b2fe83daae4ab2ff759f6548",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4ifhq4/y6/l/en_US-j/0UPLazx7iRRdLuwiFvu3ajtMeU9mUqQk_wEJ-ROiKDdMRRs9zFt3thDsw3QayN-rEbGnnnuL5rHlgC0QtXjpYuLyKs7Ge3p72Y8U179Dahh_o7DhesS6E0AmUivM4eymOZBgyfxoD11xWcSP17R_g10IG7Qt4SYwnTrWJRbmtPZeCQ-8nH-1-r1hAqkm3Y8B91Tz4dDD3JAc6XRhPU4lBGPOYu15fXj59NZEN6_5Y4fsItwL6sBvBHvit27VrITcx_cUhvQJ2CdFQgehALYdCswgmH3KsuDdfKwugFxMtLvovRXLF19FybmQZGQvdhzMUG-51HH_zQ.js",
+      "byte_range": {
+        "start": 2262716,
+        "end": 2265274,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutNewslettersNewsletterStatusRequestIQPayloadMixin": {
+      "module_sha256": "13fa82e630629180f274f0ebb523240b0f3ffa3e4980d6d252a63536defa3016",
+      "module_bytes": 836,
+      "public_bundle_sha256": "7a7b2db4d739f3996851a7df53c61cbc2a8a0530b2fe83daae4ab2ff759f6548",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4ifhq4/y6/l/en_US-j/0UPLazx7iRRdLuwiFvu3ajtMeU9mUqQk_wEJ-ROiKDdMRRs9zFt3thDsw3QayN-rEbGnnnuL5rHlgC0QtXjpYuLyKs7Ge3p72Y8U179Dahh_o7DhesS6E0AmUivM4eymOZBgyfxoD11xWcSP17R_g10IG7Qt4SYwnTrWJRbmtPZeCQ-8nH-1-r1hAqkm3Y8B91Tz4dDD3JAc6XRhPU4lBGPOYu15fXj59NZEN6_5Y4fsItwL6sBvBHvit27VrITcx_cUhvQJ2CdFQgehALYdCswgmH3KsuDdfKwugFxMtLvovRXLF19FybmQZGQvdhzMUG-51HH_zQ.js",
+      "byte_range": {
+        "start": 2257362,
+        "end": 2258198,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutNewslettersNewsletterStatusRequestPayloadMixin": {
+      "module_sha256": "2dd81afdf83d32534cf3e8c77979c012af795df5d5ece5d164dd97a834088d3d",
+      "module_bytes": 514,
+      "public_bundle_sha256": "7a7b2db4d739f3996851a7df53c61cbc2a8a0530b2fe83daae4ab2ff759f6548",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4ifhq4/y6/l/en_US-j/0UPLazx7iRRdLuwiFvu3ajtMeU9mUqQk_wEJ-ROiKDdMRRs9zFt3thDsw3QayN-rEbGnnnuL5rHlgC0QtXjpYuLyKs7Ge3p72Y8U179Dahh_o7DhesS6E0AmUivM4eymOZBgyfxoD11xWcSP17R_g10IG7Qt4SYwnTrWJRbmtPZeCQ-8nH-1-r1hAqkm3Y8B91Tz4dDD3JAc6XRhPU4lBGPOYu15fXj59NZEN6_5Y4fsItwL6sBvBHvit27VrITcx_cUhvQJ2CdFQgehALYdCswgmH3KsuDdfKwugFxMtLvovRXLF19FybmQZGQvdhzMUG-51HH_zQ.js",
+      "byte_range": {
+        "start": 2256848,
+        "end": 2257362,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutNewslettersStatusAfterMixinMixin": {
+      "module_sha256": "909ddd17af323fc756dd4d23784446f2db96f8ba32399d60dfe08de8a5a62731",
+      "module_bytes": 323,
+      "public_bundle_sha256": "7a7b2db4d739f3996851a7df53c61cbc2a8a0530b2fe83daae4ab2ff759f6548",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4ifhq4/y6/l/en_US-j/0UPLazx7iRRdLuwiFvu3ajtMeU9mUqQk_wEJ-ROiKDdMRRs9zFt3thDsw3QayN-rEbGnnnuL5rHlgC0QtXjpYuLyKs7Ge3p72Y8U179Dahh_o7DhesS6E0AmUivM4eymOZBgyfxoD11xWcSP17R_g10IG7Qt4SYwnTrWJRbmtPZeCQ-8nH-1-r1hAqkm3Y8B91Tz4dDD3JAc6XRhPU4lBGPOYu15fXj59NZEN6_5Y4fsItwL6sBvBHvit27VrITcx_cUhvQJ2CdFQgehALYdCswgmH3KsuDdfKwugFxMtLvovRXLF19FybmQZGQvdhzMUG-51HH_zQ.js",
+      "byte_range": {
+        "start": 2255624,
+        "end": 2255947,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutNewslettersStatusBeforeMixinMixin": {
+      "module_sha256": "bb12755d09ffd87b827ce32ceadb5e19fe6577b20ce104293e22ecc4d02da44f",
+      "module_bytes": 327,
+      "public_bundle_sha256": "7a7b2db4d739f3996851a7df53c61cbc2a8a0530b2fe83daae4ab2ff759f6548",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4ifhq4/y6/l/en_US-j/0UPLazx7iRRdLuwiFvu3ajtMeU9mUqQk_wEJ-ROiKDdMRRs9zFt3thDsw3QayN-rEbGnnnuL5rHlgC0QtXjpYuLyKs7Ge3p72Y8U179Dahh_o7DhesS6E0AmUivM4eymOZBgyfxoD11xWcSP17R_g10IG7Qt4SYwnTrWJRbmtPZeCQ-8nH-1-r1hAqkm3Y8B91Tz4dDD3JAc6XRhPU4lBGPOYu15fXj59NZEN6_5Y4fsItwL6sBvBHvit27VrITcx_cUhvQJ2CdFQgehALYdCswgmH3KsuDdfKwugFxMtLvovRXLF19FybmQZGQvdhzMUG-51HH_zQ.js",
+      "byte_range": {
+        "start": 2255947,
+        "end": 2256274,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersGetNewsletterStatusesResponseSuccess": {
+      "module_sha256": "f192e3fb10bdd3d3837a2dd0de20771dcdd7dca98e4f6d34f407ef568d6eb789",
+      "module_bytes": 1129,
+      "public_bundle_sha256": "7a7b2db4d739f3996851a7df53c61cbc2a8a0530b2fe83daae4ab2ff759f6548",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4ifhq4/y6/l/en_US-j/0UPLazx7iRRdLuwiFvu3ajtMeU9mUqQk_wEJ-ROiKDdMRRs9zFt3thDsw3QayN-rEbGnnnuL5rHlgC0QtXjpYuLyKs7Ge3p72Y8U179Dahh_o7DhesS6E0AmUivM4eymOZBgyfxoD11xWcSP17R_g10IG7Qt4SYwnTrWJRbmtPZeCQ-8nH-1-r1hAqkm3Y8B91Tz4dDD3JAc6XRhPU4lBGPOYu15fXj59NZEN6_5Y4fsItwL6sBvBHvit27VrITcx_cUhvQJ2CdFQgehALYdCswgmH3KsuDdfKwugFxMtLvovRXLF19FybmQZGQvdhzMUG-51HH_zQ.js",
+      "byte_range": {
+        "start": 2254495,
+        "end": 2255624,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersNewsletterStatusResponsePayloadMixin": {
+      "module_sha256": "a8097fb447f9f288f035fcc37e016ac3ada46c7c0a809b07ba4310dd7847a3b6",
+      "module_bytes": 990,
+      "public_bundle_sha256": "7a7b2db4d739f3996851a7df53c61cbc2a8a0530b2fe83daae4ab2ff759f6548",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4ifhq4/y6/l/en_US-j/0UPLazx7iRRdLuwiFvu3ajtMeU9mUqQk_wEJ-ROiKDdMRRs9zFt3thDsw3QayN-rEbGnnnuL5rHlgC0QtXjpYuLyKs7Ge3p72Y8U179Dahh_o7DhesS6E0AmUivM4eymOZBgyfxoD11xWcSP17R_g10IG7Qt4SYwnTrWJRbmtPZeCQ-8nH-1-r1hAqkm3Y8B91Tz4dDD3JAc6XRhPU4lBGPOYu15fXj59NZEN6_5Y4fsItwL6sBvBHvit27VrITcx_cUhvQJ2CdFQgehALYdCswgmH3KsuDdfKwugFxMtLvovRXLF19FybmQZGQvdhzMUG-51HH_zQ.js",
+      "byte_range": {
+        "start": 2253505,
+        "end": 2254495,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterSendMessageJob": {
+      "module_sha256": "9cf12033d7573e418261549bf317fe246798570d16befe6b0ab866350824f560",
+      "module_bytes": 7140,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2453236,
+        "end": 2460376,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterSendMessageQueryJob": {
+      "module_sha256": "4685969d6ffc1db9c1b239bbc97d69703220f73a87899095272d7d9d79644081",
+      "module_bytes": 5510,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 2447726,
+        "end": 2453236,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishNewsletterQuestionPublishMixin": {
+      "module_sha256": "d52970c802c4e1c1761ea84deb3f9b0865e56a9cc1c98c616fe095f36126b9c9",
+      "module_bytes": 805,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 192991,
+        "end": 193796,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishNewsletterQuestionResponsePublishMixin": {
+      "module_sha256": "4145802ebf6740026d10e97f929ecf925b6f331d691a9ded4f787a7f48b1a718",
+      "module_bytes": 730,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 179351,
+        "end": 180081,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishNewsletterQuestionReplyPublishMixin": {
+      "module_sha256": "86205406e74909e0d93295d381431dfc183cd456222ea3b7ed404e3524615d3b",
+      "module_bytes": 960,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 194260,
+        "end": 195220,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishQuestionTypeQuestionMixin": {
+      "module_sha256": "b21ebe66de789ab863248a2e34ef22ffff71b59b2ac7c7a086249c7746493662",
+      "module_bytes": 336,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 192655,
+        "end": 192991,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishQuestionTypeResponseMixin": {
+      "module_sha256": "d4a76735808183e18088948d79725c5d4e0f73b904380e3808434ac43aae12f0",
+      "module_bytes": 336,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 179015,
+        "end": 179351,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishQuestionTypeReplyMixin": {
+      "module_sha256": "48b09a1a44c335c472b664ca95f1e47016240a0bb17de3095fdb4aac1d643f24",
+      "module_bytes": 327,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 187264,
+        "end": 187591,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishParentAndResponseServerIDMixin": {
+      "module_sha256": "6cbb94b66422e10192b5ad9f0c2c639f587af4cb1ecf4bf97c34d866ec887c1a",
+      "module_bytes": 464,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 193796,
+        "end": 194260,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterQuestionResponseStateChangeNotificationHandler": {
+      "module_sha256": "5f523b0215c92f0b57772a64dfa66430ea44f3aa6e4554adaa89971f1fa29809",
+      "module_bytes": 1179,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4149178,
+        "end": 4150357,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishNewsletterPollResultSnapshotMixin": {
+      "module_sha256": "95633817b2ba6fb80a6c4a25b1e8938b67d5d025d1c105c6237b678c49a8cfff",
+      "module_bytes": 772,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 191235,
+        "end": 192007,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishContentTypePollResultSnapshotMixin": {
+      "module_sha256": "4a7ca17711564210b46eb0478b80436c3011b3c8fa22873f32cdfcc474c83240",
+      "module_bytes": 366,
+      "public_bundle_sha256": "ae81536923eba9f83f03891a2523fca6ace3179977ba0fe7e779d734e6202bf3",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iENn4/yU/l/en_US-j/S9zWqG1yTK7Pt07UVlUtCrsSlDJ0QAshBNw1HOrRSHFsUQ21KyPensuQp1sDjuF5SmuF7b8Wy6t6Dmx3k5U0rxBJT-AuBCH3JSv9wOG39rwPJYC_eT_kt-WFDOuB-q6QYhl2_DIjxa0l60WNP9da5at6xncKtz8dRBnPrv-3MS2LngLEXCrEeLHuYRqNDmRzvuTFbc.js",
+      "byte_range": {
+        "start": 3229591,
+        "end": 3229957,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishNewsletterQuizCreationMixin": {
+      "module_sha256": "62361b687e2053f01067595f434bcda3ca29781a2e1aa5bde0bcd9378f76df48",
+      "module_bytes": 744,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 195684,
+        "end": 196428,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishContentTypeQuizCreationMixin": {
+      "module_sha256": "61a6f84126ff67337da1d73502e93c846b7fc1765a670d4947406a8c186cf745",
+      "module_bytes": 464,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 195220,
+        "end": 195684,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxOutMessagePublishNewsletterMediaPublishMixin": {
+      "module_sha256": "8ac75f8fac5a19743510d0d4071bd3e8c79677683e87d80716e83536d6e25da9",
+      "module_bytes": 515,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 189976,
+        "end": 190491,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebHandleMexNotification": {
+      "module_sha256": "d7e73fc306dd64b99195fa10fdf9aea61e0eb5095a04b244fa94fe331b566a35",
+      "module_bytes": 10328,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4207548,
+        "end": 4217876,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterJoinHandler": {
+      "module_sha256": "fb4991eca4ec76cc6c2e6d17a3b67ccdd824b68ca534f2f26748e18a27d735e1",
+      "module_bytes": 3652,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4134253,
+        "end": 4137905,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterLeaveHandler": {
+      "module_sha256": "34e3d188f6582d654b696a4174c639e75be7b69e974010edd3ec6997774fc383",
+      "module_bytes": 1497,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4137905,
+        "end": 4139402,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterMetadataUpdateNotificationHandler": {
+      "module_sha256": "33e22d50e9b19f2b7e4aab0bd02efe374e9dd17704940a9854517a8a9f5c353d",
+      "module_bytes": 1324,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4140541,
+        "end": 4141865,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterUserSettingChangeHandler": {
+      "module_sha256": "9d549578373906898c116b45588d350939af80fb674b55077cfe82186276367d",
+      "module_bytes": 1732,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4155976,
+        "end": 4157708,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterStateChangeHandler": {
+      "module_sha256": "3d2b7f822eab44500cc3e74bc6c763cb9ef2f2f81f563247ca0c7bc2fe207943",
+      "module_bytes": 3640,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4152336,
+        "end": 4155976,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterRoleChangeNotificationHandler": {
+      "module_sha256": "315e11b29f04bb62530f7246bc11c5b15c62500748b6b5db6bc71f5210a1be73",
+      "module_bytes": 1979,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4150357,
+        "end": 4152336,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterOwnerNotificationHandler": {
+      "module_sha256": "cd7ab9c4987c248bdd0a3cfafe8e6ecb18a7917acd7cd8c827a02d6f1f3d360a",
+      "module_bytes": 3567,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4143483,
+        "end": 4147050,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterAdminNotificationHandler": {
+      "module_sha256": "0b83a81d8bfd0d5b84fa369c2603598de1c755c21041470546fa73f426ace4a8",
+      "module_bytes": 4414,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4128328,
+        "end": 4132742,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterAdminInviteRevokeNotificationHandler": {
+      "module_sha256": "336121f64e65c676d3c3e2cb28a4605292833aefb9f2b4d947635d27dd60c421",
+      "module_bytes": 3011,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4121961,
+        "end": 4124972,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterPaidPartnershipNotificationHandler": {
+      "module_sha256": "f79253ade73f4ba44defe2bbc7e62b3cbe7c71c0e79088f380973f2bcef1db55",
+      "module_bytes": 1801,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4147050,
+        "end": 4148851,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebMexNewsletterAIContentNotificationHandler": {
+      "module_sha256": "e060c021802e1439d3f00c16e8091a8f9b11b22102e5d5e57cc94c5e33817dda",
+      "module_bytes": 1909,
+      "public_bundle_sha256": "ea48211cf1718ea13129f9073ab7c995a301113292eee8ad21e8033f6c0a4057",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iAN34/yC/l/en_US-j/oHsnf3BCRc0YrbpdbSKItI66HaMOctpg0sSY9XmSHBFoBT36MMe_hUWIUDWojnfE83vAghqYsgtkJjw2FWSGjbxPw-5D0fo87VexS5fZsrfXkJFkMFkFbkgSdTPJhFQf-t22LhMRMqs-knqsSxt38VFUYCJAQ3gV1KT2R_iY2ir6Gzij8RriikzpInCaxB4sKaTy9Uj8MktTLDDSdr06zeoqAvkg.js",
+      "byte_range": {
+        "start": 4120052,
+        "end": 4121961,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersNewsletterReactionsMixin": {
+      "module_sha256": "9d1efce41ef7890372b6299fcc8a8cf7c6b4d18924c29a1a3ca2be2fbbf2936d",
+      "module_bytes": 835,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 93527,
+        "end": 94362,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInNewslettersNewsletterPollVotesMixin": {
+      "module_sha256": "6593df9ec2db61afde4779a4ae885206ee5137480c285e71aa8918d30e7f5614",
+      "module_bytes": 821,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 92706,
+        "end": 93527,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WASmaxInMessageDeliverNewsletterPollVoteMixin": {
+      "module_sha256": "09916b74a2b05c8abe436a7c9f55a24b4e9715a7124c307cca4a843aa641e1ec",
+      "module_bytes": 919,
+      "public_bundle_sha256": "ae81536923eba9f83f03891a2523fca6ace3179977ba0fe7e779d734e6202bf3",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iENn4/yU/l/en_US-j/S9zWqG1yTK7Pt07UVlUtCrsSlDJ0QAshBNw1HOrRSHFsUQ21KyPensuQp1sDjuF5SmuF7b8Wy6t6Dmx3k5U0rxBJT-AuBCH3JSv9wOG39rwPJYC_eT_kt-WFDOuB-q6QYhl2_DIjxa0l60WNP9da5at6xncKtz8dRBnPrv-3MS2LngLEXCrEeLHuYRqNDmRzvuTFbc.js",
+      "byte_range": {
+        "start": 1824709,
+        "end": 1825628,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebNewsletterAddAiContentLabelJob": {
+      "module_sha256": "fb879e0825b70d8371a1561e00a2726dea24dc0f581a7d3cc8e74913618c96cf",
+      "module_bytes": 1867,
+      "public_bundle_sha256": "1010b2557ea3eb535dd455b90c24ddecbba13196be7e4e65719d91c64764cf2f",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iL3F4/yM/l/en_US-j/qYY6PMRKFA-.js",
+      "byte_range": {
+        "start": 1676333,
+        "end": 1678200,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebQuestionsGenerateQuestionResponseMessageProto": {
+      "module_sha256": "e2343b4be7d1401d3b71ff3c0e2638894a23bb46ef51d1faea8d6cc2cb23fd61",
+      "module_bytes": 241,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 1009823,
+        "end": 1010064,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebQuestionsProtoUtils": {
+      "module_sha256": "862e1628a0d38a498d45415aa53a4993cd463de4ffc2e9310def7fd48cc0fc14",
+      "module_bytes": 3174,
+      "public_bundle_sha256": "eea816e26bf3e5718574e1b2d547a8b29f3794e1498879e264be5feae0fed05e",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4/y2/r/0x125YhtgZ1S9zWqG1yTK7Qp1sDjuF5SmT-AuBCH3JSvNP9da5at6xnv-3MS2LngLEyPiijlEH8daP17R_g10IG7RbmtPZeCQ-8AjAOrFD_pFvqPQ_K7BJvZrwyy1OJvCTTXrSl2CXOXS4z_23LEffI1_XLzAWDo_lWkSowE4uaUmpoaR-vjbVqw8VsZCHZTz4hagG3hpaoOUJoGRh4v13xIpzOynYJ7RuO74fKt5zGfVPbdsQUQ8uarnQi2NO2WMSUVsbCdhC4sM8pHXEUUHs8kc2wW6vm-5IQ-8Bk2SBy57olT7s-X.js",
+      "byte_range": {
+        "start": 1018116,
+        "end": 1021290,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebE2EProtoUtils": {
+      "module_sha256": "3c7ae8ecd8b6a7e84aad20fa47424aa5361063126982a8b3f07728f20d3a2d96",
+      "module_bytes": 16829,
+      "public_bundle_sha256": "eea816e26bf3e5718574e1b2d547a8b29f3794e1498879e264be5feae0fed05e",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4/y2/r/0x125YhtgZ1S9zWqG1yTK7Qp1sDjuF5SmT-AuBCH3JSvNP9da5at6xnv-3MS2LngLEyPiijlEH8daP17R_g10IG7RbmtPZeCQ-8AjAOrFD_pFvqPQ_K7BJvZrwyy1OJvCTTXrSl2CXOXS4z_23LEffI1_XLzAWDo_lWkSowE4uaUmpoaR-vjbVqw8VsZCHZTz4hagG3hpaoOUJoGRh4v13xIpzOynYJ7RuO74fKt5zGfVPbdsQUQ8uarnQi2NO2WMSUVsbCdhC4sM8pHXEUUHs8kc2wW6vm-5IQ-8Bk2SBy57olT7s-X.js",
+      "byte_range": {
+        "start": 3590052,
+        "end": 3606881,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    },
+    "WAWebE2EProtoGenerator": {
+      "module_sha256": "c515361bf2b5bd30b1663d2d0aada0d6970b0e721b005ab6527b77846b125297",
+      "module_bytes": 20902,
+      "public_bundle_sha256": "682291eb369ec0664c2962cf48669ed901977548bd4f72b35133961d1f68f9ce",
+      "public_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yc/l/en_US-j/suZo8h_NqwG.js",
+      "byte_range": {
+        "start": 1033019,
+        "end": 1053921,
+        "semantics": "half-open-UTF8-bytes"
+      }
+    }
+  },
+  "facts": [
+    {
+      "key": "update_reactions_nested_settings",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "request": {
+          "newsletter_id": "channel JID",
+          "updates": {
+            "settings": {
+              "reaction_codes": {
+                "value": "ALL|BASIC|NONE|BLOCKLIST"
+              }
+            }
+          }
+        },
+        "existing_sdk_bug": "updates.reaction_codes was outside required settings object"
+      },
+      "source_modules": [
+        "WAWebMexUpdateNewsletterJob",
+        "WAWebMexNewsletterUtils"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "picture_removal",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "observed_sender_value": "empty string for explicitly edited picture without bytes",
+        "null_server_semantics_observed": false
+      },
+      "source_modules": [
+        "WAWebNewsletterMetadataQueryJob"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "pin_unpin",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "variables": {
+          "newsletter_id": "channel JID",
+          "input": {
+            "message_ids": [
+              "decimal server ID"
+            ]
+          }
+        },
+        "response_roots": [
+          "xwa2_newsletter_pin_messages",
+          "xwa2_newsletter_unpin_messages"
+        ],
+        "snapshot_path": "thread_metadata.pinned_messages",
+        "snapshot_item": {
+          "message_id": "decimal server ID",
+          "expiry_ts": "Unix seconds"
+        },
+        "doc_ids": {
+          "pin": "27165709459706559",
+          "unpin": "28007176042216937"
+        }
+      },
+      "source_modules": [
+        "WAWebMexNewsletterPinMessagesJob",
+        "WAWebMexNewsletterUnpinMessagesJob",
+        "WAWebMexNewsletterPinMessagesJobMutation.graphql",
+        "WAWebMexNewsletterUnpinMessagesJobMutation.graphql",
+        "WAWebNewsletterPinMessageAction",
+        "WAWebMexNewsletterParseUtils"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "labels",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "variables": {
+          "newsletter_id": "channel JID",
+          "server_id": "decimal server ID",
+          "message_type": "MESSAGE|STATUS"
+        },
+        "paid": {
+          "doc_id": "26102375079404865",
+          "response_root": "xwa2_newsletter_label_paid_partnership"
+        },
+        "ai": {
+          "doc_id": "27909718265289596",
+          "response_root": "xwa2_newsletter_label_ai_content"
+        },
+        "success_projection": "response root contains non-null id"
+      },
+      "source_modules": [
+        "WAWebMexNewsletterAddPaidPartnershipLabelJob",
+        "WAWebMexNewsletterAddPaidPartnershipLabelJobMutation.graphql",
+        "WAWebMexNewsletterLabelAiContentJob",
+        "WAWebMexNewsletterLabelAiContentJobMutation.graphql",
+        "WAWebCommonNewsletterEnums"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "poll_vote_clear",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "empty_votes_allowed": true,
+        "meaning": "REMOVE_VOTE",
+        "vote_count_bounds": [
+          0,
+          1000
+        ],
+        "vote_encoding": "native option hash bytes in vote child"
+      },
+      "source_modules": [
+        "WAWebNewsletterSendVoteMsgAction",
+        "WASmaxOutMessagePublishNewsletterPollVoteMixin"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "directory_enums",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "views": [
+          "RECOMMENDED",
+          "NEW",
+          "POPULAR",
+          "FEATURED",
+          "TRENDING"
+        ],
+        "categories": [
+          "BUSINESS",
+          "ENTERTAINMENT",
+          "LIFESTYLE",
+          "NEWS",
+          "ORGANIZATIONS",
+          "PEOPLE",
+          "SPORTS",
+          "SPECIAL_EVENTS",
+          "SPECIAL_EVENTS_2",
+          "SPECIAL_EVENTS_3",
+          "SPECIAL_EVENTS_4",
+          "SPECIAL_EVENTS_5"
+        ],
+        "category_integer_UI_values_are_not_wire_values": true
+      },
+      "source_modules": [
+        "WAWebMexFetchNewsletterDirectoryListJob",
+        "WAWebNewsletterDirectoryFilterUtils",
+        "WAWebNewsletterDirectoryCategoryUtils"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "view_roles",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "mex_values": [
+          "OWNER",
+          "ADMIN",
+          "SUBSCRIBER",
+          "GUEST"
+        ],
+        "XML_view_role": "custom string; caller controls exact value"
+      },
+      "source_modules": [
+        "WAWebNewsletterHandleMexGetNewsletter",
+        "WASmaxOutNewslettersQueryNewsletterJIDParamsMixin"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "user_settings",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "input": {
+          "newsletter_id": "channel JID",
+          "type": "MUTE_ADMIN_ACTIVITY|MUTE_FOLLOWER_ACTIVITY",
+          "value": "ON|OFF"
+        }
+      },
+      "source_modules": [
+        "WAWebNewsletterUpdateUserSettingJob",
+        "WAWebMexUpdateNewsletterUserSetting"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "history_and_updates",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "history_response_path": "iq/messages/message",
+        "updates_response_path": "iq/message_updates/messages/message",
+        "messages_attributes": {
+          "jid": "optional newsletter JID",
+          "t": "optional non-negative timestamp"
+        },
+        "message_attributes": {
+          "id": "optional client stanza ID",
+          "server_id": "required integer",
+          "t": "optional timestamp",
+          "is_sender": "optional true"
+        },
+        "content": "plaintext protobuf plus optional addons"
+      },
+      "source_modules": [
+        "WASmaxInNewslettersGetNewsletterMessagesResponseSuccess",
+        "WASmaxInNewslettersGetNewsletterMessageUpdatesResponseSuccess",
+        "WASmaxInNewslettersNewsletterMessageResponsePayloadMixin",
+        "WASmaxInNewslettersNewsletterMessageHistoryMixin"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "my_addons",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "iq": {
+          "to": "s.whatsapp.net",
+          "xmlns": "newsletter",
+          "type": "get"
+        },
+        "child": {
+          "tag": "my_addons",
+          "attributes": {
+            "limit": "integer",
+            "jid": "optional newsletter JID"
+          }
+        },
+        "response_path": "iq/my_addons/messages[@jid]/message[@server_id]"
+      },
+      "source_modules": [
+        "WASmaxOutNewslettersMyAddOnsRequest",
+        "WAWebGetMyAddOnsRPC",
+        "WASmaxInNewslettersMyAddOnsResponseSuccess"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "channel_status_history",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "iq": {
+          "to": "s.whatsapp.net",
+          "xmlns": "newsletter",
+          "type": "get"
+        },
+        "child": {
+          "tag": "statuses",
+          "attributes": {
+            "type": "jid",
+            "jid": "channel JID",
+            "count": "1..100",
+            "view_role": "optional",
+            "before": "optional exclusive with after",
+            "after": "optional exclusive with before"
+          }
+        },
+        "response_path": "iq/statuses/status",
+        "publishing_verified": false
+      },
+      "source_modules": [
+        "WAWebNewsletterGetStatusesQuery",
+        "WASmaxOutNewslettersNewsletterStatusRequestIQPayloadMixin",
+        "WASmaxOutNewslettersNewsletterStatusRequestPayloadMixin",
+        "WASmaxOutNewslettersQueryNewsletterJIDParamsMixin",
+        "WASmaxOutNewslettersStatusAfterMixinMixin",
+        "WASmaxOutNewslettersStatusBeforeMixinMixin",
+        "WASmaxInNewslettersGetNewsletterStatusesResponseSuccess",
+        "WASmaxInNewslettersNewsletterStatusResponsePayloadMixin"
+      ],
+      "limitations": [
+        "Read operation only. A channel status producer pipeline was not present in selected source."
+      ]
+    },
+    {
+      "key": "questions_and_responses",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "question": {
+          "envelope_meta": {
+            "questiontype": "question"
+          },
+          "protobuf_wrapper": "questionMessage.message",
+          "inner_context_info": {
+            "isQuestion": true
+          }
+        },
+        "response": {
+          "envelope_attributes": {
+            "id": "new response client stanza ID",
+            "server_id": "parent question server ID",
+            "type": "text"
+          },
+          "envelope_meta": {
+            "questiontype": "response"
+          },
+          "protobuf": {
+            "questionResponseMessage": {
+              "key": {
+                "id": "new response client stanza ID",
+                "remoteJid": "channel JID",
+                "fromMe": true
+              },
+              "text": "response text"
+            }
+          }
+        },
+        "admin_reshare_reply": {
+          "envelope_meta": {
+            "questiontype": "reply",
+            "parent_server_id": "question server ID",
+            "response_server_id": "response server ID"
+          },
+          "protobuf_wrapper": "questionReplyMessage.message",
+          "inner_context_info": {
+            "questionReplyQuotedMessage": {
+              "quotedQuestion": "full Message protobuf with question context",
+              "quotedResponse": "full questionResponseMessage Message protobuf",
+              "serverQuestionId": "question server ID"
+            }
+          }
+        },
+        "registration_dependency_observed": false,
+        "mutation_question_response_state_doc_id": "24636260219323456",
+        "mutation_request_shape_observed": false,
+        "notification_response_states": [
+          "HIDE",
+          "STAR",
+          "UNSTAR"
+        ]
+      },
+      "source_modules": [
+        "WAWebNewsletterSendMessageJob",
+        "WAWebNewsletterSendMessageQueryJob",
+        "WASmaxOutMessagePublishNewsletterQuestionPublishMixin",
+        "WASmaxOutMessagePublishNewsletterQuestionResponsePublishMixin",
+        "WASmaxOutMessagePublishNewsletterQuestionReplyPublishMixin",
+        "WASmaxOutMessagePublishQuestionTypeQuestionMixin",
+        "WASmaxOutMessagePublishQuestionTypeResponseMixin",
+        "WASmaxOutMessagePublishQuestionTypeReplyMixin",
+        "WASmaxOutMessagePublishParentAndResponseServerIDMixin",
+        "WAWebMexNewsletterQuestionResponseStateChangeNotificationHandler",
+        "WAWebQuestionsGenerateQuestionResponseMessageProto",
+        "WAWebQuestionsProtoUtils",
+        "WAWebE2EProtoUtils",
+        "WAWebE2EProtoGenerator"
+      ],
+      "limitations": [
+        "Static sender formats, not a live feature availability test. State update request shape not observed; notification shape is not a substitute for mutation input.",
+        "Meta alone is insufficient for a compatible question or admin reply; the future-proof wrappers and context fields above are part of the observed generator/parser path."
+      ]
+    },
+    {
+      "key": "poll_snapshot_and_quiz",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "snapshot": {
+          "message_type": "poll",
+          "meta": {
+            "polltype": "result_snapshot"
+          },
+          "payload": "plaintext protobuf poll-result snapshot"
+        },
+        "quiz": {
+          "smax_message_type": "poll",
+          "smax_meta": {
+            "polltype": "quiz_creation",
+            "contenttype": "optional"
+          },
+          "producer_branch_found_in_current_query_job": false
+        }
+      },
+      "source_modules": [
+        "WAWebNewsletterSendMessageQueryJob",
+        "WASmaxOutMessagePublishNewsletterPollResultSnapshotMixin",
+        "WASmaxOutMessagePublishContentTypePollResultSnapshotMixin",
+        "WASmaxOutMessagePublishNewsletterQuizCreationMixin",
+        "WASmaxOutMessagePublishContentTypeQuizCreationMixin"
+      ],
+      "limitations": [
+        "Quiz envelope schema exists, but producer/protobuf construction and server availability were not established."
+      ]
+    },
+    {
+      "key": "media_wire_types",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "observed": [
+          "audio",
+          "document",
+          "gif",
+          "image",
+          "ptt",
+          "sticker",
+          "url",
+          "vcard",
+          "video",
+          "sticker_pack"
+        ],
+        "media_id": "optional public message attribute"
+      },
+      "source_modules": [
+        "WAWebNewsletterSendMessageJob",
+        "WASmaxOutMessagePublishNewsletterMediaPublishMixin"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "notification_dispatch",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "envelope": "notification[@type=mex]/update[@op_name] contains JSON {data:{root:payload}}",
+        "operations": {
+          "NotificationNewsletterJoin": {
+            "root": "xwa2_notify_newsletter_on_join",
+            "fields": [
+              "id",
+              "thread_metadata",
+              "viewer_metadata",
+              "state"
+            ]
+          },
+          "NotificationNewsletterLeave": {
+            "root": "xwa2_notify_newsletter_on_leave",
+            "fields": [
+              "id"
+            ]
+          },
+          "NotificationNewsletterUpdate": {
+            "root": "xwa2_notify_newsletter_on_metadata_update",
+            "fields": [
+              "id",
+              "thread_metadata",
+              "viewer_metadata",
+              "state"
+            ]
+          },
+          "NotificationNewsletterUserSettingChange": {
+            "root": "xwa2_notify_newsletter_on_user_setting_change",
+            "fields": [
+              "id",
+              "setting.type",
+              "setting.value"
+            ]
+          },
+          "NotificationNewsletterStateChange": {
+            "root": "xwa2_notify_newsletter_on_state_change",
+            "fields": [
+              "id",
+              "is_requestor",
+              "state.type"
+            ],
+            "states": [
+              "ACTIVE",
+              "SUSPENDED",
+              "GEOSUSPENDED",
+              "DELETED"
+            ]
+          },
+          "NotificationNewsletterAdminPromote": {
+            "root": "xwa2_notify_newsletter_admin_promote",
+            "fields": [
+              "id",
+              "user.id",
+              "user_new_role"
+            ]
+          },
+          "NotificationNewsletterAdminDemote": {
+            "root": "xwa2_notify_newsletter_admin_demote",
+            "fields": [
+              "id",
+              "user.id",
+              "user_new_role"
+            ]
+          },
+          "NotificationNewsletterOwnerUpdate": {
+            "root": "xwa2_notify_newsletter_owner_on_metadata_update",
+            "fields": [
+              "id",
+              "actor.id",
+              "thread_metadata"
+            ]
+          },
+          "NotificationNewsletterAdminMetadataUpdate": {
+            "root": "xwa2_notify_newsletter_on_admin_metadata_update",
+            "fields": [
+              "id",
+              "admin_settings",
+              "thread_metadata",
+              "messages.edges[].node.server_id",
+              "messages.edges[].node.message_delivery_update.issue.code"
+            ]
+          },
+          "NotificationNewsletterAdminInviteRevoke": {
+            "root": "xwa2_notify_newsletter_admin_invite_revoke",
+            "fields": [
+              "id",
+              "actor.id",
+              "user.id"
+            ]
+          },
+          "NotificationNewsletterPaidPartnershipUpdate": {
+            "root": "xwa2_notify_newsletter_paid_partnership_update",
+            "fields": [
+              "newsletter_id",
+              "server_id",
+              "message_type"
+            ]
+          },
+          "NotificationNewsletterAIContentUpdate": {
+            "root": "xwa2_notify_newsletter_ai_content_update",
+            "fields": [
+              "newsletter_id",
+              "server_id",
+              "message_type"
+            ]
+          },
+          "NewsletterResponseStateUpdate": {
+            "root": "xwa2_notify_newsletter_response_state_update",
+            "fields": [
+              "server_id",
+              "response_server_id",
+              "response_state"
+            ]
+          }
+        },
+        "channel_id_normalization": "Public handler calls toNewsletterJid; support valid newsletter JID or digits with newsletter suffix, reject unrelated addresses.",
+        "pin_notification": "No separate pin op observed; pinned snapshot is a metadata field when present.",
+        "partial_updates": "Merge only present fields; do not interpret absent thread_metadata/settings as deletion.",
+        "state_update_root_without_channel_id": "NewsletterResponseStateUpdate handler observed server and response ids, not channel id; do not invent one."
+      },
+      "source_modules": [
+        "WAWebHandleMexNotification",
+        "WAWebMexNewsletterJoinHandler",
+        "WAWebMexNewsletterLeaveHandler",
+        "WAWebMexNewsletterMetadataUpdateNotificationHandler",
+        "WAWebMexNewsletterUserSettingChangeHandler",
+        "WAWebMexNewsletterStateChangeHandler",
+        "WAWebMexNewsletterRoleChangeNotificationHandler",
+        "WAWebMexNewsletterOwnerNotificationHandler",
+        "WAWebMexNewsletterAdminNotificationHandler",
+        "WAWebMexNewsletterAdminInviteRevokeNotificationHandler",
+        "WAWebMexNewsletterPaidPartnershipNotificationHandler",
+        "WAWebMexNewsletterAIContentNotificationHandler",
+        "WAWebMexNewsletterQuestionResponseStateChangeNotificationHandler"
+      ],
+      "limitations": []
+    },
+    {
+      "key": "addon_snapshot_counts",
+      "evidence_type": "static-public-source-observation",
+      "observation": {
+        "aggregate_reactions": {
+          "container": "reactions",
+          "entries": "0..1000 reaction children",
+          "entry_count_minimum": 1,
+          "empty_container": "empty snapshot; must clear previous aggregate"
+        },
+        "aggregate_poll_votes": {
+          "container": "votes",
+          "entries": "0..1000 vote children",
+          "entry_count_minimum": 1,
+          "empty_container": "empty aggregate snapshot"
+        },
+        "individual_poll_vote": {
+          "count_attribute": "absent",
+          "entries": "0..1000 native 32-byte hash children",
+          "empty_container": "clear individual vote"
+        },
+        "status_history_namespace": "Public app uses InternalIdPrefix.NewsletterStatus independently from normal post prefix."
+      },
+      "source_modules": [
+        "WASmaxInNewslettersNewsletterReactionsMixin",
+        "WASmaxInNewslettersNewsletterPollVotesMixin",
+        "WASmaxInMessageDeliverNewsletterPollVoteMixin",
+        "WAWebMexNewsletterPaidPartnershipNotificationHandler",
+        "WAWebNewsletterAddAiContentLabelJob"
+      ],
+      "limitations": [
+        "A count=0 reaction/vote aggregate entry is not supported by the inspected public schema. Empty containers are supported."
+      ]
+    }
+  ],
+  "doc_id_comparison": {
+    "observed_count": 28,
+    "mismatches": [],
+    "operations": [
+      {
+        "module": "WAWebMexAcceptNewsletterAdminInviteJobMutation.graphql",
+        "op": "AcceptNewsletterAdminInvite",
+        "observed_doc_id": "9580828702035549",
+        "manifest_doc_id": "9580828702035549",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexCreateNewsletterAdminInviteJobMutation.graphql",
+        "op": "CreateNewsletterAdminInvite",
+        "observed_doc_id": "9387141988078609",
+        "manifest_doc_id": "9387141988078609",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexCreateNewsletterJobMutation.graphql",
+        "op": "CreateNewsletter",
+        "observed_doc_id": "25149874324715067",
+        "manifest_doc_id": "25149874324715067",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexDeleteNewsletterJobMutation.graphql",
+        "op": "DeleteNewsletter",
+        "observed_doc_id": "30062808666639665",
+        "manifest_doc_id": "30062808666639665",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchAllNewslettersMetadataJobQuery.graphql",
+        "op": "FetchAllNewslettersMetadata",
+        "observed_doc_id": "25399611239711790",
+        "manifest_doc_id": "25399611239711790",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterAdminCapabilitiesJobQuery.graphql",
+        "op": "FetchNewsletterAdminCapabilities",
+        "observed_doc_id": "9801384413216421",
+        "manifest_doc_id": "9801384413216421",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterAdminInfoJobQuery.graphql",
+        "op": "FetchNewsletterAdminInfo",
+        "observed_doc_id": "26278439461859188",
+        "manifest_doc_id": "26278439461859188",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterDehydratedJobQuery.graphql",
+        "op": "FetchNewsletterDehydrated",
+        "observed_doc_id": "26944199458535748",
+        "manifest_doc_id": "26944199458535748",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterDirectoryCategoriesPreviewJobQuery.graphql",
+        "op": "FetchNewsletterDirectoryCategoriesPreview",
+        "observed_doc_id": "35266481849605779",
+        "manifest_doc_id": "35266481849605779",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterDirectoryListJobQuery.graphql",
+        "op": "FetchNewsletterDirectoryList",
+        "observed_doc_id": "26125047313831973",
+        "manifest_doc_id": "26125047313831973",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterDirectorySearchResultsJobQuery.graphql",
+        "op": "FetchNewsletterDirectorySearchResults",
+        "observed_doc_id": "26301059626252132",
+        "manifest_doc_id": "26301059626252132",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterEnforcementsJobQuery.graphql",
+        "op": "FetchNewsletterEnforcements",
+        "observed_doc_id": "27835373536068060",
+        "manifest_doc_id": "27835373536068060",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterIsDomainPreviewableJobQuery.graphql",
+        "op": "FetchNewsletterIsDomainPreviewable",
+        "observed_doc_id": "9849510985088294",
+        "manifest_doc_id": "9849510985088294",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterJobQuery.graphql",
+        "op": "FetchNewsletter",
+        "observed_doc_id": "27456920720571478",
+        "manifest_doc_id": "27456920720571478",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterMessageReactionSenderListJobQuery.graphql",
+        "op": "FetchNewsletterMessageReactionSenderList",
+        "observed_doc_id": "29575462448733991",
+        "manifest_doc_id": "29575462448733991",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchNewsletterPollVotersJobQuery.graphql",
+        "op": "FetchNewsletterPollVoters",
+        "observed_doc_id": "9407762219322536",
+        "manifest_doc_id": "9407762219322536",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchRecommendedNewslettersJobQuery.graphql",
+        "op": "FetchRecommendedNewsletters",
+        "observed_doc_id": "25806748772361516",
+        "manifest_doc_id": "25806748772361516",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexFetchSimilarNewslettersJobQuery.graphql",
+        "op": "FetchSimilarNewsletters",
+        "observed_doc_id": "26217043484590756",
+        "manifest_doc_id": "26217043484590756",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexJoinNewsletterJobMutation.graphql",
+        "op": "JoinNewsletter",
+        "observed_doc_id": "24404358912487870",
+        "manifest_doc_id": "24404358912487870",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexLeaveNewsletterJobMutation.graphql",
+        "op": "LeaveNewsletter",
+        "observed_doc_id": "9767147403369991",
+        "manifest_doc_id": "9767147403369991",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexLogNewsletterExposuresJobMutation.graphql",
+        "op": "LogNewsletterExposures",
+        "observed_doc_id": "25260800823586918",
+        "manifest_doc_id": "25260800823586918",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexNewsletterAddPaidPartnershipLabelJobMutation.graphql",
+        "op": "NewsletterAddPaidPartnershipLabel",
+        "observed_doc_id": "26102375079404865",
+        "manifest_doc_id": "26102375079404865",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexNewsletterLabelAiContentJobMutation.graphql",
+        "op": "NewsletterLabelAiContent",
+        "observed_doc_id": "27909718265289596",
+        "manifest_doc_id": "27909718265289596",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexNewsletterPinMessagesJobMutation.graphql",
+        "op": "NewsletterPinMessages",
+        "observed_doc_id": "27165709459706559",
+        "manifest_doc_id": "27165709459706559",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexNewsletterUnpinMessagesJobMutation.graphql",
+        "op": "NewsletterUnpinMessages",
+        "observed_doc_id": "28007176042216937",
+        "manifest_doc_id": "28007176042216937",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexRevokeNewsletterAdminInviteJobMutation.graphql",
+        "op": "RevokeNewsletterAdminInvite",
+        "observed_doc_id": "9656078347839416",
+        "manifest_doc_id": "9656078347839416",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexUpdateNewsletterJobMutation.graphql",
+        "op": "UpdateNewsletter",
+        "observed_doc_id": "24250201037901610",
+        "manifest_doc_id": "24250201037901610",
+        "matches": true
+      },
+      {
+        "module": "WAWebMexUpdateNewsletterUserSettingJobMutation.graphql",
+        "op": "UpdateNewsletterUserSetting",
+        "observed_doc_id": "31938993655691868",
+        "manifest_doc_id": "31938993655691868",
+        "matches": true
+      }
+    ]
+  },
+  "manifest_change": {
+    "path": "src/Service/mex-operations.json",
+    "before_sha256": "faf96d0d35d9b5b9c495c4645463819f45a5bcd17da441e7526d61cad5efdf6c",
+    "after_sha256": "10d011f83d49040a08dbd6034d7d50e33febfdcbe4cc157f33f1873a8161df14",
+    "sole_added_operation": "NewsletterLabelAiContent",
+    "doc_id": "27909718265289596"
+  },
+  "remaining_unknowns": [
+    "No live WhatsApp channel CRUD/admin/send operations were executed. Runtime permissions, server feature flags, rate limits and current session capabilities are not established by static source.",
+    "Insights metrics request object shape, admin followers pagination and question response state mutation inputs were not delivered in the bounded public bootstrap; do not publish fabricated field requirements.",
+    "Channel status publishing and quiz producer/protobuf construction remain unverified, although read/status and Smax quiz envelopes were observed.",
+    "Scheduled updates capability and global scheduled-message notifications are present; no channel scheduling mutation request was established.",
+    "Successful websocket transport writes are not equivalent to a WhatsApp operation acknowledgement.",
+    "A bounded public bootstrap inventory does not establish the complete feature set of every app build or server deployment."
+  ],
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-15T11:16:32.428952+00:00",
+  "research_ledger_sha256": "07773d9558bfb199ebcfaf413abdc5f8b44e062c2fc72295dee795e915c3679f",
+  "response_identity_supplement": {
+    "sources": [
+      {
+        "module": "WASmaxInMessageDeliverResponseServerIDMixin",
+        "sha256": "ca51b3a2563f3336d9eec6984c4cacc09e2e91dd19d7ced4e2d7b9f68d87b4fb",
+        "source_url": "https://static.whatsapp.net/rsrc.php/v4iENn4/yU/l/en_US-j/S9zWqG1yTK7Pt07UVlUtCrsSlDJ0QAshBNw1HOrRSHFsUQ21KyPensuQp1sDjuF5SmuF7b8Wy6t6Dmx3k5U0rxBJT-AuBCH3JSv9wOG39rwPJYC_eT_kt-WFDOuB-q6QYhl2_DIjxa0l60WNP9da5at6xncKtz8dRBnPrv-3MS2LngLEXCrEeLHuYRqNDmRzvuTFbc.js",
+        "bundle_sha256": "ae81536923eba9f83f03891a2523fca6ace3179977ba0fe7e779d734e6202bf3",
+        "start": 1827490,
+        "end": 1827965
+      }
+    ],
+    "ack_attribute": "response_server_id",
+    "incoming_location": "meta.attrs.response_server_id",
+    "type": "opaque string; separate from numeric question server ID"
+  },
+  "implementation": {
+    "service": "WaClient::channels() and backward-compatible newsletter()",
+    "incoming": "newsletter_message, newsletter_update and typed channel_update; generic MEX event retained",
+    "persistence": "Session-scoped snapshots and post history; separate status/response identity namespaces; callback cursor replay; independent field clocks; revocation tombstones",
+    "outgoing": "Own post/edit/revocation projected only after correlated server ACK, without synthetic incoming events",
+    "public_media": "Native plaintext upload/download, original CDN descriptor and SHA256/length verification; no dummy Signal media keys",
+    "question_response": "Original wrappers/context/quotes and opaque responseServerId retained; question parent is not indexed as a response post",
+    "limits": "No real channel operation was executed. Native insights object fields, question response-state mutations, channel status publication, quiz producer and scheduling remain outside verified send contracts."
+  },
+  "checks": {
+    "sdk": {
+      "tests": 1852,
+      "assertions": 28785,
+      "result": "passed",
+      "log_sha256": "52fbea53f3684910266654af7ecbb0c64aa60d17fca2b72022ca5b0a3007c8f6"
+    },
+    "sdk_phpstan_level": 6,
+    "sdk_dbgp": "passed",
+    "execution_scope": "Local transports, durable queue reopen, synthetic public protobuf and HTTP/media fixtures; no linked-account channel changes"
+  },
+  "source_sha256": {
+    "src/Service/NewsletterService.php": "784a9edac2f6b4df780d034aaa323fa80a46bb7ca24be3f4c2727d658ddebc3c",
+    "src/Service/NewsletterInput.php": "b066af66160242d67e531029f899def94831d24ef6715c7dd4547b508e0e4bd2",
+    "src/Service/NewsletterInbox.php": "15a63991c9a3852865060f43f0def0f02dfe7e66f7c083a44ab3518bd7b0d54d",
+    "src/Service/IncomingEvents.php": "facd67d68def20c0d237ce62de9e49625d03f26e194e95f33986f4eaeb5b73c2",
+    "src/Service/Services.php": "0299691b7a0f15cdd869cebf3cf1790ecd8489c547fa31aceb4dcccf728aaf4f",
+    "src/Service/mex-operations.json": "10d011f83d49040a08dbd6034d7d50e33febfdcbe4cc157f33f1873a8161df14",
+    "src/History/ChannelStore.php": "347eeb305631faeb5e061fbd9d2aa7dfa3d9c371ce4fb192cdc431a4d596bf29",
+    "src/WaClient.php": "ed5062fd168e3bd517c0148465ceb8e5a1552fd19eb280e0909fff3c9741b6f4",
+    "src/Message/ContentDecoder.php": "720eb4ef0a35c2ddfdc0bcc12afde1e2df3ee7ca0dbffc8b60ab3edd52d904e8",
+    "src/Media/MediaTransfer.php": "c2040298a99d8a5f4c2b9ef10c7627526aee99354dd8ca6631495986efa0e939",
+    "tests/phpunit/NewsletterServiceTest.php": "d8ca55a16630a7b0cb18d859af3544e521792d930d9905ebbbf58fc2a3352208",
+    "tests/phpunit/NewsletterProtocolTest.php": "2db72caa440f66dab9062314313f9be6aca2ad3ac73543cb77e8ec3e0d48b6f6",
+    "tests/phpunit/NewsletterInboxTest.php": "303e58f11255d9a92da21e2d83f6043fe83d901c61a12e8a558c0630e9fc6c96",
+    "tests/phpunit/NewsletterLifecycleTest.php": "659842163981cb1d99f0c4b7d140d06b593c1e56b156669085af545ccebb9c08",
+    "tests/phpunit/ChannelStoreTest.php": "e53d69998b4cdf51dd6f2d5594ecd365e36cc9398a4c7090cf0d6dcaec6bef91",
+    "tests/phpunit/NewsletterMediaTest.php": "0cc5c0bce1277c0a5f10c93331cd6228bb0d2579fb42b0bc3356f8bc8728930d",
+    "tests/phpunit/ServiceProtocolTest.php": "1ecd87826906dee33acf440fa7f3c6aacd5f93b6c287f410c5ddc9ae49ad1257"
+  }
+}

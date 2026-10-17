@@ -1,0 +1,939 @@
+{
+  "schema_version": 1,
+  "title": "MVO PHP Business protocol evidence",
+  "checked_on": "2026-10-14",
+  "date_timezone": "America/Sao_Paulo",
+  "purpose": "Durable metadata for the protocol evidence used by the PHP SDK. This is not certification, server compatibility attestation, or a vendor guarantee.",
+  "publication": {
+    "contains_vendor_bundles": false,
+    "contains_extracted_source_code": false,
+    "contains_account_data": false,
+    "contains_credentials_or_access_tokens": false,
+    "contains_only_audit_metadata": true
+  },
+  "scope": {
+    "implementation_language": "PHP",
+    "node_runtime_required": false,
+    "reference_artifacts_executed": false,
+    "static_inspection_only": true,
+    "real_business_account_mutations_executed": false,
+    "current_server_acceptance_verified": false,
+    "all_current_business_features_claimed": false
+  },
+  "sources": [
+    {
+      "id": "wa-public-historical-2.2412.54",
+      "authority": "published WhatsApp browser artifact",
+      "source_url": "https://web.whatsapp.com/app.2c7f8dd150ae88037cde.js",
+      "version_label": "2.2412.54",
+      "version_label_origin": "Archived HTML dependency listing, historical 2024 protocol generation; not a negotiated version of a connected account.",
+      "raw_bytes": 6817844,
+      "raw_sha256": "f9bb5cfed4b227d7fab5f438a877a92f5944285875cc9e48e29be6afe9fb5183",
+      "raw_digest_recomputed_locally": true,
+      "modules": [
+        {
+          "module_id": "535190",
+          "offset": 1943348,
+          "length": 8567,
+          "offset_unit": "decoded Unicode code points",
+          "source_fragment_utf8_sha256": "14ed77a192ae38a14b811ded411f372f4e1cf0b17c42121f0f3f44c96ce194aa",
+          "inert_parser_wrapper_sha256": "612a6a9fe999311fb401117e9340471ef78fb6e7de3687e4b039d3d26bdceac1",
+          "fragment_verified_inside_wrapper": true
+        },
+        {
+          "module_id": "761849",
+          "offset": 1991411,
+          "length": 3452,
+          "offset_unit": "decoded Unicode code points",
+          "source_fragment_utf8_sha256": "7217197e9bf8a628c8dfff82b9541981a9bfff29a66a6ae91ebb0dda7424cebe",
+          "inert_parser_wrapper_sha256": "cbf2713a86e80654db75facfb3c5827d4e8383f07f113334b1ff3867f8d81c93",
+          "fragment_verified_inside_wrapper": true
+        },
+        {
+          "module_id": "225747",
+          "offset": 382343,
+          "length": 633,
+          "offset_unit": "decoded Unicode code points",
+          "source_fragment_utf8_sha256": "384636025a98d56e0ae482956ced5a262af0e2ed24b086d331982cee76a3d41d",
+          "inert_parser_wrapper_sha256": "52efaf8b697751d118127f36fe3609015894a5ec45498e53f8439b6bcead2c42",
+          "fragment_verified_inside_wrapper": true
+        },
+        {
+          "module_id": "168965",
+          "offset": 1938988,
+          "length": 885,
+          "offset_unit": "decoded Unicode code points",
+          "source_fragment_utf8_sha256": "59b8c4909d5b54f223a1ebaa93b317f090d69cbf081dfe3de502cf71082870bd",
+          "inert_parser_wrapper_sha256": "c6f6f619ac6af86388e7badb50d721da75609fe4e5fe5b54209868a1bd132836",
+          "fragment_verified_inside_wrapper": true
+        }
+      ],
+      "rea": {
+        "analysis_evidence_id": "ev_73508c1bf7baff353cf7f6101dfd6faebf13f3fa634ce5eae1a99caf7b05ecb1",
+        "summary_evidence_id": "ev_835e55f81504c8a4330ef06bb686195d00dd47bef19f576a373216f33001a6a7",
+        "selected_tree_sha256": "d403c9b3b4dbe2ef72b4086d79ba95601e9ef70fb743d22710fdbb84d353dbf0",
+        "confidence": "derived static observations",
+        "semantic_coverage": "unknown / partial",
+        "semantic_unknowns": 974,
+        "limitation_count": 5
+      },
+      "limitations": [
+        "Four selected module properties were inventoried; dynamic dependencies were not executed.",
+        "The parser wrapper is inert metadata preparation, not runtime evaluation.",
+        "Historical protocol evidence does not establish current server acceptance."
+      ]
+    },
+    {
+      "id": "wa-public-catalog-observed-2026-10-14",
+      "authority": "published WhatsApp static browser artifact",
+      "source_url": "https://static.whatsapp.net/rsrc.php/v4iqc44/yS/l/en_US-j/a8dJ9eFfqw5.js",
+      "observed_on": "2026-10-14",
+      "public_html_manifest_build_id": "1050403604_main",
+      "negotiated_whatsapp_web_version": null,
+      "build_id_is_not_a_negotiated_protocol_version": true,
+      "raw_bytes": 4013754,
+      "raw_sha256": "1281ad5fbe23bc937927c59761a4d9b6c70c42aac97ebb7298fee783ddd26533",
+      "raw_digest_recomputed_locally": true,
+      "modules": [
+        {
+          "name": "WAWebBizCatalogViewWamEvent",
+          "offset": 1851268,
+          "length": 1569,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "51970f94b082e78080d35737fb0bc6a7cf1fdd88838c59fefd995ecadb90e48f"
+        },
+        {
+          "name": "WAWebProductCatalogSession",
+          "offset": 1857290,
+          "length": 658,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "e505fa545fc836d0d2c9f9ac151adab328495f5102042b0d590b8b66df4778ab"
+        },
+        {
+          "name": "WAWebProductCatalogContext",
+          "offset": 1857948,
+          "length": 772,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "2d72be84e2f888ec2115bd3a00028469385c32bcacb5dec858f55a47cee1169d"
+        },
+        {
+          "name": "WAWebProductCatalogEventUtils",
+          "offset": 1858720,
+          "length": 1176,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "f5d24158036b1a0c8ce1310bc1f227d9aea8a34367d40868662b685f0a44f22c"
+        },
+        {
+          "name": "WAWebSelfCatalogOwnership",
+          "offset": 1859896,
+          "length": 239,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "88ebda5016922c0304d83d5a1958f944819e3282249b94e08055818f15565fb1"
+        },
+        {
+          "name": "WAWebProductCatalogLogEvents",
+          "offset": 1860135,
+          "length": 19488,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "bdb6466b70dadf6bd19a3324160db66c42dca97e55c3c3757a2bff1a6cf0965d"
+        },
+        {
+          "name": "WAWebProductCatalogMetaLinkingGatingUtils",
+          "offset": 1879623,
+          "length": 1350,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "b74e4d0e261a7a41251022ec70ea66f49289042661dc33cd6db10512f7c6e1aa"
+        },
+        {
+          "name": "WAWebBizCatalogManagementAddProductMutation_facebookRelayOperation",
+          "offset": 1880973,
+          "length": 138,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "7d5bad96f45aebf6d5b5ff3656152d5b08f2d39129b2f7a9bca322f1c1b1dfcb"
+        },
+        {
+          "name": "WAWebBizCatalogManagementAddProductMutation.graphql",
+          "offset": 1881111,
+          "length": 7075,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "44007a017343e99705803f5f60a263c336fc27b1ce66f072941e98f61229835b"
+        },
+        {
+          "name": "WAWebBizCatalogManagementAddProduct",
+          "offset": 1888186,
+          "length": 1800,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "28b35b1c8e912bcda36542cdd6ae380c6e06eedb6426aed5d6678706579b6643"
+        },
+        {
+          "name": "WAWebBizCatalogAddProductJob",
+          "offset": 1889986,
+          "length": 1361,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "ae17e3c84d11229432920100a657eb55668ee16aace9fefb187245a4d4ed6e5d"
+        },
+        {
+          "name": "WAWebBizCatalogManagementAppealProductMutation_facebookRelayOperation",
+          "offset": 1891347,
+          "length": 141,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "cdbd96e667fe078d9ace012c763bf09e60a7968449b70c16fb342ea3d3492100"
+        },
+        {
+          "name": "WAWebBizCatalogManagementAppealProductMutation.graphql",
+          "offset": 1891488,
+          "length": 1151,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "e55c2b0de3505770a6ee6cca556d63bdddf85cbd0da6135edbac4ecbfbff016b"
+        },
+        {
+          "name": "WAWebBizCatalogManagementAppealProduct",
+          "offset": 1892639,
+          "length": 1562,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "a98ceb6ead29d76a313ed040ba0a7786a42de4d3639ce93689abd1111b60c459"
+        },
+        {
+          "name": "WAWebBizCatalogAppealProductJob",
+          "offset": 1894201,
+          "length": 1213,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "38bd9460b35f7241b63a4144814e2da91c2e60f18b71fe421e4b01ce4c80ad68"
+        },
+        {
+          "name": "WAWebBizCatalogManagementDeleteProductMutation_facebookRelayOperation",
+          "offset": 1895414,
+          "length": 140,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "d7c154935d2034bdac67531cb230419b9b8a70497e4832578bbb9ab997d12283"
+        },
+        {
+          "name": "WAWebBizCatalogManagementDeleteProductMutation.graphql",
+          "offset": 1895554,
+          "length": 1081,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "7dbff7a18820f6a832d9a451dea1b5c726166bcceb0a740593bcdfe2a22c58f9"
+        },
+        {
+          "name": "WAWebBizCatalogManagementDeleteProduct",
+          "offset": 1896635,
+          "length": 1590,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "0c38dabf2ec7c82903c794ed2f59de8698a42948f581ff45304c5eeb9c3eeaf8"
+        },
+        {
+          "name": "WAWebBizCatalogDeleteProductsJob",
+          "offset": 1898225,
+          "length": 1208,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "f1bfefca5811c7078ad974a0b35309fc87a9648a5e76a4296ea1140ae42b86cc"
+        },
+        {
+          "name": "WAWebBizCatalogManagementEditProductMutation_facebookRelayOperation",
+          "offset": 1899433,
+          "length": 138,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "86aa4b119ee578573fc632b2e94e673db7d0d0b9f47e0cb13aaac2dbae71f81e"
+        },
+        {
+          "name": "WAWebBizCatalogManagementEditProductMutation.graphql",
+          "offset": 1899571,
+          "length": 7083,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "b28e1888ae3457caf73934c106f5b01562c19ced09e79599f0b66c64323196cc"
+        },
+        {
+          "name": "WAWebBizCatalogManagementEditProduct",
+          "offset": 1906654,
+          "length": 1808,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "b967fd78f65e9c4155c7a2831eb1bc4b3d42cfa65779104b3971edad791046c8"
+        },
+        {
+          "name": "WAWebBizCatalogEditProductJob",
+          "offset": 1908462,
+          "length": 1388,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "9f0c85b3bb085aea3407ce2d5c71df2fe36411f4a4158359afe40b862a3ee320"
+        },
+        {
+          "name": "WAWebBizCatalogManagementUpdateProductVisibilityMutation_facebookRelayOperation",
+          "offset": 1909850,
+          "length": 150,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "aab004c7a48680d9f515a3744894cc2072200f01c1fa5d4f8c7e9a146e4d43aa"
+        },
+        {
+          "name": "WAWebBizCatalogManagementUpdateProductVisibilityMutation.graphql",
+          "offset": 1910000,
+          "length": 1232,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "468aaf099969e659a196a11ea7736979600850cd3846584680ff0b8fc0079d46"
+        },
+        {
+          "name": "WAWebBizCatalogManagementUpdateProductVisibility",
+          "offset": 1911232,
+          "length": 1653,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "06650775560372a2924e012b5b7e88fdfde5ccf322addba3330666c9934e75ca"
+        },
+        {
+          "name": "WAWebBizCatalogProductVisibilitySetJob",
+          "offset": 1912885,
+          "length": 1319,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "226d29913acb2e929a0679456edeb562f70943c92584901b86410a6505acc5c2"
+        },
+        {
+          "name": "WAWebBizCatalogManagementCreateCatalogMutation_facebookRelayOperation",
+          "offset": 1914204,
+          "length": 141,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "172252763af4c9410ebdd7d8af343594e86977fe69ffa788cda86b2bf4c31fea"
+        },
+        {
+          "name": "WAWebBizCatalogManagementCreateCatalogMutation.graphql",
+          "offset": 1914345,
+          "length": 1060,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "1cf467fa8a21d44abed64bd0f8b96d2cbc5325dc7ffe545938308352292f09c7"
+        },
+        {
+          "name": "WAWebBizCatalogManagementCreateCatalog",
+          "offset": 1915405,
+          "length": 1561,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "b4ca1a858f544551ccecff950e72db1a25916cef18d1d28ea554bb4695dfa41e"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchCatalogQuery_facebookRelayOperation",
+          "offset": 1919081,
+          "length": 136,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "e60243ceff75cb21f94ac6964ea30ec0500218576274c523ef523a7d1e61af4b"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchCatalogQuery.graphql",
+          "offset": 1919217,
+          "length": 7885,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "f98f0902e4625e05dd3dd8660e4e48e88883aebfd4d2b8b044f95ece4e374e33"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchCatalog",
+          "offset": 1927102,
+          "length": 2059,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "5e65bee7674fba0ebe0b574c5ad88c8ef07e9bd6bae16a1f9ea43eb134357df6"
+        },
+        {
+          "name": "WAWebQueryCatalogQuery.graphql",
+          "offset": 1929161,
+          "length": 6836,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "c546e5ae8e2fe03f10477b2dbde7600b7ba3985ea263b977b32dea08ba3d9540"
+        },
+        {
+          "name": "WAWebQueryCatalog",
+          "offset": 1935997,
+          "length": 3944,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "f8e62d12805367f872c964c38af8b995cd3cb0d5934f9b8546dd160b5c6704c7"
+        },
+        {
+          "name": "WAWebQueryCatalogHasCategoriesQuery.graphql",
+          "offset": 1939941,
+          "length": 1095,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "0d430d4e6b7171aedfcac662f0864864b5bf05c929a007be6840763d98f587f4"
+        },
+        {
+          "name": "WAWebQueryCatalogHasCategories",
+          "offset": 1941036,
+          "length": 1448,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "d40d7221c823ca4572dd78874b318a28c023d2aa6ba7acd6f1aeaa83bf46cfa1"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchProductQuery_facebookRelayOperation",
+          "offset": 1942484,
+          "length": 137,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "be1d1c0269d9f523cc7532325a7417720eb8a2435dec8c644995790659048fdc"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchProductQuery.graphql",
+          "offset": 1942621,
+          "length": 7555,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "8ef2fe531140177222ece5cffd6e424469620a29c85e47078196d37a6f612f0b"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchProduct",
+          "offset": 1950176,
+          "length": 2048,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "8bc80f1d2d1b21f19a0cd0567192a8a87175d445e7be52e0bbf2c683cc0e0773"
+        },
+        {
+          "name": "WAWebQueryCatalogProductQuery.graphql",
+          "offset": 1952224,
+          "length": 6522,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "d96caab9acf792f3d8b6a31833df4763524d365f98688bbc5dca438cf96467db"
+        },
+        {
+          "name": "WAWebQueryCatalogProduct",
+          "offset": 1958746,
+          "length": 3712,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "ee8adda41fabc5ad7edeccfb6bb151839842642b76c37296a3301f6fb3170e1a"
+        },
+        {
+          "name": "WAWebBizProductCatalogBridge",
+          "offset": 1964738,
+          "length": 8817,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "c31252bc496c461fad62af713fce044b60fd06dfa480dd80221d96982bc3f703"
+        },
+        {
+          "name": "WAWebBizProductCatalogAction",
+          "offset": 1973697,
+          "length": 3231,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "6bdce7b4f755f74038eef8fc045532a4193cf638ca070fb7daff5d3618b819dc"
+        },
+        {
+          "name": "WAWebCatalogGetters",
+          "offset": 1980340,
+          "length": 651,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "cf77e6408957a85385e88bff16da077614a415786ed776773491d220042f4c0f"
+        },
+        {
+          "name": "WAWebProductCatalogLogQplEvents",
+          "offset": 1980991,
+          "length": 339,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "5829b33665f58f3765ded655a30392fecabdfd8f0adbe2b4c9fe4939afe4b982"
+        },
+        {
+          "name": "WAWebCatalogCollection",
+          "offset": 1981330,
+          "length": 8712,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "ea47c360c1647e365ecdbf260e8e0472eb730e631e3fa4c38598b7986a70acb1"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchCollectionsQuery_facebookRelayOperation",
+          "offset": 1994665,
+          "length": 140,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "be876ade68ed19ced9883761f1d131a269535fc435daa131fd5e0c8f5c770020"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchCollectionsQuery.graphql",
+          "offset": 1994805,
+          "length": 8010,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "a33b568d60066f16e9ca9606b1037bf5a0f93d57766ca15bb5b5ccde7d5a1664"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchCollections",
+          "offset": 2002815,
+          "length": 2524,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "4a634b86c7e6e111dd3640787739fec9a72b7752217beb84f6bc0deef71a4692"
+        },
+        {
+          "name": "WAWebQueryProductCollectionsQuery.graphql",
+          "offset": 2005339,
+          "length": 7114,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "b89f146731928afa122002e2dd5ed570229a1e22c37d54c6b072fcd31a7958e8"
+        },
+        {
+          "name": "WAWebQueryProductCollections",
+          "offset": 2012453,
+          "length": 4054,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "6de71bb472082f26bf60feb3b3ddc0e6501557cf742a6f5a30e0eab682b78328"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchSingleCollectionQuery_facebookRelayOperation",
+          "offset": 2016507,
+          "length": 145,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "614a467defc1b935688ca39b26950a8c1167fac6e32d4b6b1ab35859a1acb416"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchSingleCollectionQuery.graphql",
+          "offset": 2016652,
+          "length": 7950,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "9a7a52bd7d2feed2a1ab24a819325223da72cd916ef3f941ab73ee139042c8e9"
+        },
+        {
+          "name": "WAWebBizCatalogManagementFetchSingleCollection",
+          "offset": 2024602,
+          "length": 2468,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "5147b3aaaa0c0518f0be23e4484f94d7b70dd5d2ac8c5203059a7ed9b3019d82"
+        },
+        {
+          "name": "WAWebQueryProductSingleCollectionQuery.graphql",
+          "offset": 2027070,
+          "length": 7068,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "ed54f5d115efe8951c31fbd7842ad318969564ecbcb011559a80294b3c2a9606"
+        },
+        {
+          "name": "WAWebQueryProductSingleCollection",
+          "offset": 2034138,
+          "length": 3620,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "dca0b14a036fc62477bb12b9e5b9d0431770b05b1a4cdae8975a5f7f29a6d5e1"
+        },
+        {
+          "name": "WAWebBizCatalogUtils",
+          "offset": 2068417,
+          "length": 7977,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "93bd5da03e5884845c31a3ae04becd2e0c27d332597c935b182be72003a9daf6"
+        },
+        {
+          "name": "WAWebProductCatalogCatalogConstants",
+          "offset": 3544496,
+          "length": 230,
+          "offset_unit": "decoded Unicode code points",
+          "module_utf8_sha256": "31bb5b908ffa96d224aafde781c491435027e932028e17f8a34ebe994b86a57c"
+        }
+      ],
+      "module_slices_verified": 59,
+      "rea": {
+        "analysis_evidence_id": "ev_812548b995112076b868068d2420343ab6e0322452e3ca8a67ab229ddf706918",
+        "summary_evidence_id": "ev_1e72647e39bee1e7057682eccbc1f71e59da10e1655ee7105dbe3cd75f93f391",
+        "selected_tree_sha256": "e516e012628ad466affa97fd007da94b96e07af61f42b075a1f814e2b8381c49",
+        "confidence": "derived static observations",
+        "javascript_files_parsed": 60,
+        "parse_failures": 0,
+        "application_coverage": "partial",
+        "semantic_coverage": "partial",
+        "truncated": true,
+        "application_unknowns": 1,
+        "semantic_unknowns": 5565,
+        "worker_heap_limit_mib": 1024,
+        "limitation": "Semantic analysis of the complete 4 MB bundle exceeded the worker heap; extracted module facts were retained, without whole-program equivalence claims."
+      },
+      "limitations": [
+        "Only the catalog-related public artifacts located for this audit were inspected.",
+        "Product management mutations observed here use Facebook GraphQL with a separate access token and Facebook Relay environment.",
+        "These Facebook mutation IDs are not WhatsApp MEX query IDs and were not copied into the SDK MEX manifest.",
+        "The observed Facebook path neither proves acceptance nor proves removal of legacy companion IQ product operations."
+      ]
+    },
+    {
+      "id": "pinned-protocol-specification",
+      "authority": "pinned protocol reference already audited in the project",
+      "revision": "653042df263be650b7729c3649d735936125f65e",
+      "related_audit": "updates/2026-10-14/commit-audit.json",
+      "scope": [
+        "WhatsApp MEX query/request/response types and persisted operation IDs",
+        "Business profile and plaintext-media transport reference",
+        "66 pinned app-state actions plus independently verified message-label extension"
+      ],
+      "limitations": [
+        "A pinned specification is a versioned implementation reference, not a guarantee from the WhatsApp server.",
+        "Persisted operation IDs can expire or become unavailable for an account."
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "id": "OBS-COLLECTIONS-IQ",
+      "classification": "observed historical wire construction",
+      "source_ids": [
+        "wa-public-historical-2.2412.54"
+      ],
+      "module_ids": [
+        "535190"
+      ],
+      "capabilities": [
+        "collection create",
+        "collection rename and explicit product add/remove membership",
+        "per-collection deletion",
+        "collection appeal",
+        "collection reorder"
+      ],
+      "wire_namespace": "w:biz:catalog",
+      "wire_smax_ids": {
+        "create": "36",
+        "update": "40",
+        "delete": "43",
+        "appeal": "48",
+        "reorder": "92"
+      },
+      "response_rule": "Create/update require the returned collection ID; delete/appeal/reorder require response/success. No moderation status is invented when absent.",
+      "php_files": [
+        "src/Service/CatalogCollections.php"
+      ]
+    },
+    {
+      "id": "OBS-CART-IQ",
+      "classification": "observed historical wire construction",
+      "source_ids": [
+        "wa-public-historical-2.2412.54"
+      ],
+      "module_ids": [
+        "761849",
+        "225747"
+      ],
+      "capabilities": [
+        "remote commercial cart enable/disable",
+        "cart setting returned as an explicit boolean"
+      ],
+      "wire_namespace": "fb:thrift_iq",
+      "wire_smax_id": "25",
+      "php_files": [
+        "src/Service/CatalogCollections.php"
+      ]
+    },
+    {
+      "id": "OBS-CATALOG-CREATE",
+      "classification": "observed historical wire construction",
+      "source_ids": [
+        "wa-public-historical-2.2412.54"
+      ],
+      "module_ids": [
+        "168965"
+      ],
+      "capabilities": [
+        "explicit product_catalog_create IQ request and corresponding response"
+      ],
+      "php_files": [
+        "src/Service/CatalogCollections.php"
+      ]
+    },
+    {
+      "id": "OBS-CURRENT-PRODUCT-GRAPHQL",
+      "classification": "observed current public artifact path with partial analysis",
+      "source_ids": [
+        "wa-public-catalog-observed-2026-10-14"
+      ],
+      "module_names": [
+        "WAWebBizCatalogManagementAddProduct",
+        "WAWebBizCatalogManagementEditProduct",
+        "WAWebBizCatalogManagementDeleteProduct",
+        "WAWebBizCatalogManagementUpdateProductVisibility",
+        "WAWebBizCatalogManagementCreateCatalog"
+      ],
+      "observation": "These inspected product-management paths use Facebook GraphQL/Relay and a separately fetched access token. They are not dispatched as MEX operations in this SDK.",
+      "implemented_from_this_path": false
+    },
+    {
+      "id": "OBS-SDK-IQ-MEX",
+      "classification": "implemented PHP with local fixture evidence",
+      "source_ids": [
+        "pinned-protocol-specification",
+        "wa-public-historical-2.2412.54"
+      ],
+      "capabilities": [
+        "catalog/product/collection reads",
+        "product create/edit/delete with actual server IDs/count",
+        "localized category taxonomy",
+        "order creation/query and advanced checkout cart refresh",
+        "Business profile edit and PPS cover upload/binding"
+      ],
+      "php_files": [
+        "src/Service/CatalogService.php",
+        "src/Service/CatalogCollections.php",
+        "src/Service/BusinessService.php",
+        "src/Media/MediaTransfer.php"
+      ],
+      "limitations": [
+        "Legacy IQ writes and pinned MEX IDs require current account/server homologation.",
+        "Advanced checkout cart refresh preserves an extensible caller-supplied request; JSON validity does not establish server commercial validity."
+      ]
+    },
+    {
+      "id": "OBS-APPSTATE-TOOLS",
+      "classification": "implemented PHP with independently authenticated local peer tests",
+      "source_ids": [
+        "pinned-protocol-specification"
+      ],
+      "capabilities": [
+        "label create/update/delete",
+        "chat and message label association",
+        "quick reply create/update/delete and complete local pagination",
+        "Business broadcast list definitions"
+      ],
+      "appstate_schema_count": 67,
+      "pinned_schema_count": 66,
+      "verified_extension": "LabelMessage",
+      "extension_collection": "regular",
+      "extension_version": 3,
+      "php_files": [
+        "src/Service/BusinessToolsService.php",
+        "src/AppState/AppStateService.php",
+        "src/AppState/AppStateProjector.php",
+        "src/AppState/schema.json"
+      ],
+      "response_rule": "Pending mutations are durable before network I/O. Projection changes require authenticated synchronization and acceptance; failed ACK does not advertise a successful local mutation."
+    }
+  ],
+  "inferences_and_non_claims": [
+    {
+      "id": "INF-HISTORICAL-COMPANION",
+      "classification": "implementation inference, not live verification",
+      "text": "The observed historical companion IQ contract supplies a justified PHP serializer/parser. Its acceptance by the current server has not been established."
+    },
+    {
+      "id": "INF-CURRENT-GRAPHQL",
+      "classification": "bounded inference",
+      "text": "The inspected public product-management path has changed transport context. The audit did not prove that every account follows this path or that legacy IQ endpoints have been retired."
+    },
+    {
+      "id": "NONCLAIM-COMPLETE-BUSINESS",
+      "classification": "explicit scope limit",
+      "text": "This report does not claim complete support for all WhatsApp Business, commerce-manager, payments, advertising, or future server capabilities."
+    },
+    {
+      "id": "NONCLAIM-REAL-ACCOUNT",
+      "classification": "explicit scope limit",
+      "text": "No real Business account writes, product uploads, catalog changes, label changes, checkout orders, or broadcasts were executed for this implementation audit."
+    }
+  ],
+  "validation": {
+    "kind": "local deterministic fixture and cryptographic peer tests",
+    "runtime": "PHP 8.4.25",
+    "phpunit": "11.5.57",
+    "command": "php -c .dev/php.ini -d xdebug.mode=off vendor/phpunit/phpunit/phpunit --configuration phpunit.xml.dist tests/phpunit/CatalogTest.php tests/phpunit/CatalogCollectionsTest.php tests/phpunit/BusinessToolsTest.php tests/phpunit/BusinessMediaTest.php tests/phpunit/AppStateProjectorTest.php tests/phpunit/AppStateServiceTest.php tests/phpunit/AppStateCryptoTest.php",
+    "passed": true,
+    "tests": 169,
+    "assertions": 1683,
+    "tested_on": "2026-10-14",
+    "real_whatsapp_connection_used": false,
+    "local_protocol_transport_only": true,
+    "scope": [
+      "IQ/MEX request shape and returned IDs/counts",
+      "refusals, malformed/incomplete response rejection and partial deletion",
+      "plaintext upload hashes, returned PPS metadata, authentication retry and invalid-media rejection",
+      "encrypted app-state mutations verified by a separate local peer and MAC authentication",
+      "ACK failure retains queue without announcing local success",
+      "pagination and label cleanup over more than one thousand local records"
+    ],
+    "test_files": [
+      {
+        "path": "tests/phpunit/CatalogTest.php",
+        "sha256": "c0a15750213e588fcd670dfc5bf17fee58402dd8382a8576b5819bf48e22775f"
+      },
+      {
+        "path": "tests/phpunit/CatalogCollectionsTest.php",
+        "sha256": "765f05728541e4499d21659eef7ff0cad87a788e5087a1863e322f09f3c8a5cd"
+      },
+      {
+        "path": "tests/phpunit/BusinessToolsTest.php",
+        "sha256": "1cbbe2b6d0227e4d113669e218f02ea152d9e654bf6beef146db74a0881f9385"
+      },
+      {
+        "path": "tests/phpunit/BusinessMediaTest.php",
+        "sha256": "06cc6ebcc28d5cdc1c5175f49258deb83b6f1ca744ac2e69f3a7bf23143ec955"
+      },
+      {
+        "path": "tests/phpunit/AppStateProjectorTest.php",
+        "sha256": "1d4e35b3d995a3771b49148f9703c2665c6a6b573a7ccea6425e06ed6ce7e499"
+      },
+      {
+        "path": "tests/phpunit/AppStateServiceTest.php",
+        "sha256": "5e7a7b106b239a1ebba78c3c8d0e963582649530f0669c940d46723ce45af3db"
+      },
+      {
+        "path": "tests/phpunit/AppStateCryptoTest.php",
+        "sha256": "46c85982ee2c8a3e7cdecd5de0d423cd1e75ccb96f2387e017ac6936f8bc9840"
+      }
+    ]
+  },
+  "implementation_snapshot": {
+    "note": "Content hashes at report creation; hashes identify audited PHP files and do not imply external protocol certification.",
+    "files": [
+      {
+        "path": "src/Service/CatalogService.php",
+        "sha256": "08cad4043fd81c8f99971e6f4c9b1a5b74ec9475057a082c6c23d43eefec5b6c"
+      },
+      {
+        "path": "src/Service/CatalogCollections.php",
+        "sha256": "82a90cce33eadb0ebcb104e487627e0f5a14b24eadb456f041d113df7019bc13"
+      },
+      {
+        "path": "src/Service/BusinessService.php",
+        "sha256": "f612a2dc8a49cb096d2922cf0533f7b95a2e09ae4d83ff8b2a0a330bc59fea36"
+      },
+      {
+        "path": "src/Service/BusinessToolsService.php",
+        "sha256": "8dc714a203a46f9fe5649517efd13ffe3988ebc7d8f816dbacc0fdd8a7e9f48d"
+      },
+      {
+        "path": "src/Service/MexService.php",
+        "sha256": "3ddd3c651b736a22834eaf40374a2488ed8f2e9f5a1b577786257b7b2b8e9c54"
+      },
+      {
+        "path": "src/Service/mex-operations.json",
+        "sha256": "10d011f83d49040a08dbd6034d7d50e33febfdcbe4cc157f33f1873a8161df14"
+      },
+      {
+        "path": "src/Service/Services.php",
+        "sha256": "0299691b7a0f15cdd869cebf3cf1790ecd8489c547fa31aceb4dcccf728aaf4f"
+      },
+      {
+        "path": "src/Media/MediaTransfer.php",
+        "sha256": "c2040298a99d8a5f4c2b9ef10c7627526aee99354dd8ca6631495986efa0e939"
+      },
+      {
+        "path": "src/AppState/AppStateService.php",
+        "sha256": "0415565206521db73f63a59ba932b5e7fd562609774deb772fcf74590dd66540"
+      },
+      {
+        "path": "src/AppState/AppStateProjector.php",
+        "sha256": "b39fb58de5fc01b71417b76e7e3b65f174e228082965b4c4e470ec1ed52abb11"
+      },
+      {
+        "path": "src/AppState/AppStateSchema.php",
+        "sha256": "9c898b0bfcdec1a674e1127b3f55e9620d1ca7628e6c1249b69abb183f2bdba5"
+      },
+      {
+        "path": "src/AppState/schema.json",
+        "sha256": "5f8c4653a715c41d65476fdc84ea1a5ff8ff79a30da2d88e5c737650fc69c298"
+      },
+      {
+        "path": "src/WaClient.php",
+        "sha256": "ed5062fd168e3bd517c0148465ceb8e5a1552fd19eb280e0909fff3c9741b6f4"
+      }
+    ],
+    "revisions": [
+      {
+        "updated_at_utc": "2026-10-15T02:12:03.814682+00:00",
+        "reason": "Added authenticated username recipient resolution to the shared client. Historical public protocol observations are unchanged. Current source passed full SDK regression checks (1310 tests, 26556 assertions, PHPStan 6 and DBGp).",
+        "changed_sources": [
+          {
+            "previous_path": "src/WaClient.php",
+            "previous_sha256": "cb43a13d6ca76b9651a47ac7b5daa2ee5eb6f1ba4bfa75deb6c8240654cf3e33",
+            "current_sha256": "79f10790d03fb0ce4631e546152a5fd89a581c2b46a2e176e73c46f0ab713032"
+          }
+        ]
+      },
+      {
+        "updated_at_utc": "2026-10-15T02:41:16.464657+00:00",
+        "reason": "Added a native community service and corrected shared group protocol handling. Historical public Business protocol observations are unchanged. Current source passed full SDK regression checks (1397 tests, 26816 assertions, PHPStan 6 and DBGp).",
+        "changed_sources": [
+          {
+            "previous_path": "src/Service/Services.php",
+            "previous_sha256": "bac64cb759a27b993fe563c53f7c41101c8a224c30f2a8040b81c7abd3dc6160",
+            "current_sha256": "62e0fc3ccc331982282f85b4d3cd6b954ee5dc202b855fb93fae410f9c28ba81"
+          },
+          {
+            "previous_path": "src/WaClient.php",
+            "previous_sha256": "79f10790d03fb0ce4631e546152a5fd89a581c2b46a2e176e73c46f0ab713032",
+            "current_sha256": "2b794d82f2a0984915d0f700221f0d2e778c916a0f013ceb967befe39568de21"
+          }
+        ]
+      },
+      {
+        "updated_at_utc": "2026-10-15T03:03:48.832080+00:00",
+        "reason": "Added durable native PHP Status management to the shared client. Historical Business protocol observations are unchanged. Full SDK/API checks passed.",
+        "checks": {
+          "sdk": {
+            "tests": 1470,
+            "assertions": 27080,
+            "result": "passed"
+          },
+          "api": {
+            "tests": 563,
+            "assertions": 37475,
+            "result": "passed"
+          }
+        },
+        "changed_sources": [
+          {
+            "previous_path": "src/Service/Services.php",
+            "previous_sha256": "62e0fc3ccc331982282f85b4d3cd6b954ee5dc202b855fb93fae410f9c28ba81",
+            "current_sha256": "0333cfc4edd8cd6f57a55c0f4a8f039e785fa0967ade3232bce5b05f805789b7"
+          },
+          {
+            "previous_path": "src/WaClient.php",
+            "previous_sha256": "2b794d82f2a0984915d0f700221f0d2e778c916a0f013ceb967befe39568de21",
+            "current_sha256": "a3462a57bfee797a2f56361ecc7a1e516633d1c3ac24a68891608f3fba13b3b8"
+          }
+        ]
+      },
+      {
+        "updated_at_utc": "2026-10-15T04:05:00.710760+00:00",
+        "reason": "Native Flow construction and response projection corrected against public WhatsApp Web modules. Historical protocol observations retained.",
+        "checks": {
+          "sdk": {
+            "tests": 1599,
+            "assertions": 27796,
+            "result": "passed"
+          },
+          "api": {
+            "tests": 619,
+            "assertions": 37848,
+            "result": "passed"
+          }
+        },
+        "changed_sources": [
+          {
+            "previous_path": "src/WaClient.php",
+            "previous_sha256": "a3462a57bfee797a2f56361ecc7a1e516633d1c3ac24a68891608f3fba13b3b8",
+            "current_sha256": "55ac3a3d33d77526c83819b88f047613b8c2937f49cf454a7ca0ca8641860ba6"
+          }
+        ]
+      },
+      {
+        "updated_at_utc": "2026-10-15T11:16:32.428952+00:00",
+        "reason": "Channel management integration and shared-service regressions; historical protocol/runtime observations retained.",
+        "checks": {
+          "sdk": {
+            "tests": 1852,
+            "assertions": 28785,
+            "result": "passed",
+            "log_sha256": "52fbea53f3684910266654af7ecbb0c64aa60d17fca2b72022ca5b0a3007c8f6"
+          },
+          "api": {
+            "tests": 1055,
+            "assertions": 55579,
+            "result": "passed",
+            "log_sha256": "19c810c69d6d6d32a6f245da09bdd74bfe89b09baee03bb22bd4be7901142194"
+          }
+        },
+        "new_live_operations_in_this_revision": false,
+        "changed_sources": [
+          {
+            "path": "src/Service/mex-operations.json",
+            "previous_sha256": "faf96d0d35d9b5b9c495c4645463819f45a5bcd17da441e7526d61cad5efdf6c",
+            "current_sha256": "10d011f83d49040a08dbd6034d7d50e33febfdcbe4cc157f33f1873a8161df14"
+          },
+          {
+            "path": "src/Service/Services.php",
+            "previous_sha256": "0333cfc4edd8cd6f57a55c0f4a8f039e785fa0967ade3232bce5b05f805789b7",
+            "current_sha256": "0299691b7a0f15cdd869cebf3cf1790ecd8489c547fa31aceb4dcccf728aaf4f"
+          },
+          {
+            "path": "src/Media/MediaTransfer.php",
+            "previous_sha256": "cd172750fd4540a5f56a854cde7b9761370b52eb9850b12cd879232ba7daa46d",
+            "current_sha256": "c2040298a99d8a5f4c2b9ef10c7627526aee99354dd8ca6631495986efa0e939"
+          },
+          {
+            "path": "src/WaClient.php",
+            "previous_sha256": "55ac3a3d33d77526c83819b88f047613b8c2937f49cf454a7ca0ca8641860ba6",
+            "current_sha256": "ed5062fd168e3bd517c0148465ceb8e5a1552fd19eb280e0909fff3c9741b6f4"
+          }
+        ]
+      }
+    ]
+  },
+  "provenance_limits": [
+    "SHA-256 digests were recomputed from locally retained public artifact bytes; they are content identifiers, not vendor signatures.",
+    "REA evidence IDs identify static audit outputs; they do not establish live runtime behavior or server authorization.",
+    "Source bundles, selected source files, private paths and account state are not embedded in this report."
+  ]
+}

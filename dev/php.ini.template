@@ -1,0 +1,38 @@
+[PHP]
+; Generated into .dev/php.ini by tools/setup.ps1. Global XAMPP config is untouched.
+extension_dir = "@EXTENSION_DIR@"
+extension = openssl
+extension = sodium
+extension = pdo_sqlite
+extension = mbstring
+extension = curl
+extension = fileinfo
+extension = zip
+extension = sockets
+extension = gmp
+extension = gd
+extension = ffi
+ffi.enable = true
+date.timezone = America/Sao_Paulo
+error_reporting = -1
+display_errors = On
+display_startup_errors = On
+log_errors = On
+error_log = "@LOG_DIR@/php-error.log"
+memory_limit = 512M
+zend.assertions = 1
+zend.exception_ignore_args = On
+curl.cainfo = "@CA_FILE@"
+openssl.cafile = "@CA_FILE@"
+
+[xdebug]
+zend_extension = "@XDEBUG_DLL@"
+xdebug.mode = develop,debug
+xdebug.start_with_request = trigger
+xdebug.client_host = 127.0.0.1
+xdebug.client_port = 9003
+xdebug.discover_client_host = 0
+xdebug.connect_timeout_ms = 1000
+xdebug.show_exception_trace = 0
+xdebug.log = "@LOG_DIR@/xdebug.log"
+xdebug.log_level = 0

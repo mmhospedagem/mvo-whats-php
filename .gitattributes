@@ -1,0 +1,24 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.woff2 binary
+*.ttf binary
+
+/.github export-ignore
+/.vscode export-ignore
+/.impeccable export-ignore
+/.auth export-ignore
+/.auth-backups export-ignore
+/.cache export-ignore
+/.dev export-ignore
+/build export-ignore
+/dev.local.json export-ignore
+/storage export-ignore
+/var export-ignore
+/sessions export-ignore
+/docs/FLOW-PROTOCOL-EVIDENCE.json export-ignore
+/backup*.zip export-ignore
+/mvo-php.zip export-ignore
+/PRODUCT.md export-ignore
+/DESIGN.md export-ignore

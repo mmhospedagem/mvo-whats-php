@@ -1,0 +1,8 @@
+{
+  "php": {"minor": "8.4", "threadSafe": true, "bits": 64, "compiler": "VS17"},
+  "xdebug": {
+    "version": "3.5.3",
+    "url": "https://xdebug.org/files/php_xdebug-3.5.3-8.4-ts-vs17-x86_64.dll",
+    "sha256": "b9c79caec87f2b289df4b7bfa64b64f01c97956c9ac7ddb936302b79aec65cda"
+  }
+}

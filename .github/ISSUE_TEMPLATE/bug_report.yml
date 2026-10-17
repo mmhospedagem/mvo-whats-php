@@ -1,0 +1,42 @@
+name: Relatar um problema
+description: Informe um comportamento reproduzível da biblioteca PHP.
+title: '[Bug]: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Não inclua tokens, QR Codes, sessões ou dados de conversas reais. Para vulnerabilidades, use o canal privado descrito em SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Versão ou commit da biblioteca
+      placeholder: v1.0.0 ou SHA do commit
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Ambiente
+      placeholder: PHP 8.3, Ubuntu 24.04, sessão vinculada por QR
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reprodução mínima
+      description: Inclua código PHP reduzido e dados sintéticos.
+      render: php
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado esperado e observado
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnóstico sem dados privados
+      description: Diferencie ACK, entrega, leitura e exibição no aplicativo.
+      render: text

@@ -1,0 +1,68 @@
+{
+  "formatVersion": 1,
+  "whatsappWebVersion": "2.3000.1050588369",
+  "verifiedAtUtc": "2026-10-16T12:20:08.203254+00:00",
+  "sourceSha256": "15be8399670b726ea2e8350cc911b92036f79b7d43ccff3a11ca971183e5acb4",
+  "descriptorSha256": "5dbce3080d0540037c5e31ff342ce0fcc84ac07a34e5d3f0a38d3b03177c60f9",
+  "compatibilitySha256": "8c7623bbe0835cb0344b5e900c5a7884a4d76f8173921713137b638b64ea0386",
+  "counts": {
+    "messages": 771,
+    "enums": 226,
+    "fields": 3576,
+    "enumValues": 1680,
+    "oneofGroups": 39,
+    "oneofFields": 130
+  },
+  "officialVerification": {
+    "sourceUrl": "https://web.whatsapp.com/?locale=en_US",
+    "clientRevision": "1050588369",
+    "htmlSha256": "f0b0a2c3e6e7846b172349d19f3b801e47691d53265eecc70310115bda8f9146",
+    "buildConstantsSha256": "7a3f5c4be172486edb12ba6b24250e54fd1a7d5fb9b259e4a8c65f3276c81c41",
+    "modulesObserved": 28,
+    "messagesCompared": 612,
+    "enumsCompared": 213,
+    "fieldsCompared": 3016,
+    "differencesInObservedDefinitions": 0,
+    "shapesSha256": "d59efe34acd6b65fd1084b1545ae73f9546f5991423d0ab3d5821de757778c22",
+    "reaEvidenceId": "ev_428e75520ce2953dd2f71582a303a77082ee7f4840960cb1d2e3a41c459d63a3",
+    "reaParentEvidenceId": "ev_10cfa750aea6972420c08a5b8db67bc3e15ba64442231ae97598e5ccc9cdf3bb",
+    "method": "Static public bundle AST; no WhatsApp session or module execution."
+  },
+  "baseExtraction": {
+    "version": "2.3000.1050579926",
+    "commit": "ab2a7ce8147d39d6a0ca42cfb59565565699d771",
+    "url": "https://raw.githubusercontent.com/wppconnect-team/wa-proto/ab2a7ce8147d39d6a0ca42cfb59565565699d771/WAProto.proto",
+    "sha256": "04b576e8a36fd55e302ec475d4d533cd85789b490154655f651242b04d9663c2",
+    "license": "Apache-2.0",
+    "messages": 725,
+    "enums": 222
+  },
+  "compatibility": {
+    "baselineVersion": "2.3000.1043028647",
+    "messagesRetained": 46,
+    "enumsRetained": 4,
+    "historicalFieldRetained": "Message.newsletterAdminProfileMessageV2#117",
+    "legacyWireTypes": {
+      "Message.ChatSolidColorWallpaper": {
+        "1": [
+          2
+        ],
+        "2": [
+          2
+        ]
+      }
+    },
+    "wallpaperPolicy": "Current fixed32 fields are typed; historical string wire fields survive in _unknown without conversion."
+  },
+  "changesFromBaseline": {
+    "messagesAdded": 130,
+    "enumsAdded": 17,
+    "fieldsAddedToExistingMessages": 84,
+    "valuesAddedToExistingEnums": 99
+  },
+  "limitations": [
+    "The official public bootstrap is a partial module corpus: 113 message types in the base extraction were not loaded in this capture.",
+    "Schema support provides encoding and decoding; it does not enable every corresponding WhatsApp feature or server permission.",
+    "No live message, call, SMS, registration or customer session reset was used to verify this update."
+  ]
+}

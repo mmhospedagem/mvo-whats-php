@@ -1,0 +1,75 @@
+{
+  "checked_at_utc": "2026-10-15T23:58:11.706141+00:00",
+  "release": "20261015-php-v15",
+  "features": [
+    "primary_android_sms_or_voice_code_request",
+    "separate_otp_and_two_factor_pin_confirmation",
+    "durable_registration_keys_and_identifiers",
+    "resume_mobile_tcp_identity_after_restart",
+    "no_automatic_sms_replay_on_unknown_result",
+    "generation_lifecycle_guards_and_pending_mobile_qr_block",
+    "typed_direct_http_api_and_swagger"
+  ],
+  "supported_registration_profile": {
+    "os": "android",
+    "version": "2.26.39.79",
+    "apk_sha256": "8905c05e6283d7a7087582ae345aeef5e5b248cdc13fa7d729710d4d339bc52e",
+    "independent_enc_and_version_token_vectors": true,
+    "hardware_attestation_fabricated": false
+  },
+  "sdk_linux_suite": {
+    "exit_code": 0,
+    "seconds": 59.1,
+    "summary": [
+      "Time: 00:58.316, Memory: 56.00 MB",
+      "Tests: 2021, Assertions: 29635, Skipped: 1."
+    ],
+    "phpstan_exit_code": 0
+  },
+  "isolated_authenticated_redis_suite": {
+    "exit_code": 0,
+    "seconds": 7.9,
+    "summary": [
+      "Time: 00:06.998, Memory: 140.00 MB",
+      "OK (48 tests, 351 assertions)"
+    ],
+    "network_internal": true,
+    "production_mounts": false,
+    "redis_authenticated_acl": true,
+    "whatsapp_network_opened": false
+  },
+  "tested_packages_sha256": {
+    "mobile-registration-v15-sdk.zip": "a5fe15fc29da7c47a1893a135cb539d8bdd56c50dcb461cfe32b6c5b677ffb29"
+  },
+  "runtime_source_fingerprints": {
+    "sdk": "71636e2d70bae343a155c4f39760e63cb587cd314ba92bae9d3ce9a4ec3e3228"
+  },
+  "validation_scope": {
+    "real_sms_requests_sent": 0,
+    "real_voice_code_requests_sent": 0,
+    "real_mobile_registration_validated": false,
+    "real_otp_or_pin_used": false,
+    "existing_customer_session_reset": false,
+    "fixtures": [
+      "sms_and_voice_and_two_factor_success_and_refusal",
+      "encrypted_http_wire_and_apk_version_token_vectors",
+      "restart_restores_same_noise_and_signal_keys",
+      "unknown_delivery_then_explicit_otp_confirmation",
+      "lifecycle_changes_while_https_is_in_flight",
+      "revoked_credentials_and_pending_mobile_never_start_qr"
+    ]
+  },
+  "limits": [
+    "server_may_require_device_confirmation_integrity_captcha_or_email",
+    "ios_and_business_registration_require_their_own_supported_profile",
+    "mobile_voip_media_is_a_separate_validation_scope"
+  ],
+  "credentials_customer_numbers_or_codes_in_report": false,
+  "additional_fixes": [
+    "brazil_consumer_registration_requires_11_national_digits_and_ninth_digit",
+    "invalid_numbers_fail_before_credential_io_or_https",
+    "explicit_no_routes_blocked_and_number_conflict_messages",
+    "server_retry_after_not_bypassed_by_confirm_resend"
+  ],
+  "publication_scope": "Public library validation record. Private API, infrastructure and connected-account validation details are omitted; the retained test results and package hashes describe the original recorded snapshot."
+}

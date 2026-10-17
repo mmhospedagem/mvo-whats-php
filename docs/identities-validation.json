@@ -1,0 +1,53 @@
+{
+  "checked_at_utc": "2026-10-15T21:38:29.536339+00:00",
+  "release": "20261015-php-v13",
+  "features": [
+    "batch_phone_to_lid_lookup_with_per_item_invalid_and_nullable_exists",
+    "authenticated_incoming_alternative_jids",
+    "canonical_hosted_and_per_device_signal_addresses",
+    "atomic_all_device_signal_resynchronization",
+    "persistent_lid_successions_with_conflict_and_replay_guards",
+    "authenticated_identity_appstate_projection",
+    "group_addressing_selection_and_observed_ack_mode"
+  ],
+  "sdk_linux_suite": {
+    "exit_code": 0,
+    "seconds": 59.1,
+    "summary": [
+      "Time: 00:58.285, Memory: 56.00 MB",
+      "Tests: 1973, Assertions: 29387, Skipped: 1."
+    ],
+    "phpstan_exit_code": 0
+  },
+  "isolated_authenticated_redis_suite": {
+    "exit_code": 0,
+    "seconds": 7.7,
+    "summary": [
+      "Time: 00:06.735, Memory: 138.00 MB",
+      "OK (48 tests, 349 assertions)"
+    ],
+    "network_internal": true,
+    "production_mounts": false,
+    "redis_authenticated_acl": true,
+    "whatsapp_network_opened": false
+  },
+  "tested_packages_sha256": {
+    "identities-sdk.zip": "37dda250aadbcebd2c5baca2255ddfdf3ff006afdf58b24652dc906d04c64eab"
+  },
+  "validation_scope": {
+    "real_whatsapp_checks": [
+      "connected_account_preserved_across_release_restart",
+      "readonly_lookup_of_own_account_pn_and_lid",
+      "invalid_item_does_not_abort_valid_lookup"
+    ],
+    "fixture_checks": [
+      "signal_bundle_exchange_and_all_device_rollback",
+      "appstate_identity_projection",
+      "group_addressing_and_server_ack_correction"
+    ],
+    "real_contact_signal_resets": 0,
+    "whatsapp_messages_sent": 0
+  },
+  "private_credentials_or_customer_identifiers_in_report": false,
+  "publication_scope": "Public library validation record. Private API, infrastructure and connected-account validation details are omitted; the retained test results and package hashes describe the original recorded snapshot."
+}

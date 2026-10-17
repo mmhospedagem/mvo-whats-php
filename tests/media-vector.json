@@ -1,0 +1,6 @@
+{
+  "key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+  "plain": "504850206e6174697665205768617473417070206d6564696100ff",
+  "body": "f91cd6e8596abd557a5830f484dcd67e79e27f4dbcd016fa5d6195c3f9aa3cf71627e8cbc7db61be5f64",
+  "source": "Independent Python cryptography HKDF/AES-CBC/HMAC implementation"
+}

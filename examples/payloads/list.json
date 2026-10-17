@@ -1,0 +1,1 @@
+{"type":"list","data":{"title":"Escolha","description":"Menu de atendimento","buttonText":"Abrir","listType":"SINGLE_SELECT","sections":[{"title":"Opções","rows":[{"rowId":"suporte","title":"Suporte"},{"rowId":"vendas","title":"Vendas"}]}]}}

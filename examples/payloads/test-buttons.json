@@ -1,0 +1,20 @@
+{
+  "type": "buttons",
+  "data": {
+    "contentText": "Teste da biblioteca PHP. Escolha uma opção:",
+    "footerText": "Mensagem de teste autorizada",
+    "headerType": "EMPTY",
+    "buttons": [
+      {
+        "buttonId": "teste_confirmar",
+        "buttonText": {"displayText": "Confirmar"},
+        "type": "RESPONSE"
+      },
+      {
+        "buttonId": "teste_ajuda",
+        "buttonText": {"displayText": "Ajuda"},
+        "type": "RESPONSE"
+      }
+    ]
+  }
+}

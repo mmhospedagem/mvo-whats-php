@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Instalação e primeira conexão
+    url: https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/INSTALLATION.md
+    about: Comece pelos requisitos, instalação e tutoriais da biblioteca.
+  - name: Relatar uma vulnerabilidade
+    url: https://github.com/mmhospedagem/mvo-whats-php/blob/main/SECURITY.md
+    about: Use um canal privado, sem publicar dados ou credenciais.

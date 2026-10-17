@@ -1,0 +1,12 @@
+{
+  "type": "buttons",
+  "data": {
+    "contentText": "Teste de botões da MVO em PHP. Escolha uma opção:",
+    "footerText": "Confirmar / Ajuda",
+    "headerType": "EMPTY",
+    "buttons": [
+      {"buttonId": "teste_confirmar", "buttonText": {"displayText": "Confirmar"}, "type": "RESPONSE"},
+      {"buttonId": "teste_ajuda", "buttonText": {"displayText": "Ajuda"}, "type": "RESPONSE"}
+    ]
+  }
+}

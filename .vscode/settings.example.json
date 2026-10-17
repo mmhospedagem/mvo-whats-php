@@ -1,0 +1,14 @@
+{
+  "php.validate.executablePath": "php",
+  "php.debug.executablePath": "php",
+  "intelephense.environment.phpVersion": "8.2.0",
+  "search.exclude": {
+    "**/vendor/**": true,
+    "**/.auth*/**": true,
+    "**/.dev/**": true,
+    "**/.cache/**": true,
+    "**/build/**": true
+  },
+  "editor.insertSpaces": true,
+  "editor.tabSize": 4
+}

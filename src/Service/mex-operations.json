@@ -1,0 +1,522 @@
+{
+  "ACSServerProviderConfig": {
+    "docId": "25133761326299603",
+    "clientDocId": "25133761326299603"
+  },
+  "ACSServerProviderIssuance": {
+    "docId": "26039599689054760",
+    "clientDocId": "26039599689054760"
+  },
+  "AcceptNewsletterAdminInvite": {
+    "docId": "9580828702035549",
+    "clientDocId": "9580828702035549"
+  },
+  "AiAgentAutoReplyControl": {
+    "docId": "27338647792432014",
+    "clientDocId": "27338647792432014"
+  },
+  "AuthAgentFeaturePolicy": {
+    "docId": "26467789126176720",
+    "clientDocId": "26467789126176720"
+  },
+  "BPAccessTokenAndSessionCookies": {
+    "docId": "26756198580685447",
+    "clientDocId": "26756198580685447"
+  },
+  "BizCreateOrder": {
+    "docId": "26486627094287046",
+    "clientDocId": "26486627094287046"
+  },
+  "BizCustomUrlGetUserGraphql": {
+    "docId": "26867176859566677",
+    "clientDocId": "26867176859566677"
+  },
+  "BizGetCategories": {
+    "docId": "26266473919627648",
+    "clientDocId": "26266473919627648"
+  },
+  "BizGetCategoriesV2": {
+    "docId": "26869203922665622",
+    "clientDocId": "26869203922665622"
+  },
+  "BizGetCustomUrlUserGraphql": {
+    "docId": "WAWebBizGetCustomUrlUserGraphqlQuery",
+    "clientDocId": "WAWebBizGetCustomUrlUserGraphqlQuery"
+  },
+  "BizGetMerchantCompliance": {
+    "docId": "25960403573553316",
+    "clientDocId": "25960403573553316"
+  },
+  "BizGetPriceTiers": {
+    "docId": "25362864436721857",
+    "clientDocId": "25362864436721857"
+  },
+  "BizGetProfileShimlinks": {
+    "docId": "24491258413796282",
+    "clientDocId": "24491258413796282"
+  },
+  "BizGraphQLRefreshCart": {
+    "docId": "WAWebBizGraphQLRefreshCartJobQuery",
+    "clientDocId": "WAWebBizGraphQLRefreshCartJobQuery"
+  },
+  "BizProfileAddressAutocomplete": {
+    "docId": "34963438739971331",
+    "clientDocId": "34963438739971331"
+  },
+  "BizQueryOrder": {
+    "docId": "26593811266898374",
+    "clientDocId": "26593811266898374"
+  },
+  "BizSetMerchantCompliance": {
+    "docId": "25188352884120072",
+    "clientDocId": "25188352884120072"
+  },
+  "CachedToken": {
+    "docId": "27013462064904056",
+    "clientDocId": "27013462064904056"
+  },
+  "CanonicalUserValid": {
+    "docId": "25995999653397511",
+    "clientDocId": "25995999653397511"
+  },
+  "ChangeNewsletterOwner": {
+    "docId": "9546742745432473",
+    "clientDocId": "9546742745432473"
+  },
+  "ConsumerFetchQuickPromotions": {
+    "docId": "35462584533386409",
+    "clientDocId": "35462584533386409"
+  },
+  "ConsumerQuickPromotionActionGraphQL": {
+    "docId": "25690382143972563",
+    "clientDocId": "25690382143972563"
+  },
+  "CreateInviteCode": {
+    "docId": "26155584267463745",
+    "clientDocId": "26155584267463745"
+  },
+  "CreateLabyrinthBackup": {
+    "docId": "27207738338837013",
+    "clientDocId": "27207738338837013"
+  },
+  "CreateMarketingCampaignAction": {
+    "docId": "26304826652483067",
+    "clientDocId": "26304826652483067"
+  },
+  "CreateNewsletter": {
+    "docId": "25149874324715067",
+    "clientDocId": "25149874324715067"
+  },
+  "CreateNewsletterAdminInvite": {
+    "docId": "9387141988078609",
+    "clientDocId": "9387141988078609"
+  },
+  "CreateReportAppeal": {
+    "docId": "27103316329328467",
+    "clientDocId": "27103316329328467"
+  },
+  "CreateWhatsAppAdsIdentity": {
+    "docId": "24393949203623093",
+    "clientDocId": "24393949203623093"
+  },
+  "CustomLabel3pdEvent": {
+    "docId": "24247439618185103",
+    "clientDocId": "24247439618185103"
+  },
+  "DebugLabyrinthInboxSnapshot": {
+    "docId": "27416732057922291",
+    "clientDocId": "27416732057922291"
+  },
+  "DeleteNewsletter": {
+    "docId": "30062808666639665",
+    "clientDocId": "30062808666639665"
+  },
+  "DemoteNewsletterAdmin": {
+    "docId": "9880997548630971",
+    "clientDocId": "9880997548630971"
+  },
+  "EditBizProfile": {
+    "docId": "26652989367627867",
+    "clientDocId": "26652989367627867"
+  },
+  "ExternalCtxAuthoriseWAChat": {
+    "docId": "9790465291023292",
+    "clientDocId": "9790465291023292"
+  },
+  "FetchAboutStatus": {
+    "docId": "24535500086059408",
+    "clientDocId": "24535500086059408"
+  },
+  "FetchAllNewslettersMetadata": {
+    "docId": "25399611239711790",
+    "clientDocId": "25399611239711790"
+  },
+  "FetchAllSubgroups": {
+    "docId": "9935467776504344",
+    "clientDocId": "9935467776504344"
+  },
+  "FetchBotCertificateRevocationList": {
+    "docId": "35807917542188393",
+    "clientDocId": "35807917542188393"
+  },
+  "FetchBotProfilesGQL": {
+    "docId": "26368585139502858",
+    "clientDocId": "26368585139502858"
+  },
+  "FetchDynamicAIModes": {
+    "docId": "25335662402775799",
+    "clientDocId": "25335662402775799"
+  },
+  "FetchGroupInfo": {
+    "docId": "27508847222068472",
+    "clientDocId": "27508847222068472"
+  },
+  "FetchGroupInfoIncludBots": {
+    "docId": "27795062750123057",
+    "clientDocId": "27795062750123057"
+  },
+  "FetchGroupInviteCode": {
+    "docId": "29247029834912157",
+    "clientDocId": "29247029834912157"
+  },
+  "FetchGroupIsInternal": {
+    "docId": "34119218944390847",
+    "clientDocId": "34119218944390847"
+  },
+  "FetchIntegritySignals": {
+    "docId": "26438847999065394",
+    "clientDocId": "26438847999065394"
+  },
+  "FetchNativeAdsMvpEligibility": {
+    "docId": "26673846358955912",
+    "clientDocId": "26673846358955912"
+  },
+  "FetchNewChatMessageCappingInfo": {
+    "docId": "24503548349331633",
+    "clientDocId": "24503548349331633"
+  },
+  "FetchNewsletter": {
+    "docId": "27456920720571478",
+    "clientDocId": "27456920720571478"
+  },
+  "FetchNewsletterAdminCapabilities": {
+    "docId": "9801384413216421",
+    "clientDocId": "9801384413216421"
+  },
+  "FetchNewsletterAdminInfo": {
+    "docId": "26278439461859188",
+    "clientDocId": "26278439461859188"
+  },
+  "FetchNewsletterDehydrated": {
+    "docId": "26944199458535748",
+    "clientDocId": "26944199458535748"
+  },
+  "FetchNewsletterDirectoryCategoriesPreview": {
+    "docId": "35266481849605779",
+    "clientDocId": "35266481849605779"
+  },
+  "FetchNewsletterDirectoryList": {
+    "docId": "26125047313831973",
+    "clientDocId": "26125047313831973"
+  },
+  "FetchNewsletterDirectorySearchResults": {
+    "docId": "26301059626252132",
+    "clientDocId": "26301059626252132"
+  },
+  "FetchNewsletterEnforcements": {
+    "docId": "27835373536068060",
+    "clientDocId": "27835373536068060"
+  },
+  "FetchNewsletterFollowers": {
+    "docId": "27472091235714801",
+    "clientDocId": "27472091235714801"
+  },
+  "FetchNewsletterInsights": {
+    "docId": "9853618868050977",
+    "clientDocId": "9853618868050977"
+  },
+  "FetchNewsletterIsDomainPreviewable": {
+    "docId": "9849510985088294",
+    "clientDocId": "9849510985088294"
+  },
+  "FetchNewsletterMessageReactionSenderList": {
+    "docId": "29575462448733991",
+    "clientDocId": "29575462448733991"
+  },
+  "FetchNewsletterPendingInvites": {
+    "docId": "9783111038412085",
+    "clientDocId": "9783111038412085"
+  },
+  "FetchNewsletterPollVoters": {
+    "docId": "9407762219322536",
+    "clientDocId": "9407762219322536"
+  },
+  "FetchNewsletterReports": {
+    "docId": "35936238352686172",
+    "clientDocId": "35936238352686172"
+  },
+  "FetchOHAIKeyConfig": {
+    "docId": "29366514836329275",
+    "clientDocId": "29366514836329275"
+  },
+  "FetchOIDCState": {
+    "docId": "24622479247368194",
+    "clientDocId": "24622479247368194"
+  },
+  "FetchPlaintextLinkPreview": {
+    "docId": "9101130456653613",
+    "clientDocId": "9101130456653613"
+  },
+  "FetchQuickPromotions": {
+    "docId": "27262639366727460",
+    "clientDocId": "27262639366727460"
+  },
+  "FetchReachoutTimelock": {
+    "docId": "23983697327930364",
+    "clientDocId": "23983697327930364"
+  },
+  "FetchRecommendedNewsletters": {
+    "docId": "25806748772361516",
+    "clientDocId": "25806748772361516"
+  },
+  "FetchSimilarNewsletters": {
+    "docId": "26217043484590756",
+    "clientDocId": "26217043484590756"
+  },
+  "FetchSubgroupSuggestions": {
+    "docId": "23972005349071865",
+    "clientDocId": "23972005349071865"
+  },
+  "FetchSubscriptionEntryPoints": {
+    "docId": "9569660009784796",
+    "clientDocId": "9569660009784796"
+  },
+  "FetchSubscriptions": {
+    "docId": "35324254123840149",
+    "clientDocId": "35324254123840149"
+  },
+  "FetchTextStatusList": {
+    "docId": "24072923595647473",
+    "clientDocId": "24072923595647473"
+  },
+  "GetAccessTokenFromOIDCCode": {
+    "docId": "25278212845117908",
+    "clientDocId": "25278212845117908"
+  },
+  "GetAccountNonce": {
+    "docId": "25091178200467555",
+    "clientDocId": "25091178200467555"
+  },
+  "GetFBAccountPages": {
+    "docId": "24564518546541529",
+    "clientDocId": "24564518546541529"
+  },
+  "GetNumbersForBrandIds": {
+    "docId": "33391034967211217",
+    "clientDocId": "33391034967211217"
+  },
+  "GetPrivacyLists": {
+    "docId": "26806428515612550",
+    "clientDocId": "26806428515612550"
+  },
+  "GetPrivacySettings": {
+    "docId": "25637004609323493",
+    "clientDocId": "25637004609323493"
+  },
+  "GetUsername": {
+    "docId": "25347099718279209",
+    "clientDocId": "25347099718279209"
+  },
+  "GetWAAEligibility": {
+    "docId": "24346676171620002",
+    "clientDocId": "24346676171620002"
+  },
+  "GraphQLProductCatalogGetPublicKey": {
+    "docId": "WAWebGraphQLProductCatalogGetPublicKeyJobQuery",
+    "clientDocId": "WAWebGraphQLProductCatalogGetPublicKeyJobQuery"
+  },
+  "GraphQLVerifyPostcode": {
+    "docId": "WAWebGraphQLVerifyPostcodeJobQuery",
+    "clientDocId": "WAWebGraphQLVerifyPostcodeJobQuery"
+  },
+  "GroupStoreInviteSms": {
+    "docId": "26810859745268181",
+    "clientDocId": "26810859745268181"
+  },
+  "GroupSuspensionAppeal": {
+    "docId": "25946115325088226",
+    "clientDocId": "25946115325088226"
+  },
+  "IntegrityChallengeResponse": {
+    "docId": "26230331493320650",
+    "clientDocId": "26230331493320650"
+  },
+  "JoinNewsletter": {
+    "docId": "24404358912487870",
+    "clientDocId": "24404358912487870"
+  },
+  "LeaveNewsletter": {
+    "docId": "9767147403369991",
+    "clientDocId": "9767147403369991"
+  },
+  "LidChangeNotification": {
+    "docId": "9892367127524985",
+    "clientDocId": "9892367127524985"
+  },
+  "LogNewsletterExposures": {
+    "docId": "25260800823586918",
+    "clientDocId": "25260800823586918"
+  },
+  "NativeMLModel": {
+    "docId": "32743078615336512",
+    "clientDocId": "32743078615336512"
+  },
+  "NewsletterAddPaidPartnershipLabel": {
+    "docId": "26102375079404865",
+    "clientDocId": "26102375079404865"
+  },
+  "NewsletterLabelAiContent": {
+    "docId": "27909718265289596",
+    "clientDocId": "27909718265289596"
+  },
+  "NewsletterPinMessages": {
+    "docId": "27165709459706559",
+    "clientDocId": "27165709459706559"
+  },
+  "NewsletterQuestionResponseStateUpdate": {
+    "docId": "24636260219323456",
+    "clientDocId": "24636260219323456"
+  },
+  "NewsletterUnpinMessages": {
+    "docId": "28007176042216937",
+    "clientDocId": "28007176042216937"
+  },
+  "QueryCatalog": {
+    "docId": "9916553288394782",
+    "clientDocId": "9916553288394782"
+  },
+  "QueryCatalogHasCategories": {
+    "docId": "9759957480718978",
+    "clientDocId": "9759957480718978"
+  },
+  "QueryCatalogProduct": {
+    "docId": "9647868451963105",
+    "clientDocId": "9647868451963105"
+  },
+  "QueryProductCollections": {
+    "docId": "9430970660362540",
+    "clientDocId": "9430970660362540"
+  },
+  "QueryProductListCatalog": {
+    "docId": "30125049463760630",
+    "clientDocId": "30125049463760630"
+  },
+  "QueryProductSingleCollection": {
+    "docId": "9546992575408789",
+    "clientDocId": "9546992575408789"
+  },
+  "QuerySubgroupParticipantCount": {
+    "docId": "24079399904996141",
+    "clientDocId": "24079399904996141"
+  },
+  "QuickPromotionAction": {
+    "docId": "9741612265875562",
+    "clientDocId": "9741612265875562"
+  },
+  "ReportProduct": {
+    "docId": "27419506181072609",
+    "clientDocId": "27419506181072609"
+  },
+  "RequestClientLogsForBug": {
+    "docId": "27135500612803533",
+    "clientDocId": "27135500612803533"
+  },
+  "ResolveAccountTypeAndAdPage": {
+    "docId": "24732033759799062",
+    "clientDocId": "24732033759799062"
+  },
+  "ResolveAccountTypeAndAdPageQuery": {
+    "docId": "24856134350695832",
+    "clientDocId": "24856134350695832"
+  },
+  "RevokeNewsletterAdminInvite": {
+    "docId": "9656078347839416",
+    "clientDocId": "9656078347839416"
+  },
+  "SetUsername": {
+    "docId": "25757341163897635",
+    "clientDocId": "25757341163897635"
+  },
+  "SetUsernameKey": {
+    "docId": "9749436995157074",
+    "clientDocId": "9749436995157074"
+  },
+  "SignupMetadata": {
+    "docId": "26378108788468347",
+    "clientDocId": "26378108788468347"
+  },
+  "SupportBugReportSubmit": {
+    "docId": "25952242091096312",
+    "clientDocId": "25952242091096312"
+  },
+  "SupportContactFormSubmit": {
+    "docId": "26494666453460666",
+    "clientDocId": "26494666453460666"
+  },
+  "SupportMessageFeedbackSubmit": {
+    "docId": "25772720305756789",
+    "clientDocId": "25772720305756789"
+  },
+  "TransferCommunityOwnership": {
+    "docId": "29643783178598899",
+    "clientDocId": "29643783178598899"
+  },
+  "UpdateGroupProperty": {
+    "docId": "9418211574894172",
+    "clientDocId": "9418211574894172"
+  },
+  "UpdateNewsletter": {
+    "docId": "24250201037901610",
+    "clientDocId": "24250201037901610"
+  },
+  "UpdateNewsletterUserSetting": {
+    "docId": "31938993655691868",
+    "clientDocId": "31938993655691868"
+  },
+  "UpdateTextStatus": {
+    "docId": "9152604461510864",
+    "clientDocId": "9152604461510864"
+  },
+  "UploadLabyrinthMessages": {
+    "docId": "27746955431579348",
+    "clientDocId": "27746955431579348"
+  },
+  "UsernameAvailability": {
+    "docId": "26122779627399568",
+    "clientDocId": "26122779627399568"
+  },
+  "Usync": {
+    "docId": "29829202653362039",
+    "clientDocId": "29829202653362039"
+  },
+  "WAAOnboarding": {
+    "docId": "25173295938976172",
+    "clientDocId": "25173295938976172"
+  },
+  "WaffleFXServiceDataQueryV2": {
+    "docId": "9475021792620702",
+    "clientDocId": "9475021792620702"
+  },
+  "WaffleFXWAMOUpdateUOOM": {
+    "docId": "10031635203620145",
+    "clientDocId": "10031635203620145"
+  },
+  "WaffleXE": {
+    "docId": "32172601809054525",
+    "clientDocId": "32172601809054525"
+  },
+  "useWAWebEstimatedDailyReach": {
+    "docId": "26555147174103537",
+    "clientDocId": "26555147174103537"
+  }
+}

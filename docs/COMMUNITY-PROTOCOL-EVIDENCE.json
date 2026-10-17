@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-15T02:41:16.756699+00:00",
+  "implementation": "Native PHP community service; one existing authenticated session",
+  "scope": {
+    "sdk_methods": 38,
+    "api_operations": 39,
+    "node_runtime_required": false,
+    "real_community_mutations_executed": false,
+    "current_server_acceptance_verified": false
+  },
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/tulir/whatsmeow/main/group.go",
+      "type": "primary implementation source",
+      "observations": [
+        "parent creation",
+        "linked_parent creation",
+        "sub_groups query",
+        "links/link",
+        "unlink",
+        "membership_requests_action",
+        "pending invitation acceptance"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Socket/groups.ts",
+      "type": "primary implementation source",
+      "observations": [
+        "group metadata",
+        "participant mutation results",
+        "membership request response shape",
+        "invitation IQs"
+      ]
+    },
+    {
+      "path": "src/Service/mex-operations.json",
+      "type": "local persisted-operation manifest",
+      "operations": [
+        "FetchAllSubgroups",
+        "FetchGroupIsInternal",
+        "TransferCommunityOwnership",
+        "FetchSubgroupSuggestions",
+        "GroupSuspensionAppeal"
+      ]
+    }
+  ],
+  "protocol_notes": [
+    "Public source URLs are mutable references, not immutable server specifications.",
+    "No external implementation is executed at runtime.",
+    "IQ and MEX fixtures validate request/response behavior locally; they do not attest to server availability or account permissions.",
+    "Community updates retain the existing group event name."
+  ],
+  "checks": {
+    "sdk": {
+      "tests": 1397,
+      "assertions": 26816,
+      "result": "passed"
+    },
+    "api": {
+      "tests": 488,
+      "assertions": 32667,
+      "result": "passed"
+    },
+    "sdk_phpstan_level": 6,
+    "api_phpstan_level": 5,
+    "dbgp": "passed",
+    "community_sdk_tests": 87,
+    "community_handler_tests": 118
+  },
+  "source_sha256": {
+    "src/Service/CommunityService.php": "5f0676dd8bb1669e781e9cbd3021b39636e8aa73e3d33cf30259c1ca53ad69ed",
+    "src/Service/GroupService.php": "15c7c9440271f21827fdf233369507a58f0ea9c166825c1790a5a356b63def7b",
+    "src/Service/Services.php": "0299691b7a0f15cdd869cebf3cf1790ecd8489c547fa31aceb4dcccf728aaf4f",
+    "src/Service/IncomingEvents.php": "facd67d68def20c0d237ce62de9e49625d03f26e194e95f33986f4eaeb5b73c2",
+    "src/WaClient.php": "ed5062fd168e3bd517c0148465ceb8e5a1552fd19eb280e0909fff3c9741b6f4",
+    "src/Mcp/ClientRuntime.php": "4d9ad815b7f567b09241b0d98b93a336c117e48236070b63114e2aacd6c09958",
+    "tests/phpunit/CommunityServiceTest.php": "a735ae16b7b26400e1d135d2cea3bfc7a2b7513fb05fff86f25939dca99dfc0d"
+  },
+  "source_revisions": [
+    {
+      "updated_at_utc": "2026-10-15T03:03:48.832080+00:00",
+      "reason": "Status integration changed shared client/service/MCP wiring; community protocol behavior retained.",
+      "checks": {
+        "sdk": {
+          "tests": 1470,
+          "assertions": 27080,
+          "result": "passed"
+        },
+        "api": {
+          "tests": 563,
+          "assertions": 37475,
+          "result": "passed"
+        }
+      },
+      "changed_sources": [
+        {
+          "previous_path": "src/Service/Services.php",
+          "previous_sha256": "62e0fc3ccc331982282f85b4d3cd6b954ee5dc202b855fb93fae410f9c28ba81",
+          "current_sha256": "0333cfc4edd8cd6f57a55c0f4a8f039e785fa0967ade3232bce5b05f805789b7"
+        },
+        {
+          "previous_path": "src/WaClient.php",
+          "previous_sha256": "2b794d82f2a0984915d0f700221f0d2e778c916a0f013ceb967befe39568de21",
+          "current_sha256": "a3462a57bfee797a2f56361ecc7a1e516633d1c3ac24a68891608f3fba13b3b8"
+        },
+        {
+          "previous_path": "src/Mcp/ClientRuntime.php",
+          "previous_sha256": "4eca68ae66c40ffaef8b9277921491c971740ee1d9a1a948563a30edb4fc3a19",
+          "current_sha256": "4d9ad815b7f567b09241b0d98b93a336c117e48236070b63114e2aacd6c09958"
+        }
+      ]
+    },
+    {
+      "updated_at_utc": "2026-10-15T04:05:00.710760+00:00",
+      "reason": "Native Flow construction and response projection corrected against public WhatsApp Web modules. Historical protocol observations retained.",
+      "checks": {
+        "sdk": {
+          "tests": 1599,
+          "assertions": 27796,
+          "result": "passed"
+        },
+        "api": {
+          "tests": 619,
+          "assertions": 37848,
+          "result": "passed"
+        }
+      },
+      "changed_sources": [
+        {
+          "previous_path": "src/WaClient.php",
+          "previous_sha256": "a3462a57bfee797a2f56361ecc7a1e516633d1c3ac24a68891608f3fba13b3b8",
+          "current_sha256": "55ac3a3d33d77526c83819b88f047613b8c2937f49cf454a7ca0ca8641860ba6"
+        }
+      ]
+    }
+  ],
+  "implementation_revisions": [
+    {
+      "updated_at_utc": "2026-10-15T11:16:32.428952+00:00",
+      "reason": "Channel management integration and shared-service regressions; historical protocol/runtime observations retained.",
+      "checks": {
+        "sdk": {
+          "tests": 1852,
+          "assertions": 28785,
+          "result": "passed",
+          "log_sha256": "52fbea53f3684910266654af7ecbb0c64aa60d17fca2b72022ca5b0a3007c8f6"
+        },
+        "api": {
+          "tests": 1055,
+          "assertions": 55579,
+          "result": "passed",
+          "log_sha256": "19c810c69d6d6d32a6f245da09bdd74bfe89b09baee03bb22bd4be7901142194"
+        }
+      },
+      "new_live_operations_in_this_revision": false,
+      "changed_sources": [
+        {
+          "path": "src/Service/Services.php",
+          "project": "sdk",
+          "previous_sha256": "0333cfc4edd8cd6f57a55c0f4a8f039e785fa0967ade3232bce5b05f805789b7",
+          "current_sha256": "0299691b7a0f15cdd869cebf3cf1790ecd8489c547fa31aceb4dcccf728aaf4f"
+        },
+        {
+          "path": "src/Service/IncomingEvents.php",
+          "project": "sdk",
+          "previous_sha256": "81f784c09430ab2c9cadf81fbebe986946f0579ed4dcb63d4dc0309800585237",
+          "current_sha256": "facd67d68def20c0d237ce62de9e49625d03f26e194e95f33986f4eaeb5b73c2"
+        },
+        {
+          "path": "src/WaClient.php",
+          "project": "sdk",
+          "previous_sha256": "55ac3a3d33d77526c83819b88f047613b8c2937f49cf454a7ca0ca8641860ba6",
+          "current_sha256": "ed5062fd168e3bd517c0148465ceb8e5a1552fd19eb280e0909fff3c9741b6f4"
+        }
+      ]
+    }
+  ]
+}

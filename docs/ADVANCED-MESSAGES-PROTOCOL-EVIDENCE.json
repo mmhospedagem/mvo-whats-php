@@ -1,0 +1,127 @@
+{
+  "date": "2026-10-16",
+  "method": "Read-only REA of the selected shipped Android artifact and previously captured public Web bundles; no account sends or device mutations.",
+  "android": {
+    "version": "2.26.40.76",
+    "package": "com.whatsapp",
+    "apkSha256": "bb86534df2207da45ce9beabcde2576a3b8ca3ec170603f286630f020a792106",
+    "observations": [
+      {
+        "feature": "event_cover",
+        "classMethod": "X.Cx3.ADZ",
+        "evidenceId": "ev_7815fe6c0afc01bcb965858623eb84ddc09b49e2cbb26b59268fde3b8106161f",
+        "evidenceFileSha256": "271e2e053726a63df7bbe539d814734c1938eabbab9bb093e77640824740ca1a",
+        "observed": "The authenticated image producer wraps EVENT_COVER_IMAGE in eventCoverImage; parent association remains MessageContextInfo.",
+        "implementationScope": "typed upload + parent/child sender; partial failures retain IDs"
+      },
+      {
+        "feature": "scheduled_call_mediatype",
+        "classMethod": "X.CdZ.A07",
+        "evidenceId": "ev_78dcaf543520244b02133a9be958da509c652797b06a67110059e83bcafc598a",
+        "evidenceFileSha256": "66ea908cab7bdfab2d7840b3f2ab810534d315019900259390c74bba5664bb2c",
+        "observed": "Native message types80/86 map to scheduled_call/scheduled_call_edit encryption media attributes.",
+        "implementationScope": "typed builder and authenticated original-author cancellation; offline Signal verified; no physical UI validation"
+      },
+      {
+        "feature": "status_poll_consumer",
+        "classMethod": "X.Cx8.CJz",
+        "evidenceId": "ev_d4972291260ba48b654e2b6e9670534ffe8cd17460aefbe2fc966f3c048cdb5e",
+        "evidenceFileSha256": "f71648cdd6e070a2304c121816fce52578a3e0667fe568022d4e8681844fe4ae",
+        "observed": "The consumer unwraps pollCreationMessageV4.message containing pollCreationMessage.",
+        "implementationScope": "receive/projection/local query; publication/vote routing not established"
+      },
+      {
+        "feature": "status_poll_current_producer",
+        "classMethod": "X.Cx8.A02",
+        "evidenceId": "ev_7354e91fa6f07a077533077478554286772ebc8c5ba81126b46876a6bf3875f2",
+        "evidenceFileSha256": "9200e9190e6d662d41f19b738d40f979db4ee3ab2580b5577307e70250de2779",
+        "observed": "The examined poll producer selects V3,V5,V6; channel branch in A00 selectsV2. A full APK field-reference scan found V4 reads but no direct write.",
+        "implementationScope": "No guessed V4 publisher"
+      },
+      {
+        "feature": "group_status_producer",
+        "classMethod": "X.CyV.C3g",
+        "evidenceId": "ev_730e5e14e568ec44b0a8d02e701d677ed9d01d62a53777d6f08a489b65b36c55",
+        "evidenceFileSha256": "b30efae6c09ca889f38a3858c6d564f5d7e7474f8f4bb8aec9d784c0defcad53",
+        "observed": "Group-status metadata selects groupStatusMessageV2 and moves MessageContextInfo outside the wrapper.",
+        "implementationScope": "Receive/local group query and direct group V2 publication using the supplied producer reference; group membership and Sender Keys are validated by the transport. No broadcast audience or lifetime is inferred from the wrapper."
+      },
+      {
+        "feature": "group_status_consumer",
+        "classMethod": "X.CyV.C3c",
+        "evidenceId": "ev_7ffbe1791bfd005c6ff0c3d34f9e4b3de40eda6dc3cabbf0c3e5ad8b8018780e",
+        "evidenceFileSha256": "b60514457fa2d6b1b52b6b1f6d14457b58a16a8548b0bcba1f6c0c3fe222d163",
+        "observed": "The consumer is gated by feature13956 and marks the result as group status.",
+        "implementationScope": "client compatibility not guaranteed"
+      },
+      {
+        "feature": "add_yours_response",
+        "classMethod": "X.C7WK.A01",
+        "evidenceId": "ev_6f9164a08f2a7acd4b780fa6f1cb547143f3d7e8c80628439e6977ced34307e2",
+        "evidenceFileSha256": "1f6b8094cbe9756d06bdd8f875e91b3436eb70f9ac6331dad63709cf2d1c9090",
+        "observed": "The real response uses associatedChildMessage with statusNotificationMessage typeSTATUS_ADD_YOURS and original/response keys; associationSTATUS_NOTIFICATION targets the response key.",
+        "implementationScope": "receive/projection; not prompt creation"
+      }
+    ]
+  },
+  "publicWeb": {
+    "url": "https://web.whatsapp.com/?locale=en_US",
+    "captureRevision": "1050596417",
+    "reaEvidenceId": "ev_cfe300ed4caf44757b7077e4305a70564bd4d45e2ae4e5bcc1d6a707b43b2754",
+    "modules": [
+      {
+        "module": "WAWebPollOptionHashUtils",
+        "sha256": "b5598155c2c2e541aff0fffa0b33580fb8f7b3e42100a66f45bc4dd96ea05f28"
+      },
+      {
+        "module": "WAWebPollsCreateOptionLocalIdMap",
+        "sha256": "b1a2b793cf58fa72433b6de0cc3498c72a1ffdc61b4eac03ec1724be6b11e9a4"
+      },
+      {
+        "module": "WAWebPollsGeneratePollCreationMessageProto",
+        "sha256": "52c23a1f454dbcba646877b3d0170c99ad0419dd318677468e48adf9ca63aec6"
+      },
+      {
+        "module": "WAWebIsPhotoPollReceiverEnabled",
+        "sha256": "7ee2d4c50b06f5306e9ac0b7e7581a218031fdf115790c7e104be2712e814c60"
+      },
+      {
+        "module": "WAWebE2EProtoGenerator",
+        "sha256": "0630b4fa6eccd91d37e4f7cf9ade394deda2143f92f73b49042481978f55c13f"
+      },
+      {
+        "module": "WAWebAssociationProtoUtils",
+        "sha256": "f2aef557c52a4f204a390133e01bcdadd1a9add77a6df0aabfbd4923e7eab795"
+      },
+      {
+        "module": "WAWebNewsletterSendMessageJob",
+        "sha256": "86fb9612749fbd6ea9f813109a014a36ccb72afbfc4ab0e928b24c9deb3d62a3"
+      },
+      {
+        "module": "WASmaxOutMessagePublishMessageAssociationTypeMixin",
+        "sha256": "2dab02aead40f1507c5b273f771410d91f2119795400a1ce8049913462a587be"
+      }
+    ],
+    "photoPollScope": "Newsletters only; plaintext image uploads; optionHash=SHA256(lowerhexSHA256(name)+base64imageSHA256); vote tokens remain SHA256(name); MEDIA_POLL child association without invented index."
+  },
+  "limits": [
+    "Schema presence alone is not a supported publisher.",
+    "Status poll and Add Yours prompt publication remain unavailable without verified distribution and authorization. Native group Status is exposed through the direct group transport, with client feature availability still requiring validation.",
+    "Add Yours6mO is the local status_sticker/content_proto schema; it must not be added as an invented E2E type.",
+    "Offline transport tests establish encoding, cryptographic association and ACK handling; they do not certify all physical WhatsApp clients or server enablement."
+  ],
+  "suppliedSource": {
+    "file": "gpstatus.js",
+    "sha256": "f34b930295de543606763c69e8c5f7612b6ab6a701f35ff588bc98669a734133",
+    "functions": [
+      "mediaContext",
+      "sendGroupStatus",
+      "publishPanelGroupStatus",
+      "revokeGroupStatus"
+    ],
+    "observed": "Direct group send of groupStatusMessageV2.message plus meta.is_group_status=true; inner ContextInfo uses isGroupStatus=true and statusAudienceMetadata audienceType=CLOSE_FRIENDS(1) with display listName/listEmoji.",
+    "scope": "Single group and explicit list of groups. Display metadata does not create a separate broadcast audience. Multi-group sends require distinct IDs and retain each outcome.",
+    "excluded": "The external SPR personalized relay plugin was not supplied. Its iOS branch sends an ordinary chat message and is not evidence of native group Status support on iOS.",
+    "validation": "Offline tests cover typed payloads, group authorization, encrypted transport and partial outcomes. Server ACK and source analysis do not prove physical-client rendering."
+  }
+}

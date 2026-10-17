@@ -1,0 +1,564 @@
+{
+  "schemaVersion": "2.3000.1050588369",
+  "publicWebRevision": "1050625872",
+  "method": "Static public Bootloader resource-map selection; no account login or execution of application modules.",
+  "publicSource": "https://web.whatsapp.com/?locale=en_US",
+  "observations": [
+    {
+      "feature": "channel_scheduling",
+      "evidenceId": "ev_909e0cec9292b590e9579ea2ddc3772b53a024b882cd5bc22336808174ae2679",
+      "summary": "The public scheduled-message producer checks eligibility; the eligibility function explicitly excludes newsletters.",
+      "implementation": "Local PHP scheduling is explicitly mvo_local; no native creation claim."
+    },
+    {
+      "feature": "photo_polls",
+      "summary": "The public producer uploads plaintext images for newsletters and binds them with MEDIA_POLL and an image option hash. Votes remain hashes of option names.",
+      "implementation": "Newsletter-only typed sender; no claim of successful client UI rendering."
+    }
+  ],
+  "moduleInventories": {
+    "scheduling": [
+      {
+        "module": "WAWebOpenScheduledMsgsDeleteReview",
+        "sha256": "63449deda907e092480614de3d1d83d9758ac446f56a39f9cbe2e486f41d41af",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          430825,
+          432891
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgsReviewText.react",
+        "sha256": "d672d87ecfacd362b3a94fa7b10fcc4050d9ba4a66ded752f1dbb646a7201a3e",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          432891,
+          434082
+        ]
+      },
+      {
+        "module": "useWAWebScheduledMsgsReview",
+        "sha256": "5aa577b74a25e04129e70d1de4e372913d3fb08a8f04bbf640b46bf0da4ae2c6",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          437827,
+          438357
+        ]
+      },
+      {
+        "module": "WAWebExtractAssociationFieldsFromScheduledMsg",
+        "sha256": "3dedbd5978d19cc318122be87c9ee5b0e03ca16b970459e40391233f16f227ce",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          1756676,
+          1757183
+        ]
+      },
+      {
+        "module": "WAWebExtractEphemeralFieldsFromScheduledMsg",
+        "sha256": "d3434d650a63e5293e56d6c6094a8511ad6ed4ce304e76b4995a2ed718133e1e",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          1757183,
+          1758300
+        ]
+      },
+      {
+        "module": "WAWebExtractPairedMediaTypeFromScheduledMsg",
+        "sha256": "9ca389c9bd42eeea65b007fdf1c487d06f3d94ffc669d24844d48b07d6e4081d",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          1758300,
+          1758723
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgRevealChatUtils",
+        "sha256": "b47825f09044b6db5dadb34f8f862f5bd560194d8e18967816e1aa7b2a61f267",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          1758723,
+          1759142
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgPostNotificationHandler",
+        "sha256": "bf49d0ec7945e17b01477b28ca3982e14ac626cf31659c6abf75aa52f6b361ad",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          1759142,
+          1767690
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgRevealNotificationHandler",
+        "sha256": "7d460f7551e4fc969404889a417bc0dbde645a205edb3e5799c839c8086c3441",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          1767690,
+          1781023
+        ]
+      },
+      {
+        "module": "WAWebWamEnumScheduledMessageActionType",
+        "sha256": "c15905d5c30840869eabb77bfea6fb27a64c16c205499c6323e6aded571d2c48",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4371132,
+          4371393
+        ]
+      },
+      {
+        "module": "WAWebWamEnumScheduledMessageEntrypoint",
+        "sha256": "bac9ce47e1104fdfa5975dff1ca85f5da1c6f04fb36e1d6e0a153ff77c6896ad",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4371393,
+          4371575
+        ]
+      },
+      {
+        "module": "WAWebScheduledMessageActionWamEvent",
+        "sha256": "588514fa90ee5e4b7fe5e5a017759e0d005ed1ed7de619420180fb793f60ad76",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4371575,
+          4372675
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgActionLogger",
+        "sha256": "d740e74a89e78e3d3b30429439da50e244b1d560c6aefbc2507165b49a98ee8b",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4372675,
+          4375815
+        ]
+      },
+      {
+        "module": "useWAWebScheduledMsgCount",
+        "sha256": "21c2e507277d7053f453916c1537a1f9d4f20f83463a8929d60b33cd9f5daaec",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4411133,
+          4412339
+        ]
+      },
+      {
+        "module": "WAWebGenerateProtocolUnscheduleMessageProto",
+        "sha256": "6058be3e604fc861d85440d33307eb9788adfb8977f88ea035485222b72675a3",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4430684,
+          4431005
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgUnscheduleDirectSend",
+        "sha256": "6e0787bf56f0db3a1d361adde0c5d89c5d719d8f19c7fe094deda25eb281eee6",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4431005,
+          4432374
+        ]
+      },
+      {
+        "module": "WAWebBulkUnscheduleScheduledMsgs",
+        "sha256": "3fc3770b42d70ca5bde93419f5e3d2035cbfe067a0b16a4c205a006fc1fd1fc9",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4435867,
+          4436847
+        ]
+      },
+      {
+        "module": "WAWebIsScheduledMessagesAvailableForChat",
+        "sha256": "3a7a1b30071adc0326c062488b590a3299d3c7fc66d644057d1beb6c2afba44c",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4516991,
+          4517769
+        ]
+      },
+      {
+        "module": "WAWebScheduledMessagesListLoadable",
+        "sha256": "0e7c47552941782aff7962d6ce205d91ac591ee8e7acb0f9d642e314432922bb",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4572218,
+          4572825
+        ]
+      },
+      {
+        "module": "WAWebShowScheduledMsgsBulkDeleteToast",
+        "sha256": "2daea85e72b791bf7b1ccf7395107ff4dddc96d1bddf9484acdf8ee8e80d8567",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          4593527,
+          4594514
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgCreatedNotification",
+        "sha256": "d24f2f0ce21e4375904faaec2e1590457fd8c739175d2c5872b54b3fd5381014",
+        "sourceSha256": "e3870c9f626bf17e033ff7f04295d9cc327f0dd94f10dd124d4805a2067c606d",
+        "sourceRange": [
+          993353,
+          995507
+        ]
+      },
+      {
+        "module": "WAWebRetryScheduledMsgAction",
+        "sha256": "cd88d08392424ca2d3661bd357da4368b569e0257f138d812596e450ed321017",
+        "sourceSha256": "8d2d0519237452329a80ad007dd727e821fcb4b756870a210c92b9b964fe079b",
+        "sourceRange": [
+          19,
+          1822
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgDeliverability",
+        "sha256": "e1513977a6e1ed3c7e079f5db6689a2cad06d3f4af7039d59bf40523cc85413e",
+        "sourceSha256": "8d2d0519237452329a80ad007dd727e821fcb4b756870a210c92b9b964fe079b",
+        "sourceRange": [
+          1822,
+          2324
+        ]
+      },
+      {
+        "module": "WAWebSendScheduledMsgNowAction",
+        "sha256": "8187f303b3357df298299505c6cbcc5508642994017aa04c0597e566463c4f94",
+        "sourceSha256": "8d2d0519237452329a80ad007dd727e821fcb4b756870a210c92b9b964fe079b",
+        "sourceRange": [
+          2324,
+          4088
+        ]
+      },
+      {
+        "module": "WAWebScheduledMessagesList.react",
+        "sha256": "719934b866561f668307f01e440ef96ec4bcf47818f83e4e57f7abcb31070c58",
+        "sourceSha256": "8d2d0519237452329a80ad007dd727e821fcb4b756870a210c92b9b964fe079b",
+        "sourceRange": [
+          4088,
+          27304
+        ]
+      },
+      {
+        "module": "WAWebScheduleMessageButton.react",
+        "sha256": "71ba55e27740630195fd864e6f149b2fdb0c77257de7c385d0759aec8a89c7c2",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          1782768,
+          1785222
+        ]
+      },
+      {
+        "module": "WAWebScheduledMsgLimitDialog.react",
+        "sha256": "1acd4ab3a9e3ad042b168d2a41b737dc08a39651a6c2a54383ff6096e0e04a0a",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          1785222,
+          1785806
+        ]
+      },
+      {
+        "module": "WAWebSendScheduledMsgAction",
+        "sha256": "3b8b99079c956a3904f79cce04854280a83d8d3ae8e9315bee1b1d3b21cc06ce",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          1789502,
+          1798081
+        ]
+      }
+    ],
+    "statusEnvelope": [
+      {
+        "module": "WAWebSendStatusMsgAction",
+        "sha256": "c6d31494bc1f0046d0b775313aaca8495564a164e4f087b501f35f9ec569e43f",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2209620,
+          2216751
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusBroadcastPublishTypeMixins",
+        "sha256": "253fccc6ba432b7363cb1b3b140d01b8c0adbace49a1ee3c1c69877954bd4d16",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2700488,
+          2701164
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusContentTypeMediaMixin",
+        "sha256": "a618bb81edbeb40bd4c825a25bf5c89b7088f9c3757c796faa55652476642923",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2701164,
+          2701458
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusContentTypeMediaFanoutMixin",
+        "sha256": "4cbcbe3b91f24ac35f9a2c9f2686431ee950853577c0d31fc143477920ff8c5d",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2701458,
+          2702315
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusEncContentTypeMixin",
+        "sha256": "c792e454256c41ab6c1f48692d21e4f9560999b55f4b39eb700857f634388413",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2702315,
+          2702698
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusContentTypeReactionMixin",
+        "sha256": "4dc42b973c1597ddbf9d4424ec169a5dbcf7b0b448afe38e290482ff108413b1",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2702698,
+          2703001
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusContentTypeTextMixin",
+        "sha256": "4847ba0095ca8e7c6a990d16294a82361f9999401cda8e3ec8855560124ecf87",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2703001,
+          2703292
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusEncContentTypeMixins",
+        "sha256": "e80a16d395fbe7dd0699e12c809ac9a887caaebb1e2588eb67b5e1ee061a2cb8",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2703292,
+          2704093
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusEncHashMetaAttributeMixin",
+        "sha256": "6685b2765e47e13f4eae98e645099e2dc24537ea6db4713f5c8939a5514c8af5",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2704093,
+          2704567
+        ]
+      },
+      {
+        "module": "WASmaxOutStatusPublishStatusEncMessageAssociationTypeMixin",
+        "sha256": "02f7e98e571068cf8eafd2fe3554820071478ce21016cd5410bb016ef03e87b3",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2705496,
+          2705924
+        ]
+      },
+      {
+        "module": "WAWebStatusPublishRequestArgs",
+        "sha256": "7b95c40c86d35159f03606a44eceea92d480cdcd4d9c010e055bc1199d418b9f",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2713890,
+          2722954
+        ]
+      },
+      {
+        "module": "WAWebEncryptAndSendStatusMsg",
+        "sha256": "599c000b1f129b41d6c2ba03e7be6cc5b1a25a54ba49f8212df7491440eb2df6",
+        "sourceSha256": "a993185bed1eec91c9c1be4727f8af9620ac24af870f11b1417c670097cdf45f",
+        "sourceRange": [
+          2722954,
+          2739915
+        ]
+      }
+    ],
+    "privacyUI": [
+      {
+        "module": "WAWebAcp2DrawerView.react",
+        "sha256": "ab2d65547087305f4d6ff7d9cf6c3edbd861a6af83c608ae58c6f802b7e5fe6b",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          20686,
+          27310
+        ]
+      },
+      {
+        "module": "WAWebAcp2Drawer.react",
+        "sha256": "041f9a7508851f7558fb852e9cdda5a4a6b2ca862a4c8f044ece7d0d970c4af5",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          27310,
+          29027
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingDrawer.react",
+        "sha256": "8a6a7224db8422147b56f78d8ed7caa67c1b537d55de1d273778ab23ce873bb2",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          466030,
+          474830
+        ]
+      },
+      {
+        "module": "WAWebMexLimitSharingUpdateHandler",
+        "sha256": "640d9bd534760aa3df5861f75af0dc36ba3dd73e2477b75667f14a90344e45b9",
+        "sourceSha256": "3e32863e87f080dbc6a2a670cb11ee4993bd2cfaec534689c2257ecc9cc505ca",
+        "sourceRange": [
+          1703791,
+          1704857
+        ]
+      },
+      {
+        "module": "WAWebAcp2ComposerStrings",
+        "sha256": "4b0c6c138af12c22e14cba4a17e3c082c81402537f1d7dc507c4f49ded9b6cd0",
+        "sourceSha256": "e3870c9f626bf17e033ff7f04295d9cc327f0dd94f10dd124d4805a2067c606d",
+        "sourceRange": [
+          77956,
+          78275
+        ]
+      },
+      {
+        "module": "WAWebAcp2ComposerNotice.react",
+        "sha256": "2b1535c5e30cacef7e22af19cbd52e887339bc8ab633b2a9a13bd4e7a3803bfe",
+        "sourceSha256": "e3870c9f626bf17e033ff7f04295d9cc327f0dd94f10dd124d4805a2067c606d",
+        "sourceRange": [
+          78275,
+          78846
+        ]
+      },
+      {
+        "module": "WAWebAcp2SendFailView.react",
+        "sha256": "2dd14519ab2d2b810119dda8a1ed9465d6141d6e80637a081de7450536f04ac2",
+        "sourceSha256": "e3870c9f626bf17e033ff7f04295d9cc327f0dd94f10dd124d4805a2067c606d",
+        "sourceRange": [
+          78846,
+          79963
+        ]
+      },
+      {
+        "module": "WAWebAcp2SendFailIcon.react",
+        "sha256": "4f616fd96ace9a4e2b03693a1b7ed67db079dbb3e107ca6fdeecac9671664fe7",
+        "sourceSha256": "e3870c9f626bf17e033ff7f04295d9cc327f0dd94f10dd124d4805a2067c606d",
+        "sourceRange": [
+          79963,
+          80437
+        ]
+      },
+      {
+        "module": "WAWebAcp2PlaceholderStrings",
+        "sha256": "18aeca1f1ad809b5f1dc6b6d5e649d241d75a543256884b0a827a022548b37a2",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          41562,
+          41862
+        ]
+      },
+      {
+        "module": "WAWebAcp2SystemText",
+        "sha256": "eaa4fc588d6b74371a1498232cc2a235b3f410111de8daa718d9ff1d3b9c39ba",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          41862,
+          43133
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingAIGroupBlock",
+        "sha256": "3620786ff7e3d24941ffaaa44c6b9d626dd5477028d214b78c1d29ae1460e0f1",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          345509,
+          346758
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingBlockedDueToAIAgent.react",
+        "sha256": "15c965c5e4de50e22379210642986fbea4afef96101df12948bb6e101cc8eb21",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          346758,
+          347391
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingBlockedDueToAIGroup.react",
+        "sha256": "636fb6eef9c1561b85025f0ec670863863839ba8548df8bbd85f5a15ccd34079",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          347391,
+          348107
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingDisableConfirmationPopup.react",
+        "sha256": "6d3157805eeb6bf2251c4c0285588ca42ce2edfe18c428b4cb41e77957293273",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          348107,
+          348978
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingSettingUpdateWamEvent",
+        "sha256": "3e738d1a962eed6a2ce7790621fe0e28e7261311dc9407b385b2d37fa6f64312",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          349757,
+          350624
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingUIUtils",
+        "sha256": "17934108bab1b1a24bb6af4e3bc38633d78809f5e895d6da11ff5e1895c6c201",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          350624,
+          362325
+        ]
+      },
+      {
+        "module": "WAWebLimitSharingInvokeBlockedPopup.react",
+        "sha256": "61dba015ce440252dccd5079897eba5ae95ed6ed37a8f9a821fab7a46aa176d6",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          362325,
+          363217
+        ]
+      },
+      {
+        "module": "WAWebSetPropertyGroupAction",
+        "sha256": "8bd27be4d26a1565b46333eabfdfbd535b13ddf613ab131ea5975f2ced645234",
+        "sourceSha256": "63b228c5b8d579b8f939124cb6a0354062f2f4fbed96f107b7f91d70d1539fe5",
+        "sourceRange": [
+          371609,
+          381941
+        ]
+      },
+      {
+        "module": "useWAWebIsChatAcp2Restricted",
+        "sha256": "a7af14441d2e7f50326649bcc5eb5b4acfd884d343809ee0861a87bc68b7c477",
+        "sourceSha256": "d511eb358243d4023ac969b8ee26b993a4bd4dcf5d4004fc7e2167d439acddc6",
+        "sourceRange": [
+          468441,
+          469031
+        ]
+      }
+    ]
+  },
+  "limitations": [
+    "Static analysis does not establish runtime feature flags or account permission.",
+    "The native newsletter scheduling command and reveal-key lifecycle have not been established.",
+    "No public channel publication was made for this investigation.",
+    "No native scheduling secret is exposed by the public DTOs."
+  ]
+}

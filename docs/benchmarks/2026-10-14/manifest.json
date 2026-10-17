@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-14",
+  "timezone": "America/Sao_Paulo",
+  "publisher": "MVO project; first-party measurement, not an independent certification",
+  "evidence_scope": "One resumed, previously paired WhatsApp session in one instrumented PHP process; one run",
+  "environment": {
+    "os": "Windows",
+    "php": "8.4.25",
+    "xdebug_mode": "off",
+    "logical_processors": 32,
+    "test_messages_sent": 0,
+    "opcache_enable_cli": false,
+    "sessions": 1,
+    "poll_seconds": 0.5
+  },
+  "not_recorded": [
+    "CPU model and clock",
+    "Windows build",
+    "physical RAM capacity",
+    "background load",
+    "PHP/PowerShell timer offset",
+    "instrumentation overhead baseline"
+  ],
+  "runtime_source_fingerprint": {
+    "file": "source-files.sha256",
+    "scope": "src/ and resources/ from the distribution accompanying this report; not a Git commit",
+    "files": 177
+  },
+  "collection": {
+    "process_metrics": "System.Diagnostics.Process.TotalProcessorTime, WorkingSet64, PrivateMemorySize64; only the PHP PID, observer excluded",
+    "php_metrics": "memory_get_usage(false), memory_get_usage(true), memory_get_peak_usage(true); message/node callback counters",
+    "instrumentation": "Callbacks and JSONL snapshots are included in PHP process measurements; observer PowerShell CPU/memory are excluded",
+    "process_clock": "Stopwatch started after Process.Start",
+    "php_clock": "hrtime timer started inside PHP script after interpreter initialization",
+    "clock_alignment": "Offset not captured. Original numerical cutoff uses connected PHP elapsed + 35 on both clocks; windows are not perfectly synchronized.",
+    "collector_elapsed_seconds_reported": 82.379,
+    "collector_exit_code_reported": 0,
+    "collector_report_provenance": "Console completion report; not derived from CSV sample span",
+    "process_sample_span_seconds": 81.3387145,
+    "process_samples": 80,
+    "php_snapshots": 77,
+    "original_phase_idle_meaning": "Name of script phase after 15 seconds connected; does not mean zero traffic",
+    "messages_meaning": "Observed message callbacks, including possible sync/replay/fromMe; not necessarily unique new incoming messages",
+    "outgoing_test_messages": 0
+  },
+  "window_selection": {
+    "connected_php_elapsed_seconds": 0.887,
+    "startup": "OS rows elapsed_seconds <= 0.887 + 15; phase initial includes sync/warmup, not login duration",
+    "steady_process": "OS rows elapsed_seconds >= 0.887 + 35 AND phase == 'idle'",
+    "steady_php": "PHP rows elapsed_seconds >= 0.887 + 35 AND phase == 'idle'",
+    "process_window": {
+      "from_seconds": 36.036476,
+      "to_seconds": 81.3415022,
+      "samples": 45
+    },
+    "php_window": {
+      "from_seconds": 37.13,
+      "to_seconds": 81.28,
+      "seconds": 44.15,
+      "snapshots": 40
+    }
+  },
+  "units_and_formulas": {
+    "mib": "bytes / 1048576",
+    "working_set": "Resident process pages, private and shared; not exclusive physical RAM cost per session",
+    "private_commit": "Private Bytes / private committed memory, not private resident RAM",
+    "php_heap": "Zend allocator used/reserved memory; not all native allocations, not additive to working set",
+    "cpu_percent_one_core": "100 * (last_cpu_seconds - first_cpu_seconds) / (last_elapsed_seconds - first_elapsed_seconds)",
+    "cpu_percent_machine_32_logical": "cpu_percent_one_core / 32; normalized process utilization, not measured total host CPU",
+    "peak_cpu_percent_one_second": "Legacy key: maximum interval-average CPU between consecutive selected OS samples (~1 s), not instantaneous peak",
+    "memory_median": "Unweighted median of selected sample values",
+    "cpu_resolution_observed_seconds": 0.015625,
+    "summary_rounding": "Window seconds 3 decimals; CPU seconds 5; core CPU percent 4; machine CPU percent 5; interval CPU percent 3; OS memory MiB 2; PHP MiB recorded at 3"
+  },
+  "reproduction": {
+    "original_collectors": "reproduce/session-resource-probe.php, reproduce/measure-session.ps1, reproduce/summarize-session-resources.py are byte-for-byte copies used for this measurement",
+    "original_assumptions": "Windows / PowerShell 7; C:/xampp/php/php.exe; .dev/php.ini; scripts copied to workspace .cache; session default already linked and no other worker; fixed output .cache/resource-probe-live",
+    "original_aggregator_limit": "Metadata Windows, PHP 8.4.25 and 32 logical processors are hardcoded; not portable environment discovery",
+    "offline_audit": "python docs/benchmarks/2026-10-14/reproduce/recalculate.py; standard library only, verifies summary against CSV and distributed SHA-256 hashes",
+    "chart": "reproduce/plot.py; matplotlib 3.11.2 used, Manrope fonts from docs/assets/fonts; SVG paths need no font download"
+  },
+  "comparison": {
+    "MVO": "Measured locally; one run",
+    "Baileys": "Not measured in this environment",
+    "whatsapp-web.js": "Not measured in this environment",
+    "whatsmeow": "Not measured in this environment",
+    "WPPConnect": "Not measured in this environment",
+    "ranking_supported": false
+  },
+  "limits": [
+    "No equivalent competitor load benchmark",
+    "No Ubuntu measurement",
+    "No 60-session test",
+    "No controlled send/receive throughput test",
+    "No HTTP/webhook/API server measurement",
+    "No media/call workload",
+    "No long-running soak",
+    "No repeated-run confidence interval",
+    "No marginal RAM estimate by multiplying working sets"
+  ],
+  "original_local_input_sha256": {
+    "os.json": "f6afe3055bfe26163ddb66f9eb553f192f70f7e85ec09676abdf39f8d1a5e8e4",
+    "php.jsonl": "167fa651d9ba5073a4f06197f383c2f60eae8930a53a1473b9969220ce36cc04",
+    "summary.json": "ecf36a8d905ea63f40ffb7ac505d7387159a00c98f429d14726e33f3fb0c9a9d"
+  },
+  "publication_transforms": [
+    "CSV contains only explicit allowlisted numeric fields and phase; row order and numeric values preserved",
+    "Public summary omits local session label, renames received_* counters to message/node events, adds sampling metadata",
+    "No credentials, keys, JIDs, message content or database files distributed"
+  ],
+  "sha256": {
+    "php-samples.csv": "6fe0af199ebf3f3135cdfaece1c10aa1368dfc53476235d161053bcfdca74351",
+    "process-samples.csv": "9df957e480cffe147da3b6cb7f6afe28a51f732133264ccbc35747caf636e238",
+    "reproduce/measure-session.ps1": "165614aa35c35e059e7a7cbbe5516610b34cbbee402204b3f23e55b4dbba9501",
+    "reproduce/plot.py": "f0143e0c627416b06a049a14183d502090765ae8258c64273ebc137f8b37e3d2",
+    "reproduce/recalculate.py": "a4e57daf68778dccd515dc5ef420b5f03e4f9cf84afdba46a4b1e99f75759a32",
+    "reproduce/session-resource-probe.php": "b71bf4f530b87ffc9194f928978b5a1ea104cd832922260d6025076104e99fc0",
+    "reproduce/summarize-session-resources.py": "6490d6c069795180f8a2ec977d44a7946fbf0db5840e110d7f3ee1dfc3c67425",
+    "resource-usage.svg": "05d713556d1f045768e0c986706d99418c77ca7b238f3dc63b788e3c0d2c2cd4",
+    "source-files.sha256": "4f8e99a8ab1eafab077f2adc000a9ffdafe04e6f5a70388cbf114a5abf491582",
+    "summary.json": "885cd4cca6ab61efa2cacb5ee92abfcba7234ee2a93e45a7c30db25c6ba73964"
+  }
+}

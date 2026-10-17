@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-15T03:06:42.481567+00:00",
+  "implementation": "Native PHP Status over the existing encrypted broadcast transport and session store",
+  "scope": {
+    "api_operations": 19,
+    "node_runtime_required": false,
+    "real_statuses_published": false,
+    "real_statuses_viewed_or_revoked": false,
+    "current_server_acceptance_verified": false
+  },
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Socket/messages-send.ts",
+      "type": "primary implementation source",
+      "observations": [
+        "explicit status recipient fanout",
+        "sender-key encryption",
+        "status receipt participant routing"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Socket/messages-recv.ts",
+      "type": "primary implementation source",
+      "observations": [
+        "status receipt attribution",
+        "expired status retry boundary"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/WhiskeySockets/Baileys/master/src/Utils/messages.ts",
+      "type": "primary implementation source",
+      "observations": [
+        "text font and ARGB colors",
+        "voice status ARGB",
+        "reaction target key",
+        "protocol revocation"
+      ]
+    },
+    {
+      "path": "resources/WAProto.schema.json",
+      "type": "local WAProto schema",
+      "observations": [
+        "extendedTextMessage",
+        "imageMessage",
+        "videoMessage",
+        "audioMessage",
+        "status privacy action"
+      ]
+    }
+  ],
+  "notes": [
+    "External source URLs are mutable references, not a current server compatibility guarantee.",
+    "No external implementation runs at runtime.",
+    "History queries return only local synchronized statuses.",
+    "Observed authenticated read/play receipts are not a guaranteed complete list of viewers.",
+    "Read receipt queueing, successful transport send and server ACK are distinct.",
+    "Audience snapshots and tombstones share the Signal store transaction and persist across restart."
+  ],
+  "checks": {
+    "sdk": {
+      "tests": 1470,
+      "assertions": 27080,
+      "result": "passed"
+    },
+    "api": {
+      "tests": 564,
+      "assertions": 37481,
+      "result": "passed"
+    },
+    "sdk_phpstan_level": 6,
+    "api_phpstan_level": 5,
+    "xdebug_dbgp": "passed",
+    "local_transport": "native Signal/sender-key and media crypto; IQ/app-state MAC/ACK fixtures; no real account mutations"
+  },
+  "source_sha256": {
+    "src/Service/StatusService.php": "3c4c5038bec545421df87b628cbeba92d7904e6a62968577486c48d5d7f83541",
+    "src/History/StatusStore.php": "2100f961b2e4773642898ced43d84f989264becb60f4e58c5ab14a9134aa3838",
+    "src/History/HistoryStore.php": "41995984a459933d6cef018a94d9794a89065e3c11fb5c095eeadc8a8df7e811",
+    "src/Message/MessageService.php": "ec9be260d145ef5466b75fbfdec6a8385c1f3738370e4780f47e36293ec2d2b7",
+    "src/Service/Services.php": "0299691b7a0f15cdd869cebf3cf1790ecd8489c547fa31aceb4dcccf728aaf4f",
+    "src/WaClient.php": "ed5062fd168e3bd517c0148465ceb8e5a1552fd19eb280e0909fff3c9741b6f4",
+    "src/Mcp/ClientRuntime.php": "4d9ad815b7f567b09241b0d98b93a336c117e48236070b63114e2aacd6c09958",
+    "tests/phpunit/StatusServiceTest.php": "d4c0807e55b76c0643fcfc4ac2fbce9f851783585bb806aa6e8a6f2053c08236",
+    "tests/phpunit/StatusStoreTest.php": "54e39bee4be2c171f52880ff15bba2ad508e691f0f75cce0be62263bedafb58f",
+    "tests/phpunit/StatusProtocolTest.php": "5b1b37b06698977a9d77bde3e77ed6022b3d2efab402519bff15995417f4fd2a"
+  },
+  "source_revisions": [
+    {
+      "updated_at_utc": "2026-10-15T03:25:12.755211+00:00",
+      "reason": "Native Flow construction and response projection corrected against public WhatsApp Web modules. Historical protocol observations retained.",
+      "checks": {
+        "sdk": {
+          "tests": 1534,
+          "assertions": 27476,
+          "result": "passed"
+        },
+        "api": {
+          "tests": 599,
+          "assertions": 37633,
+          "result": "passed"
+        }
+      },
+      "changed_sources": [
+        {
+          "previous_path": "src/Message/MessageService.php",
+          "previous_sha256": "8e3904207ae66a56c0f889a8c46dc65a0e58f897770784340623960df0a0c262",
+          "current_sha256": "9e4e7f37c6b1c387e2ca8e5333784f0c6cbce1708bb4992198a77d2d4c5f8600"
+        }
+      ]
+    },
+    {
+      "updated_at_utc": "2026-10-15T04:05:00.710760+00:00",
+      "reason": "Native Flow construction and response projection corrected against public WhatsApp Web modules. Historical protocol observations retained.",
+      "checks": {
+        "sdk": {
+          "tests": 1599,
+          "assertions": 27796,
+          "result": "passed"
+        },
+        "api": {
+          "tests": 619,
+          "assertions": 37848,
+          "result": "passed"
+        }
+      },
+      "changed_sources": [
+        {
+          "previous_path": "src/Message/MessageService.php",
+          "previous_sha256": "9e4e7f37c6b1c387e2ca8e5333784f0c6cbce1708bb4992198a77d2d4c5f8600",
+          "current_sha256": "c10640fd8a288ec42e472af12648d49dc9c26b796fb860e64d90c0ea81e4b365"
+        },
+        {
+          "previous_path": "src/WaClient.php",
+          "previous_sha256": "a3462a57bfee797a2f56361ecc7a1e516633d1c3ac24a68891608f3fba13b3b8",
+          "current_sha256": "55ac3a3d33d77526c83819b88f047613b8c2937f49cf454a7ca0ca8641860ba6"
+        }
+      ]
+    },
+    {
+      "updated_at_utc": "2026-10-15T04:42:05.952775+00:00",
+      "reason": "Native Flow construction and response projection corrected against public WhatsApp Web modules. Historical protocol observations retained.",
+      "checks": {
+        "sdk": {
+          "tests": 1726,
+          "assertions": 28438,
+          "result": "passed"
+        },
+        "api": {
+          "tests": 675,
+          "assertions": 38252,
+          "result": "passed"
+        }
+      },
+      "changed_sources": [
+        {
+          "previous_path": "src/Message/MessageService.php",
+          "previous_sha256": "c10640fd8a288ec42e472af12648d49dc9c26b796fb860e64d90c0ea81e4b365",
+          "current_sha256": "ec9be260d145ef5466b75fbfdec6a8385c1f3738370e4780f47e36293ec2d2b7"
+        }
+      ]
+    }
+  ],
+  "implementation_revisions": [
+    {
+      "updated_at_utc": "2026-10-15T11:16:32.428952+00:00",
+      "reason": "Channel management integration and shared-service regressions; historical protocol/runtime observations retained.",
+      "checks": {
+        "sdk": {
+          "tests": 1852,
+          "assertions": 28785,
+          "result": "passed",
+          "log_sha256": "52fbea53f3684910266654af7ecbb0c64aa60d17fca2b72022ca5b0a3007c8f6"
+        },
+        "api": {
+          "tests": 1055,
+          "assertions": 55579,
+          "result": "passed",
+          "log_sha256": "19c810c69d6d6d32a6f245da09bdd74bfe89b09baee03bb22bd4be7901142194"
+        }
+      },
+      "new_live_operations_in_this_revision": false,
+      "changed_sources": [
+        {
+          "path": "src/Service/Services.php",
+          "project": "sdk",
+          "previous_sha256": "0333cfc4edd8cd6f57a55c0f4a8f039e785fa0967ade3232bce5b05f805789b7",
+          "current_sha256": "0299691b7a0f15cdd869cebf3cf1790ecd8489c547fa31aceb4dcccf728aaf4f"
+        },
+        {
+          "path": "src/WaClient.php",
+          "project": "sdk",
+          "previous_sha256": "55ac3a3d33d77526c83819b88f047613b8c2937f49cf454a7ca0ca8641860ba6",
+          "current_sha256": "ed5062fd168e3bd517c0148465ceb8e5a1552fd19eb280e0909fff3c9741b6f4"
+        }
+      ]
+    }
+  ]
+}

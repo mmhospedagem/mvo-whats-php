@@ -1,0 +1,99 @@
+{
+  "name": "mvo/mvo-php",
+  "description": "Biblioteca PHP nativa para WhatsApp: QR Code, sessões persistentes, mensagens, mídia, grupos e MCP.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "ext-openssl": "*",
+    "ext-sodium": "*",
+    "ext-pdo": "*",
+    "ext-pdo_sqlite": "*",
+    "ext-json": "*",
+    "ext-zlib": "*",
+    "ext-gmp": "*",
+    "ext-curl": "*",
+    "ext-fileinfo": "*",
+    "bacon/bacon-qr-code": "^3.0",
+    "php-64bit": "^8.2",
+    "ext-xmlwriter": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5",
+    "phpstan/phpstan": "^2.1"
+  },
+  "suggest": {
+    "ext-gd": "Miniaturas de imagens/figurinhas em PHP",
+    "ext-ffi": "WebRTC e codecs Opus/MLow nativos opcionais; requer bibliotecas C instaladas separadamente",
+    "ext-pdo_mysql": "Backend MySQL/MariaDB",
+    "ext-pdo_pgsql": "Backend PostgreSQL",
+    "ext-mongodb": "Backend MongoDB oficial"
+  },
+  "autoload": {
+    "psr-4": {
+      "MVO\\": "src/"
+    }
+  },
+  "scripts": {
+    "doctor": "@php tools/dev.php doctor",
+    "voip:doctor": "@php tools/dev.php voip-doctor",
+    "test": "@php tools/dev.php test",
+    "test:legacy": "@php tools/dev.php legacy",
+    "test:coverage": "@php tools/dev.php coverage",
+    "analyse": "@php tools/dev.php analyse",
+    "lint": "@php tools/dev.php lint",
+    "check": "@php tools/dev.php check",
+    "example": "@php tools/dev.php example",
+    "debug": "@php tools/dev.php debug",
+    "debug:verify": "@php tools/dev.php debug-verify",
+    "connect:qr": "@php tools/dev.php connect-qr",
+    "connect:code": "@php tools/dev.php connect-code",
+    "test:live": "@php tools/dev.php live-test",
+    "session:status": "@php tools/dev.php session-status",
+    "worker": "@php tools/dev.php connect-qr",
+    "message:send": "@php tools/dev.php message-send",
+    "test:resume": "@php tools/dev.php resume-test",
+    "session:relink": "@php tools/dev.php session-relink",
+    "package": "@php tools/dev.php package"
+  },
+  "homepage": "https://github.com/mmhospedagem/mvo-whats-php",
+  "keywords": [
+    "php",
+    "whatsapp",
+    "whatsapp-web",
+    "mvo",
+    "multi-session",
+    "qr-code",
+    "messaging",
+    "mcp",
+    "llm"
+  ],
+  "authors": [
+    {
+      "name": "MVO",
+      "homepage": "https://www.mvo.host/"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/mmhospedagem/mvo-whats-php/issues",
+    "source": "https://github.com/mmhospedagem/mvo-whats-php",
+    "docs": "https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/INSTALLATION.md"
+  },
+  "archive": {
+    "exclude": [
+      "/.github",
+      "/.vscode",
+      "/.auth",
+      "/.auth-backups",
+      "/.dev",
+      "/.cache",
+      "/build",
+      "/dev.local.json",
+      "/PRODUCT.md",
+      "/DESIGN.md",
+      "/docs/FLOW-PROTOCOL-EVIDENCE.json",
+      "/backup*.zip",
+      "/mvo-php.zip"
+    ]
+  }
+}
