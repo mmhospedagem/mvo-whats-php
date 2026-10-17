@@ -92,7 +92,8 @@ final class McpTest extends TestCase
     }
     public function testSubprocessStdioUsesOnlyJsonAndWorksOnWindowsPipes(): void
     {
-        $process=proc_open([PHP_BINARY,'-c',dirname(__DIR__,2).'/.dev/php.ini',dirname(__DIR__,2).'/examples/mcp.php'],[['pipe','r'],['pipe','w'],['pipe','w']],$pipes,null,null,['bypass_shell'=>true,'create_new_console'=>false]);self::assertIsResource($process);
+        $ini=php_ini_loaded_file();
+        $process=proc_open([PHP_BINARY,...($ini===false ? [] : ['-c',$ini]),dirname(__DIR__,2).'/examples/mcp.php'],[['pipe','r'],['pipe','w'],['pipe','w']],$pipes,null,array_merge(getenv(),['XDEBUG_MODE'=>'off']),['bypass_shell'=>true,'create_new_console'=>false]);self::assertIsResource($process);
         fwrite($pipes[0],'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}'."\n".'{"jsonrpc":"2.0","method":"notifications/initialized"}'."\n".'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'."\n");fclose($pipes[0]);$stdout=stream_get_contents($pipes[1]);$stderr=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);$code=proc_close($process);self::assertSame(0,$code,$stderr);$lines=array_values(array_filter(explode("\n",$stdout),static fn(string $l):bool=>$l!==''));self::assertCount(2,$lines,$stdout);$a=json_decode($lines[0],true,512,JSON_THROW_ON_ERROR);$b=json_decode($lines[1],true,512,JSON_THROW_ON_ERROR);self::assertSame('2025-06-18',$a['result']['protocolVersion']);self::assertGreaterThan(80,count($b['result']['tools']));
     }
 }

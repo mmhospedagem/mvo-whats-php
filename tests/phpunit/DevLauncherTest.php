@@ -15,6 +15,7 @@ final class DevLauncherTest extends TestCase
         $this->directory=sys_get_temp_dir().'/mvo-dev-launcher-'.bin2hex(random_bytes(8)).' with spaces';
         mkdir($this->directory.'/tools',0700,true);
         mkdir($this->directory.'/vendor/bin',0700,true);
+        mkdir($this->directory.'/empty ini scan',0700,true);
         copy(dirname(__DIR__,2).'/tools/dev.php',$this->directory.'/tools/dev.php');
         $this->ini=$this->directory.'/selected config.ini';
         file_put_contents($this->ini,"memory_limit=73M\ndisplay_errors=stderr\n");
@@ -24,6 +25,7 @@ echo json_encode([
     'argv'=>$argv,
     'binary'=>PHP_BINARY,
     'ini'=>php_ini_loaded_file(),
+    'scannedIni'=>php_ini_scanned_files(),
     'memoryLimit'=>ini_get('memory_limit'),
     'cwd'=>getcwd(),
     'marker'=>getenv('MVO_DEV_LAUNCHER_TEST_VALUE'),
@@ -58,7 +60,9 @@ PHP);
         self::assertFileDoesNotExist($this->directory.'/dev.local.json');
         $marker='environment value with spaces; "quotes" & (literal) $value';
         $environment=array_merge(getenv(),[
-            'PHP_INI_SCAN_DIR'=>'',
+            // An empty variable can retain the compiled-in scan directory on Linux.
+            // Use a real empty directory so runner-wide conf.d files cannot override this fixture.
+            'PHP_INI_SCAN_DIR'=>$this->directory.'/empty ini scan',
             'MVO_DEV_LAUNCHER_TEST_VALUE'=>$marker,
             'MVO_DEV_LAUNCHER_TEST_EXIT'=>(string)$expectedExit,
             'XDEBUG_MODE'=>'debug,develop',
@@ -74,6 +78,7 @@ PHP);
         self::assertIsString($stdout);$actual=json_decode($stdout,true,32,JSON_THROW_ON_ERROR);
         self::assertSame(PHP_BINARY,$actual['binary']);
         self::assertSame(realpath($this->ini),realpath($actual['ini']));
+        self::assertEmpty($actual['scannedIni']);
         self::assertSame('73M',$actual['memoryLimit']);
         self::assertSame(realpath($this->directory),realpath($actual['cwd']));
         self::assertSame(['vendor/bin/phpunit',...$expectedArguments],$actual['argv']);

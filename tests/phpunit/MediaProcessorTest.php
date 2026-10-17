@@ -7,7 +7,7 @@ final class MediaProcessorTest extends TestCase
 {
     public function testThumbnailPreservesRatioAndHonorsEdge():void {
         if (!extension_loaded('gd')) self::markTestSkipped('Optional ext-gd is not installed');
-        $img=imagecreatetruecolor(300,150); $red=imagecolorallocate($img,255,0,0); imagefill($img,0,0,$red); ob_start(); imagepng($img); $bytes=ob_get_clean(); imagedestroy($img);
+        $img=imagecreatetruecolor(300,150); $red=imagecolorallocate($img,255,0,0); imagefill($img,0,0,$red); ob_start(); imagepng($img); $bytes=ob_get_clean(); unset($img);
         $processor=new MediaProcessor(); $thumb=$processor->thumbnail($bytes);
         self::assertNotNull($thumb); $size=getimagesizefromstring($thumb); self::assertSame([96,48],[$size[0],$size[1]]); self::assertSame('image/jpeg',$size['mime']);
         $png=$processor->process($bytes,'sticker'); self::assertArrayHasKey('pngThumbnail',$png['fields']); self::assertSame('image/png',getimagesizefromstring($png['fields']['pngThumbnail'])['mime']);

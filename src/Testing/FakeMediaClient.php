@@ -23,6 +23,6 @@ final class FakeMediaClient
         $response='';$curl=curl_init($url);curl_setopt_array($curl,[CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_CAINFO=>$this->caFile,CURLOPT_CONNECT_TO=>['localhost:443:'.$this->address],CURLOPT_PROXY=>'',CURLOPT_FOLLOWLOCATION=>false,CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,CURLOPT_SSL_VERIFYHOST=>2,CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_CONNECTTIMEOUT=>3,CURLOPT_TIMEOUT=>10,CURLOPT_WRITEFUNCTION=>static function(\CurlHandle $handle,string $chunk)use(&$response,$limit):int {if(strlen($response)+strlen($chunk)>$limit)return 0;$response.=$chunk;return strlen($chunk);}]);
         if($method==='POST')curl_setopt_array($curl,[CURLOPT_POSTFIELDS=>$body,CURLOPT_HTTPHEADER=>['Content-Type: application/octet-stream','Expect:']]);
         try {if(curl_exec($curl)===false)throw new \RuntimeException('Fake media HTTPS transfer failed: '.curl_error($curl));return ['status'=>curl_getinfo($curl,CURLINFO_RESPONSE_CODE),'body'=>$response];}
-        finally {curl_close($curl);}
+        finally {unset($curl);}
     }
 }

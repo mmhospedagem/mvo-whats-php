@@ -15,7 +15,8 @@ final class McpHttpTest extends TestCase
     private string $url;
     protected function setUp():void
     {
-        $process=proc_open([PHP_BINARY,'-c',dirname(__DIR__,2).'/.dev/php.ini',__DIR__.'/McpHttpProcess.php'],[['pipe','r'],['pipe','w'],['pipe','w']],$pipes,null,null,['bypass_shell'=>true,'create_new_console'=>false]);self::assertIsResource($process);$this->process=$process;$this->pipes=$pipes;stream_set_timeout($pipes[1],5);$line=fgets($pipes[1]);self::assertIsString($line);$this->url=json_decode($line,true,32,JSON_THROW_ON_ERROR)['url'];
+        $ini=php_ini_loaded_file();
+        $process=proc_open([PHP_BINARY,...($ini===false?[]:['-c',$ini]),__DIR__.'/McpHttpProcess.php'],[['pipe','r'],['pipe','w'],['pipe','w']],$pipes,null,array_merge(getenv(),['XDEBUG_MODE'=>'off']),['bypass_shell'=>true,'create_new_console'=>false]);self::assertIsResource($process);$this->process=$process;$this->pipes=$pipes;stream_set_timeout($pipes[1],5);$line=fgets($pipes[1]);self::assertIsString($line);$this->url=json_decode($line,true,32,JSON_THROW_ON_ERROR)['url'];
     }
     protected function tearDown():void
     {
@@ -30,7 +31,7 @@ final class McpHttpTest extends TestCase
      * @return array{status:int,body:string} */
     private function raw(string $method,string $body='',array $headers=[]):array
     {
-        $curl=curl_init($this->url);curl_setopt_array($curl,[CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.self::TOKEN,...$headers],CURLOPT_RETURNTRANSFER=>true,CURLOPT_PROXY=>'',CURLOPT_TIMEOUT=>5,CURLOPT_FOLLOWLOCATION=>false]);if($body!=='')curl_setopt($curl,CURLOPT_POSTFIELDS,$body);$data=curl_exec($curl);$status=(int)curl_getinfo($curl,CURLINFO_RESPONSE_CODE);curl_close($curl);return ['status'=>$status,'body'=>is_string($data) ? $data : ''];
+        $curl=curl_init($this->url);curl_setopt_array($curl,[CURLOPT_CUSTOMREQUEST=>$method,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.self::TOKEN,...$headers],CURLOPT_RETURNTRANSFER=>true,CURLOPT_PROXY=>'',CURLOPT_TIMEOUT=>5,CURLOPT_FOLLOWLOCATION=>false]);if($body!=='')curl_setopt($curl,CURLOPT_POSTFIELDS,$body);$data=curl_exec($curl);$status=(int)curl_getinfo($curl,CURLINFO_RESPONSE_CODE);unset($curl);return ['status'=>$status,'body'=>is_string($data) ? $data : ''];
     }
     public function testActualTcpHandshakeSharedRuntimeSseReplayAndDelete():void
     {

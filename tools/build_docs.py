@@ -32,7 +32,10 @@ def embed_local_image(match, source):
     media = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.webp': 'image/webp'}.get(path.suffix.lower())
     if media is None:
         raise ValueError(f'Unsupported documentation image: {url}')
-    data = base64.b64encode(path.read_bytes()).decode('ascii')
+    # SVG is tracked as text: Git can check it out with CRLF on Windows and LF
+    # on Linux. Normalize its line endings before embedding so both builds agree.
+    image_bytes = path.read_text(encoding='utf-8').encode('utf-8') if media == 'image/svg+xml' else path.read_bytes()
+    data = base64.b64encode(image_bytes).decode('ascii')
     return match.group(1) + 'data:' + media + ';base64,' + data + match.group(3)
 
 logo_data='data:image/png;base64,'+base64.b64encode((ROOT/'docs/assets/mvo-logo.png').read_bytes()).decode('ascii')
@@ -64,7 +67,7 @@ for weight in (400,600,800):
     css=css.replace(f'fonts/manrope-{weight}.ttf','data:font/ttf;base64,'+font)
 app=(ROOT/'docs/assets/docs.js').read_text(encoding='utf-8')
 output=template.replace('/*DOC_DATA*/',payload).replace('/*MVO_LOGO_DATA*/',json.dumps(logo_data)).replace('/*MVO_STYLES*/',css).replace('/*MVO_APP*/',app)
-(ROOT/'docs/index.html').write_text(output,encoding='utf-8')
+(ROOT/'docs/index.html').write_bytes(output.encode('utf-8'))
 for filename in ('llms.txt','llms-full.txt'):
-    (ROOT/'docs'/filename).write_text((ROOT/filename).read_text(encoding='utf-8'),encoding='utf-8')
+    (ROOT/'docs'/filename).write_bytes((ROOT/filename).read_text(encoding='utf-8').encode('utf-8'))
 print(f'Built docs/index.html: {len(pages)} pages, {sum(len(p["body"]) for p in pages):,} characters of documentation')

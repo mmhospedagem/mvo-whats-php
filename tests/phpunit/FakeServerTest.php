@@ -11,7 +11,8 @@ final class FakeServerTest extends TestCase
 {
     private function peer(string $mode=''): array
     {
-        $process=proc_open([PHP_BINARY,'-c',dirname(__DIR__,2).'/.dev/php.ini',__DIR__.'/FakeServerProcess.php',$mode],[['pipe','r'],['pipe','w'],['pipe','w']],$pipes,null,null,['bypass_shell'=>true,'create_new_console'=>false]);self::assertIsResource($process);$data=json_decode(fgets($pipes[1]),true,512,JSON_THROW_ON_ERROR);return [$process,$pipes,$data];
+        $ini=php_ini_loaded_file();
+        $process=proc_open([PHP_BINARY,...($ini===false ? [] : ['-c',$ini]),__DIR__.'/FakeServerProcess.php',$mode],[['pipe','r'],['pipe','w'],['pipe','w']],$pipes,null,array_merge(getenv(),['XDEBUG_MODE'=>'off']),['bypass_shell'=>true,'create_new_console'=>false]);self::assertIsResource($process);$data=json_decode(fgets($pipes[1]),true,512,JSON_THROW_ON_ERROR);return [$process,$pipes,$data];
     }
     private function closePeer($process,array $pipes): void {foreach($pipes as $pipe)if(is_resource($pipe))fclose($pipe);self::assertSame(0,proc_close($process));}
     public function testActualLoopbackWebSocketNoiseCertificateAndEncryptedBidirectionalFrames(): void

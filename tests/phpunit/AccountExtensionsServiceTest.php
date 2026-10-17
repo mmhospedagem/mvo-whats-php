@@ -69,7 +69,7 @@ final class AccountExtensionsServiceTest extends TestCase
     }
     public function testPreviewPreparesBoundedJpegAndPreservesEncryptedThumbnailFields():void
     {
-        if(!function_exists('imagecreatetruecolor'))self::markTestSkipped('Optional ext-gd unavailable');$image=imagecreatetruecolor(800,400);ob_start();imagepng($image);$png=ob_get_clean();imagedestroy($image);$uploaded=null;
+        if(!function_exists('imagecreatetruecolor'))self::markTestSkipped('Optional ext-gd unavailable');$image=imagecreatetruecolor(800,400);ob_start();imagepng($image);$png=ob_get_clean();unset($image);$uploaded=null;
         $builder=new LinkPreviewBuilder(static fn(string $url):string=>str_ends_with($url,'.png')?$png:'<meta property="og:title" content=""><meta property="og:image" content="/card.png">',static function(string $jpeg)use(&$uploaded):array{$uploaded=$jpeg;return ['directPath'=>'/mms/thumbnail-link/x','fileSha256'=>str_repeat('s',32),'fileEncSha256'=>str_repeat('e',32),'mediaKey'=>str_repeat('k',32),'mediaKeyTimestamp'=>123];});
         $content=$builder->build('https://www.mvo.host/','https://www.mvo.host/');self::assertSame(640,$content['linkPreview']['thumbnailWidth']);self::assertSame(320,$content['linkPreview']['thumbnailHeight']);self::assertSame('/mms/thumbnail-link/x',$content['linkPreview']['thumbnailDirectPath']);self::assertSame(str_repeat('k',32),$content['linkPreview']['mediaKey']);self::assertSame(IMAGETYPE_JPEG,getimagesizefromstring($uploaded)[2]);self::assertSame(32,strlen($content['linkPreview']['thumbnailEncSha256']));SchemaCodec::encode('Message',ContentBuilder::build($content,'5511999999999@s.whatsapp.net')['proto']);
     }

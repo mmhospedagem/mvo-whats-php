@@ -144,7 +144,7 @@ final class MediaTransfer
         try {
             if (curl_exec($curl)===false) throw new \RuntimeException($count>$limit ? 'Media response exceeds maxBytes' : 'Media HTTP transfer failed: '.curl_error($curl));
             return ['status'=>curl_getinfo($curl,CURLINFO_RESPONSE_CODE),'body'=>$received];
-        } finally { curl_close($curl); }
+        } finally { unset($curl); }
     }
 
     /**
@@ -502,7 +502,7 @@ final class MediaTransfer
             if ($ok === false) throw new \RuntimeException('Media HTTP transfer error: '.curl_error($handle));
             return ['status'=>(int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE), 'body'=>$received];
         } finally {
-            curl_close($handle);
+            unset($handle);
         }
     }
 }

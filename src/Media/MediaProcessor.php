@@ -52,7 +52,7 @@ final class MediaProcessor
             if (!imagecopyresampled($target,$source,0,0,0,0,$width,$height,$size[0],$size[1])) throw new \RuntimeException('Cannot resize thumbnail');
             ob_start(); try { $ok=$png ? imagepng($target) : imagejpeg($target,null,55); $output=ob_get_contents(); } finally { ob_end_clean(); }
             if (!$ok || !is_string($output)) throw new \RuntimeException('Cannot encode thumbnail'); return $output;
-        } finally { imagedestroy($target); imagedestroy($source); }
+        } finally { unset($target,$source); }
     }
     public function normalizeVoice(string $bytes):string {
         if ($this->ffmpeg===null) throw new \LogicException('Configure the FFmpeg path to normalize voice notes');
