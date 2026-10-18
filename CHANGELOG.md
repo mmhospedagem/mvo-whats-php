@@ -2,6 +2,11 @@
 
 As versões da biblioteca seguem versionamento semântico. Mudanças no protocolo do WhatsApp podem exigir atualizações de compatibilidade, independentemente da versão da biblioteca.
 
+## Não lançado
+
+- Formulários portáveis com `kind: input` e `cancel_option` explícita: cada campo usa resposta de texto livre e uma opção visível de cancelamento, preservando o ID original. A adaptação segue o parser distribuído do WhatsApp Web, com limite de três etapas após expansão e rejeição de valores iniciais não suportados. O modo Android com `InputFields` permanece separado.
+- Exemplos PHP e contexto para LLMs descrevem o tratamento de texto/cancelamento e os limites de validação em clientes reais.
+
 ## 1.0.1 — 2026-10-17
 
 Primeira distribuição no [Packagist](https://packagist.org/packages/mmhospedagem/mvo-whats-php), com o nome Composer **`mmhospedagem/mvo-whats-php`**.

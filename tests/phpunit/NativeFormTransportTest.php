@@ -225,6 +225,94 @@ final class NativeFormTransportTest extends TestCase
         self::assertSame('receipt',$this->sent[0]->tag);
     }
 
+    #[DataProvider('responseVersions')]
+    public function testPortableTextAndRealCancellationSurviveSignalFanoutAndAuthenticatedReplies(int $version):void
+    {
+        $jid='5522000000000@s.whatsapp.net';
+        $own=Jid::parse($this->credentials['meJid'])->bare();
+        $peers=$this->peers([$jid,$own]);$seen=[];
+        $cancel=['id'=>'cancelar_consulta_42','title'=>'Cancelar consulta'];
+        $query=function(BinaryNode $node)use($jid,$own,$peers,$cancel,&$seen):BinaryNode {
+            if($node->tag==='iq' && ($node->attrs['xmlns']??'')==='usync') return self::devices([$jid=>[0],$own=>[0,5]]);
+            if($node->tag==='iq') return self::bundles($peers);
+            self::assertSame('false',$node->attrs['device_fanout']);
+            $biz=$node->child('biz');
+            self::assertNotNull($biz);
+            self::assertSame([],$biz->attrs);
+            self::assertEquals(['v'=>'1','type'=>'native_flow'],$biz->child('interactive')->attrs);
+            self::assertSame(['name'=>'form_message'],$biz->child('interactive')->child('native_flow')->attrs);
+            foreach($node->child('participants')->content as $recipient) {
+                $device=$recipient->attrs['jid'];$enc=$recipient->child('enc');
+                $plain=$peers[$device]['signal']->decrypt($this->credentials['meJid'],$enc->attrs['type'],$enc->content);
+                $decoded=MessageCodec::decode(MessageCodec::unpad($plain));
+                self::assertSame('interactive',$decoded['kind']);
+                self::assertSame('Informe os dados da consulta',$decoded['data']['body']['text']);
+                $native=$decoded['data']['nativeFlowMessage'];
+                self::assertSame(1,$native['messageVersion']);
+                self::assertSame('form_message',$native['buttons'][0]['name']);
+                $params=json_decode($native['messageParamsJson'],false,512,JSON_THROW_ON_ERROR);
+                self::assertSame('2',$params->version);
+                self::assertSame('a2ui_form',$params->payload->type);
+                $graph=$params->payload->data;
+                self::assertSame(['name','consulta.observacao'],$graph->components[0]->children);
+                self::assertSame($graph->root,$graph->components[0]->id);
+                self::assertCount(3,$graph->components);
+                foreach(array_slice($graph->components,1) as $index=>$component) {
+                    self::assertSame(['name','consulta.observacao'][$index],$component->id);
+                    self::assertSame('ChoicePicker',$component->component);
+                    self::assertSame('mutuallyExclusive',$component->variant);
+                    self::assertSame('Continuar',$component->button);
+                    self::assertTrue($component->allow_custom_answer);
+                    self::assertEquals([(object)$cancel],$component->options,'Cancellation is the real caller-owned option');
+                    self::assertSame("Consulta MVO\n".['Nome','Observação'][$index],$component->label);
+                    self::assertObjectNotHasProperty('fields',$component);
+                    self::assertObjectNotHasProperty('default',$component);
+                    self::assertObjectNotHasProperty('required',$component);
+                }
+                self::assertObjectNotHasProperty('flow_id',$params);
+                self::assertSame(32,strlen($decoded['messageContextInfo']['messageSecret']));
+                if($device===$own) self::assertSame($jid,$decoded['destination']);
+                $seen[]=$device;
+            }
+            return new BinaryNode('ack',['class'=>'message','id'=>$node->attrs['id']]);
+        };
+        $service=$this->service($query);
+        $content=['type'=>'form','text'=>'Informe os dados da consulta','cta'=>'Responder','steps'=>[
+            ['id'=>'consulta','label'=>'Consulta MVO','kind'=>'input','button'=>'Continuar','cancel_option'=>$cancel,'fields'=>[
+                ['id'=>'name','label'=>'Nome','type'=>'text','required'=>true,'default'=>''],
+                ['id'=>'consulta.observacao','label'=>'Observação','type'=>'text','required'=>false],
+            ]],
+        ]];
+        $original=$content;
+        $outgoing=$service->sendMessage($jid,$content);
+        self::assertSame($original,$content);
+        self::assertSame('server_ack',$outgoing['status']);
+        self::assertEqualsCanonicalizing([$jid,$own],$seen);
+        foreach(['texto'=>['name'=>'Teste MVO','consulta.observacao'=>'Horário da manhã'],
+            'cancelamento'=>['name'=>$cancel['id'],'consulta.observacao'=>$cancel['id']]] as $case=>$answers) {
+            $params=json_encode($answers,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE);
+            $response=['interactiveResponseMessage'=>[
+                'nativeFlowResponseMessage'=>['name'=>'form_message','version'=>$version,'paramsJson'=>$params],
+                'contextInfo'=>['stanzaId'=>$outgoing['id'],'participant'=>$this->credentials['meJid']],
+            ]];
+            $encrypted=$peers[$jid]['signal']->encrypt($this->credentials['meJid'],MessageCodec::pad(SchemaCodec::encode('Message',$response)));
+            $node=new BinaryNode('message',['id'=>'portable-'.$case.'-'.$version,'from'=>$jid,'type'=>'text'],[
+                new BinaryNode('enc',['type'=>$encrypted['type'],'v'=>'2'],$encrypted['ciphertext']),
+            ]);
+            self::assertTrue($service->handleNode($node));
+            $incoming=array_values(array_filter($this->events,static fn(array $event):bool=>!($event[1]['fromMe']??true)));
+            $event=$incoming[array_key_last($incoming)][1];
+            self::assertSame('form_message',$event['parsedFormResponse']['name']);
+            self::assertSame($version,$event['parsedFormResponse']['version']);
+            self::assertEquals((object)$answers,$event['parsedFormResponse']['params']);
+            self::assertSame(['name','consulta.observacao'],array_keys(get_object_vars($event['parsedFormResponse']['params'])));
+            self::assertSame($params,$event['data']['nativeFlowResponseMessage']['paramsJson']);
+            self::assertSame($outgoing['id'],$event['context']['stanzaId']);
+            self::assertSame('receipt',$this->sent[array_key_last($this->sent)]->tag);
+        }
+        self::assertCount(2,$incoming,'Text and cancellation remain distinct authenticated replies');
+    }
+
     /** @return iterable<string,array{int}> */
     public static function responseVersions():iterable
     {

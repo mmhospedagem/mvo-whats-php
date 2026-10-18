@@ -28,6 +28,186 @@ final class NativeFormBuilderTest extends TestCase
         ]];
     }
 
+    /** @return array<string,mixed> */
+    private static function portableInputContent(): array
+    {
+        $content = self::androidContent();
+        unset($content['platform']);
+        $content['steps'][0]['cancel_option'] = ['id'=>'cancelar_pedido_42','title'=>'Cancelar consulta'];
+        $content['steps'][0]['fields'][0]['default'] = '';
+        return $content;
+    }
+
+    public function testPortableInputUsesRealCancellationAndOriginalFieldIdsAcrossMixedSteps(): void
+    {
+        $content = self::portableInputContent();
+        $content['steps'][0]['fields'][] = ['id'=>'_mvo_form','label'=>'Observação','type'=>'text','required'=>false];
+        $content['steps'][] = self::content()['steps'][0];
+        $original = $content;
+        $built = ContentBuilder::build($content, '5511000000000@s.whatsapp.net');
+        self::assertSame($original, $content, 'Compiling portable inputs must not rewrite application content');
+        $native = ContentDecoder::decode($built['bytes'])['data']['nativeFlowMessage'];
+        $params = json_decode($native['messageParamsJson'], true, 128, JSON_THROW_ON_ERROR);
+        self::assertSame('form_message', $native['buttons'][0]['name']);
+        self::assertSame('2', $params['version']);
+        self::assertSame('a2ui_form', $params['payload']['type']);
+        $graph = $params['payload']['data'];
+        self::assertSame('_mvo_form_', $graph['root']);
+        self::assertSame(['name','_mvo_form','nome'], $graph['components'][0]['children']);
+        self::assertSame('form', $graph['components'][0]['component']);
+        self::assertCount(4, $graph['components']);
+        foreach ($content['steps'][0]['fields'] as $index => $field) {
+            $component = $graph['components'][$index + 1];
+            self::assertSame($field['id'], $component['id']);
+            self::assertSame('ChoicePicker', $component['component']);
+            self::assertSame('mutuallyExclusive', $component['variant']);
+            self::assertSame("Cadastro MVO\n".$field['label'], $component['label']);
+            self::assertSame($component['label'], $component['title']);
+            self::assertSame('Enviar', $component['button']);
+            self::assertSame([$content['steps'][0]['cancel_option']], $component['options']);
+            self::assertTrue($component['allow_custom_answer']);
+            self::assertArrayNotHasKey('required', $component, 'ChoicePicker does not claim native text-required enforcement');
+            self::assertArrayNotHasKey('default', $component);
+            self::assertArrayNotHasKey('fields', $component);
+        }
+        self::assertSame('nome', $graph['components'][3]['id']);
+        self::assertSame($content['steps'][1]['options'], $graph['components'][3]['options']);
+        self::assertStringNotContainsString('InputFields', $native['messageParamsJson']);
+        self::assertArrayNotHasKey('platform', $params);
+        self::assertArrayNotHasKey('flow_id', $params);
+        $explicit = NativeFormBuilder::build([...$content,'platform'=>'portable']);
+        self::assertSame($native['messageParamsJson'], $explicit['interactiveMessage']['nativeFlowMessage']['messageParamsJson']);
+    }
+
+    public function testPortableExpansionCountsRenderedFieldsAndDefaultsButtonToCta(): void
+    {
+        $content = self::portableInputContent();
+        unset($content['steps'][0]['button']);
+        $content['steps'][0]['fields'] = [
+            ['id'=>'0','label'=>'Nome','type'=>'text','required'=>true],
+            ['id'=>'email','label'=>'E-mail','type'=>'text','required'=>true,'default'=>''],
+        ];
+        $content['steps'][] = [...$content['steps'][0],'id'=>'observacoes','fields'=>[
+            ['id'=>'obs','label'=>'Observação','type'=>'text','required'=>false],
+        ]];
+        $native = NativeFormBuilder::build($content)['interactiveMessage']['nativeFlowMessage'];
+        $graph = json_decode($native['messageParamsJson'], true, 128, JSON_THROW_ON_ERROR)['payload']['data'];
+        self::assertSame(['0','email','obs'], $graph['components'][0]['children']);
+        foreach (array_slice($graph['components'], 1) as $component) self::assertSame('Responder', $component['button']);
+
+        $android = self::androidContent();
+        $android['steps'][0]['fields'] = [];
+        for ($index = 0; $index < 5; ++$index) $android['steps'][0]['fields'][] = [
+            'id'=>'field_'.$index,'label'=>'Campo '.$index,'type'=>'text','required'=>true,
+        ];
+        $native = NativeFormBuilder::build($android)['interactiveMessage']['nativeFlowMessage'];
+        $graph = json_decode($native['messageParamsJson'], true, 128, JSON_THROW_ON_ERROR)['payload']['data'];
+        self::assertSame(['cadastro'], $graph['components'][0]['children']);
+        self::assertCount(5, $graph['components'][1]['fields'], 'Android keeps one InputFields step for five fields');
+    }
+
+    public function testPortableInputWithoutRealCancellationStillFailsBeforeBuilding(): void
+    {
+        $content = self::portableInputContent();
+        unset($content['steps'][0]['cancel_option']);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Portable input steps require an explicit cancel_option with id and title');
+        NativeFormBuilder::build($content);
+    }
+
+    /** @return iterable<string,array{array<string,mixed>}> */
+    public static function reservedPortableResponseIds(): iterable
+    {
+        $input = self::portableInputContent(); $input['steps'][0]['fields'][0]['id'] = '__proto__';
+        yield 'default portable input field' => [$input];
+        yield 'explicit portable input field' => [[...$input,'platform'=>'portable']];
+        $choice = self::content(); $choice['steps'][0]['id'] = '__proto__';
+        yield 'default portable choice step' => [$choice];
+        yield 'explicit portable choice step' => [[...$choice,'platform'=>'portable']];
+    }
+
+    #[DataProvider('reservedPortableResponseIds')]
+    public function testPortableResponseKeysRejectTheWebPrototypeSetterName(array $content): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Portable form response ID __proto__ is reserved by the Web client');
+        NativeFormBuilder::build($content);
+    }
+
+    public function testReservedResponseIdCheckPreservesInputGroupIdsAndroidAndExactOtherKeys(): void
+    {
+        $content = self::portableInputContent();
+        $content['steps'][0]['id'] = '__proto__';
+        $native = NativeFormBuilder::build($content)['interactiveMessage']['nativeFlowMessage'];
+        $graph = json_decode($native['messageParamsJson'], true, 128, JSON_THROW_ON_ERROR)['payload']['data'];
+        self::assertSame(['name'], $graph['components'][0]['children'], 'The unused input group ID is not a response key');
+        self::assertSame('name', $graph['components'][1]['id']);
+
+        foreach (['__proto__ ','__PROTO__','constructor','0'] as $id) {
+            $content = self::portableInputContent(); $content['steps'][0]['fields'][0]['id'] = $id;
+            $native = NativeFormBuilder::build($content)['interactiveMessage']['nativeFlowMessage'];
+            $graph = json_decode($native['messageParamsJson'], true, 128, JSON_THROW_ON_ERROR)['payload']['data'];
+            self::assertSame([$id], $graph['components'][0]['children']);
+            self::assertSame($id, $graph['components'][1]['id'], 'Other field IDs remain exact, with no normalization or renaming');
+        }
+
+        $android = self::androidContent(); $android['steps'][0]['fields'][0]['id'] = '__proto__';
+        $native = NativeFormBuilder::build($android)['interactiveMessage']['nativeFlowMessage'];
+        $graph = json_decode($native['messageParamsJson'], true, 128, JSON_THROW_ON_ERROR)['payload']['data'];
+        self::assertSame('InputFields', $graph['components'][1]['component']);
+        self::assertSame('__proto__', $graph['components'][1]['fields'][0]['id']);
+
+        $android = self::content(); $android['platform'] = 'android'; $android['steps'][0]['id'] = '__proto__';
+        $native = NativeFormBuilder::build($android)['interactiveMessage']['nativeFlowMessage'];
+        $graph = json_decode($native['messageParamsJson'], true, 128, JSON_THROW_ON_ERROR)['payload']['data'];
+        self::assertSame(['__proto__'], $graph['components'][0]['children'], 'Explicit Android keeps its existing choice contract');
+    }
+
+    /** @return iterable<string,array{array<string,mixed>}> */
+    public static function invalidPortableInputContents(): iterable
+    {
+        $valid = self::portableInputContent(); $step = $valid['steps'][0]; $field = $step['fields'][0];
+        foreach ([null,false,'cancel',new \stdClass(),[],['id'=>'cancel'],['title'=>'Cancelar'],
+            ['id'=>'cancel','title'=>'Cancelar','description'=>'extra'],['id'=>'cancel','title'=>'Cancelar','required'=>true]] as $index => $cancel) {
+            yield 'cancel shape '.$index => [[...$valid,'steps'=>[[...$step,'cancel_option'=>$cancel]]]];
+        }
+        foreach (['id','title'] as $key) foreach (['','  ',"\xFF",false,null,[]] as $index => $value) {
+            yield 'cancel '.$key.' '.$index => [[...$valid,'steps'=>[[...$step,'cancel_option'=>[...$step['cancel_option'],$key=>$value]]]]];
+        }
+        yield 'cancel id too long' => [[...$valid,'steps'=>[[...$step,'cancel_option'=>['id'=>str_repeat('a',129),'title'=>'Cancelar']]]]];
+        yield 'cancel title too long' => [[...$valid,'steps'=>[[...$step,'cancel_option'=>['id'=>'cancel','title'=>str_repeat('a',1025)]]]]];
+        yield 'android must not silently ignore cancel option' => [[...$valid,'platform'=>'android']];
+        yield 'choice must not silently ignore cancel option' => [[...self::content(),'steps'=>[[...self::content()['steps'][0],'cancel_option'=>$step['cancel_option']]]]];
+        foreach (['Maik','0',' ',null,false,1,"\xFF"] as $index => $default) {
+            yield 'default cannot be discarded '.$index => [[...$valid,'steps'=>[[...$step,'fields'=>[[...$field,'default'=>$default]]]]]];
+        }
+        foreach ([null,[],['x'=>$field],array_fill(0,6,$field),[new \stdClass()]] as $index => $fields) {
+            yield 'portable field shape '.$index => [[...$valid,'steps'=>[[...$step,'fields'=>$fields]]]];
+        }
+        foreach (['number',null] as $type) yield 'portable field type '.json_encode($type) => [[...$valid,'steps'=>[[...$step,'fields'=>[[...$field,'type'=>$type]]]]]];
+        foreach ([null,0,'true'] as $index => $required) yield 'portable required '.$index => [[...$valid,'steps'=>[[...$step,'fields'=>[[...$field,'required'=>$required]]]]]];
+        $missing = $field; unset($missing['required']);
+        yield 'portable missing required' => [[...$valid,'steps'=>[[...$step,'fields'=>[$missing]]]]];
+        yield 'portable duplicate fields' => [[...$valid,'steps'=>[[...$step,'fields'=>[$field,$field]]]]];
+        yield 'portable field collides with its step' => [[...$valid,'steps'=>[[...$step,'fields'=>[[...$field,'id'=>'cadastro']]]]]];
+        yield 'portable field collides with later choice' => [[...$valid,'steps'=>[$step,[...self::content()['steps'][0],'id'=>'name']]]];
+        yield 'portable field collides with earlier choice' => [[...$valid,'steps'=>[self::content()['steps'][0],[...$step,'fields'=>[[...$field,'id'=>'nome']]]]]];
+        yield 'portable fields collide across steps' => [[...$valid,'steps'=>[$step,[...$step,'id'=>'cadastro2']]]];
+        yield 'portable duplicate step IDs despite expansion' => [[...$valid,'steps'=>[$step,[...$step,'fields'=>[[...$field,'id'=>'name2']]]]]];
+        $four = [];
+        for ($index = 0; $index < 4; ++$index) $four[] = [...$field,'id'=>'field_'.$index];
+        yield 'one input expands past three steps' => [[...$valid,'steps'=>[[...$step,'fields'=>$four]]]];
+        yield 'mixed input and choice expands past three steps' => [[...$valid,'steps'=>[[...$step,'fields'=>array_slice($four,0,3)],self::content()['steps'][0]]]];
+        yield 'two inputs expand past three steps' => [[...$valid,'steps'=>[[...$step,'fields'=>array_slice($four,0,2)],[...$step,'id'=>'more','fields'=>array_slice($four,2)]]]];
+    }
+
+    #[DataProvider('invalidPortableInputContents')]
+    public function testPortableInputsRejectLossyDefaultsMalformedCancellationAndExpandedOverflow(array $content): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        NativeFormBuilder::build($content);
+    }
+
     public function testAndroidInputFieldsAndChoicesKeepDistinctGraphAndFlatFieldIds(): void
     {
         $content = self::androidContent();
@@ -74,8 +254,8 @@ final class NativeFormBuilderTest extends TestCase
     {
         $valid = self::androidContent(); $step = $valid['steps'][0]; $field = $step['fields'][0];
         foreach ([null,'ios','web',false] as $platform) yield 'invalid platform '.json_encode($platform)=>[[...$valid,'platform'=>$platform]];
-        $portable = $valid; unset($portable['platform']); yield 'no implicit Android conversion'=>[$portable];
-        yield 'explicit portable cannot render input'=>[[...$valid,'platform'=>'portable']];
+        $portable = $valid; unset($portable['platform']); yield 'no implicit portable input without cancellation'=>[$portable];
+        yield 'explicit portable input requires cancellation'=>[[...$valid,'platform'=>'portable']];
         foreach ([null,'InputFields','TextInput','url'] as $kind) yield 'invalid kind '.json_encode($kind)=>[[...$valid,'steps'=>[[...$step,'kind'=>$kind]]]];
         foreach ([null,[],['x'=>$field],array_fill(0,6,$field),[new \stdClass()]] as $i=>$fields) yield 'fields '.$i=>[[...$valid,'steps'=>[[...$step,'fields'=>$fields]]]];
         foreach ([null,'email','number','TEXT'] as $type) yield 'field type '.json_encode($type)=>[[...$valid,'steps'=>[[...$step,'fields'=>[[...$field,'type'=>$type]]]]]];

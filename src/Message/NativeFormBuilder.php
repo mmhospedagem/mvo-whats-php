@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace MVO\Message;
 
-/** Native multi-step forms, with explicit Android input fields, distinct from Galaxy Flows. */
+/** Native forms with portable custom answers or explicit Android input fields, distinct from Galaxy Flows. */
 final class NativeFormBuilder
 {
     /** @param array<string,mixed> $content
@@ -25,15 +25,25 @@ final class NativeFormBuilder
             if (!is_array($step)) throw new \InvalidArgumentException('Form step '.$index.' must be an object');
             $kind = array_key_exists('kind', $step) ? $step['kind'] : 'choice';
             if (!in_array($kind, ['choice','input'], true)) throw new \InvalidArgumentException('Form step kind must be choice or input');
-            self::fields($step, $kind === 'input' ? ['id','label','kind','fields','button']
+            self::fields($step, $kind === 'input' ? ($platform === 'portable'
+                ? ['id','label','kind','fields','button','cancel_option'] : ['id','label','kind','fields','button'])
                 : ['id','label','kind','selection','options','allow_custom_answer'], 'form step');
             $id = self::text($step['id'] ?? null, 'form step id', 128);
+            if ($platform === 'portable' && $kind === 'choice' && $id === '__proto__') {
+                throw new \InvalidArgumentException('Portable form response ID __proto__ is reserved by the Web client');
+            }
             if (in_array($id, $ids, true)) throw new \InvalidArgumentException('Duplicate form step ID '.$id);
             $ids[] = $id;
-            $stepIds[] = $id;
             $label = self::text($step['label'] ?? null, 'form step label', 1024);
             if ($kind === 'input') {
-                if ($platform !== 'android') throw new \InvalidArgumentException('InputFields require explicit platform android; Web supports choice steps only');
+                $cancel = null;
+                if ($platform === 'portable') {
+                    $cancel = $step['cancel_option'] ?? null;
+                    if (!is_array($cancel)) throw new \InvalidArgumentException('Portable input steps require an explicit cancel_option with id and title');
+                    self::fields($cancel, ['id','title'], 'input cancel option');
+                    $cancel = ['id'=>self::text($cancel['id'] ?? null, 'input cancel option id', 128),
+                        'title'=>self::text($cancel['title'] ?? null, 'input cancel option title', 1024)];
+                }
                 $fields = $step['fields'] ?? null;
                 if (!is_array($fields) || !array_is_list($fields) || count($fields) < 1 || count($fields) > 5) {
                     throw new \InvalidArgumentException('Input steps require 1 to 5 fields');
@@ -43,17 +53,37 @@ final class NativeFormBuilder
                     if (!is_array($field)) throw new \InvalidArgumentException('Input field must be an object');
                     self::fields($field, ['id','label','type','required','default'], 'input field');
                     $fieldId = self::text($field['id'] ?? null, 'input field id', 128);
+                    if ($platform === 'portable' && $fieldId === '__proto__') {
+                        throw new \InvalidArgumentException('Portable form response ID __proto__ is reserved by the Web client');
+                    }
                     if (in_array($fieldId, $ids, true)) throw new \InvalidArgumentException('Duplicate form field ID '.$fieldId);
                     $ids[] = $fieldId;
                     if (($field['type'] ?? null) !== 'text') throw new \InvalidArgumentException('Native input fields support type text only');
                     if (!array_key_exists('required', $field) || !is_bool($field['required'])) throw new \InvalidArgumentException('Input field required must be boolean');
                     $input = ['id'=>$fieldId,'label'=>self::text($field['label'] ?? null, 'input field label', 1024),
                         'type'=>'text','required'=>$field['required']];
-                    if (array_key_exists('default', $field)) $input['default'] = self::defaultText($field['default']);
+                    if (array_key_exists('default', $field)) {
+                        $input['default'] = self::defaultText($field['default']);
+                        if ($platform === 'portable' && $input['default'] !== '') {
+                            throw new \InvalidArgumentException('Portable input defaults must be empty; custom answers do not support prefilled text');
+                        }
+                    }
                     $inputs[] = $input;
                 }
-                $components[] = ['id'=>$id,'component'=>'InputFields','label'=>$label,'title'=>$label,'fields'=>$inputs,
-                    'button'=>array_key_exists('button', $step) ? self::button($step['button'], 'input button') : $cta];
+                $button = array_key_exists('button', $step) ? self::button($step['button'], 'input button') : $cta;
+                if ($platform === 'android') {
+                    $stepIds[] = $id;
+                    $components[] = ['id'=>$id,'component'=>'InputFields','label'=>$label,'title'=>$label,'fields'=>$inputs,'button'=>$button];
+                } else {
+                    // Each field is a real choice between cancellation and a custom text answer.
+                    // Required text is validated by the application; cancellation remains a valid choice.
+                    foreach ($inputs as $input) {
+                        $stepIds[] = $input['id'];
+                        $fieldLabel = $label."\n".$input['label'];
+                        $components[] = ['id'=>$input['id'],'component'=>'ChoicePicker','variant'=>'mutuallyExclusive',
+                            'label'=>$fieldLabel,'title'=>$fieldLabel,'button'=>$button,'options'=>[$cancel],'allow_custom_answer'=>true];
+                    }
+                }
                 continue;
             }
             $variant = match ($step['selection'] ?? null) {
@@ -77,9 +107,11 @@ final class NativeFormBuilder
                 $optionIds[] = $optionId;
                 $choices[] = ['id'=>$optionId,'title'=>self::text($option['title'] ?? null, 'form option title', 1024)];
             }
+            $stepIds[] = $id;
             $components[] = ['id'=>$id,'component'=>'ChoicePicker','variant'=>$variant,
                 'label'=>$label,'title'=>$label,'button'=>$cta,'options'=>$choices,'allow_custom_answer'=>$custom];
         }
+        if (count($stepIds) > 3) throw new \InvalidArgumentException('Native forms allow at most 3 rendered steps after portable input expansion');
         // Keep the internal graph root separate from caller-owned response field IDs.
         $root = '_mvo_form';
         while (in_array($root, $ids, true)) $root .= '_';

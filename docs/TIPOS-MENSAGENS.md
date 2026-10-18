@@ -19,7 +19,7 @@
 | `event`, `event-response` | Criar evento e responder presença |
 | `list`, `buttons`, `interactive` | Listas, botões e fluxos interativos com `data` no formato WAProto |
 | `flow`, `flow-navigate`, `flow-exchange` | WhatsApp Flows por ID, navegação ou troca de dados; veja [FLOWS.md](FLOWS.md) |
-| `form` | Formulários nativos sem registro na Meta: opções Web/Android e campos de texto Android; veja [FORMULARIOS.md](FORMULARIOS.md) |
+| `form` | Formulários nativos sem registro na Meta: opções, texto livre portável com `cancel_option` explícito e componente `InputFields` no modo Android; limites e validação em [FORMULARIOS.md](FORMULARIOS.md) |
 | `legacy-buttons` | Envelope antigo `buttonsMessage`, disponível explicitamente |
 | `list-response`, `buttons-response`, `interactive-response` | Respostas estruturadas |
 | `product`, `order`, `template`, `group-invite` e demais campos WAProto | Corpo estruturado em `data` ou envelope `raw` |

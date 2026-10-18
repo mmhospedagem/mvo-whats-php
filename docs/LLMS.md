@@ -110,6 +110,39 @@ $account = $client->accountInfo();
 
 Para conteúdo estruturado, consulte [TIPOS-MENSAGENS.md](TIPOS-MENSAGENS.md). `form` é o formulário nativo; `flow`, `flow-navigate` e `flow-exchange` têm requisitos diferentes. Um Flow inline não registra um Flow remoto e não garante compatibilidade no Android. Veja [FORMULARIOS.md](FORMULARIOS.md) e [FLOWS.md](FLOWS.md).
 
+### Texto livre em formulário nativo
+
+O modo padrão `platform => 'portable'` adapta `kind => 'input'` para texto livre com uma opção visível, fornecida explicitamente em `cancel_option`. Exemplo de solicitação de CPF/CNPJ, executado fora dos callbacks com a sessão conectada:
+
+```php
+$client->sendMessage('5511999999999', [
+    'type' => 'form',
+    'platform' => 'portable',
+    'text' => 'Digite o CPF/CNPJ ou selecione Cancelar consulta.',
+    'cta' => 'Informar documento',
+    'steps' => [[
+        'id' => 'pedido_42_documento',
+        'kind' => 'input',
+        'label' => 'Consulta de cadastro',
+        'cancel_option' => ['id' => 'pedido_42_cancelar', 'title' => 'Cancelar consulta'],
+        'fields' => [[
+            'id' => 'pedido_42_cpf_cnpj',
+            'label' => 'CPF ou CNPJ',
+            'type' => 'text',
+            'required' => true,
+        ]],
+    ]],
+]);
+```
+
+Cada campo vira uma etapa `ChoicePicker` de seleção única, com o ID original do campo, a opção de cancelamento e resposta personalizada habilitada. A soma dos campos expandidos e das etapas de opções deve ser no máximo três. `required` deve ser booleano; a aplicação valida o texto obrigatório e o documento. `default` não vazio é rejeitado no modo portável. Omitir `cancel_option` também é erro. Para emitir o componente nativo `InputFields`, use `platform => 'android'`, sem `cancel_option`; o parser Web analisado rejeita esse componente.
+
+No modo `portable`, o SDK rejeita o valor exato `__proto__` como ID de etapa de opções ou ID de campo de entrada, pois o Web perde esse valor ao construir as chaves da resposta. O ID de agrupamento de uma etapa `input` pode usá-lo, pois não vira chave de resposta. A reserva não se aplica ao modo `android` e não renomeia IDs; os demais IDs válidos são preservados literalmente.
+
+O evento `message` entrega `parsedFormResponse['params']` como `stdClass`. No exemplo, leia `$params->pedido_42_cpf_cnpj`: o valor será o texto digitado ou `'pedido_42_cancelar'`. Compare o valor com o ID de cancelamento antes de validar o documento. O SDK conserva as chaves, a versão e o JSON bruto; não cria um evento de cancelamento nem um `flow_token`. Cancelar é uma opção enviada como resposta e não encerra nem pula etapas de um formulário maior. Processe comandos no loop externo e torne ações externas idempotentes.
+
+Opções e `InputFields` Android têm evidência anterior em clientes reais. A nova adaptação portável tem testes PHP e reprodução controlada das funções distribuídas de parser e resposta do Web, sem sessão autenticada. Ainda depende de validação completa em clientes Web e Android reais; teste local ou `server_ack` não comprovam exibição. Envie uma nova mensagem para usá-la: mensagens antigas preservam sua definição. Veja o contrato completo em [FORMULARIOS.md](FORMULARIOS.md) e o [exemplo CLI](../examples/native-form.php).
+
 ## Instalar e conectar o servidor MCP
 
 O servidor MCP já existe em PHP. Para usar os exemplos executáveis, mantenha um clone próprio do SDK, com suas dependências na pasta `vendor/` desse clone:
