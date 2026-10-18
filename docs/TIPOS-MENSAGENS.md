@@ -19,7 +19,7 @@
 | `event`, `event-response` | Criar evento e responder presença |
 | `list`, `buttons`, `interactive` | Listas, botões e fluxos interativos com `data` no formato WAProto |
 | `flow`, `flow-navigate`, `flow-exchange` | WhatsApp Flows por ID, navegação ou troca de dados; veja [FLOWS.md](FLOWS.md) |
-| `form` | Formulários nativos sem registro na Meta: opções, texto livre portável com `cancel_option` explícito e componente `InputFields` no modo Android; limites e validação em [FORMULARIOS.md](FORMULARIOS.md) |
+| `form` | Formulários nativos sem registro na Meta: opções, texto livre portável com `cancel_option` explícito e componente `InputFields` no modo Android. Casos reais da adaptação: texto livre no Web e cancelamento no Android; alcance em [FORMULARIOS.md](FORMULARIOS.md) |
 | `legacy-buttons` | Envelope antigo `buttonsMessage`, disponível explicitamente |
 | `list-response`, `buttons-response`, `interactive-response` | Respostas estruturadas |
 | `product`, `order`, `template`, `group-invite` e demais campos WAProto | Corpo estruturado em `data` ou envelope `raw` |
@@ -156,6 +156,6 @@ $client->on('message_protocol', function(array $event) {
 
 Campos novos/desconhecidos são preservados em `proto['_unknown']`. A inbox mantém bytes e coordenadas sem conversão destrutiva para JSON. Se salvar eventos fora da biblioteca, use `MVO\Protocol\BinaryData::encode()`/`decode()`.
 
-Grupos usam Sender Keys Signal com assinatura, rotação quando muda a lista de membros/aparelhos, distribuição por sessão individual e persistência atômica junto da outbox. A lista é consultada novamente no envio; a distribuição só é marcada como aceita após ACK. Há testes entre instâncias PHP, com reinício, replay, adulteração e retry exato. Não há sincronização completa de histórico/app-state, envio a Status/broadcast/newsletters ou protocolo de chamadas nesta etapa. A validação dos novos tipos contra contas reais ainda está pendente.
+Grupos usam Sender Keys Signal com assinatura, rotação quando muda a lista de membros/aparelhos, distribuição por sessão individual e persistência atômica junto da outbox. A lista é consultada novamente no envio; a distribuição só é marcada como aceita após ACK. Há testes entre instâncias PHP, com reinício, replay, adulteração e retry exato. Não há sincronização completa de histórico/app-state, envio a Status/broadcast/newsletters ou protocolo de chamadas nesta etapa. A validação em contas reais varia por tipo; consulte os casos comprovados e os limites no guia de cada recurso.
 
 Veja [MIDIA.md](MIDIA.md) para todos os formatos de arquivos, miniaturas, pacotes de figurinhas, limites e download verificado.

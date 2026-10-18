@@ -2,10 +2,11 @@
 
 As versões da biblioteca seguem versionamento semântico. Mudanças no protocolo do WhatsApp podem exigir atualizações de compatibilidade, independentemente da versão da biblioteca.
 
-## Não lançado
+## 1.0.2 — 2026-10-18
 
 - Formulários portáveis com `kind: input` e `cancel_option` explícita: cada campo usa resposta de texto livre e uma opção visível de cancelamento, preservando o ID original. A adaptação segue o parser distribuído do WhatsApp Web, com limite de três etapas após expansão e rejeição de valores iniciais não suportados. O modo Android com `InputFields` permanece separado.
 - Exemplos PHP e contexto para LLMs descrevem o tratamento de texto/cancelamento e os limites de validação em clientes reais.
+- Em teste entre duas contas, a API recebeu o texto enviado pelo WhatsApp Web e o cancelamento enviado pelo Android com as chaves originais. Essa evidência se limita ao formulário e aos clientes usados no teste.
 
 ## 1.0.1 — 2026-10-17
 

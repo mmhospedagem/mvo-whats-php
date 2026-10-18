@@ -2,7 +2,7 @@
 
 Use `type => 'form'` para enviar a definição junto com a mensagem, sem `flow_id`, conta de desenvolvedor ou publicação na Meta. O envio usa a conexão PHP, Signal, fila persistente e eventos da sessão.
 
-Um teste anterior entre duas sessões confirmou opções no WhatsApp Web e Android e o componente `InputFields` no Android 2.26.39.79. A adaptação portável de texto livre com cancelamento explícito descrita abaixo é um novo contrato do SDK, baseado no parser Web analisado; ainda precisa de validação completa em clientes reais Web e Android. A compatibilidade depende da versão do cliente. As limitações do formato Galaxy estão descritas em [FLOWS.md](FLOWS.md).
+Um teste anterior entre duas sessões confirmou opções no WhatsApp Web e Android e o componente `InputFields` no Android 2.26.39.79. A adaptação portável de texto livre com cancelamento explícito descrita abaixo também foi verificada em duas mensagens reais: texto livre no Web e “Cancelar consulta” no Android, com respostas recebidas pela sessão remetente. A evidência e seu alcance estão detalhados ao final deste guia. As limitações do formato Galaxy estão descritas em [FLOWS.md](FLOWS.md).
 
 ## Opções e etapas no Web e Android
 
@@ -145,10 +145,19 @@ O evento contém `parsedFormResponse` com `name => 'form_message'`, `version` e 
 
 Na biblioteca, envie `type: "form"` com `sendMessage()`. O evento `message` inclui `parsedFormResponse`; sua aplicação pode validar os dados, consultar serviços e enviar o próximo formulário. A publicação desses eventos em uma API HTTP ou webhook pertence à aplicação que usa a biblioteca.
 
-## Limites
+## Evidência e limites
 
 O formulário nativo contém etapas locais; não executa o `data_exchange` de Galaxy dentro do modal. Trocas com seu backend passam pelos eventos/webhooks e por um novo envio da aplicação. Os tipos Galaxy continuam separados em [FLOWS.md](FLOWS.md).
 
-A análise estática do parser Web e a reprodução controlada de suas funções distribuídas de parser e resposta sustentam o formato escolhido. O ensaio local passou dez verificações, incluindo texto livre e seleção de cancelamento com a chave original do campo. Ele executou essas funções isoladamente, sem sessão autenticada, e não demonstra abertura e envio da nova adaptação em clientes Web/Android reais. Os testes PHP cobrem o builder e o transporte simulado; também não equivalem à validação nesses clientes. `server_ack` confirma aceitação pelo servidor, sem comprovar exibição ou preenchimento.
+A verificação real da adaptação usou duas novas mensagens. O usuário confirmou a interface do formulário no Web e no Android; a sessão remetente recebeu e decodificou as respostas:
+
+| Caso real | Resposta observada |
+| --- | --- |
+| Texto livre submetido pelo Web | `form_message`, versão de resposta `1`, com o texto digitado na chave original do campo. |
+| “Cancelar consulta” selecionado e enviado pelo Android, conforme confirmação do usuário | `form_message`, versão de resposta `3`, com o ID da opção de cancelamento na chave original do campo. |
+
+Esses resultados comprovam esses dois caminhos em clientes reais. As versões dos aplicativos usados nessa verificação não estão identificadas; os números `1` e `3` acima são versões das respostas. A evidência não cobre todas as combinações de campos, etapas, valores iniciais ou versões de cliente. O componente `InputFields` continua específico do modo Android.
+
+A análise estática do parser Web, a reprodução controlada de suas funções distribuídas de parser e resposta e os testes PHP do builder/transporte simulado são evidências locais adicionais. A confirmação visual do usuário e as respostas recebidas são as evidências da execução real. `server_ack` isolado confirma aceitação pelo servidor, sem comprovar exibição ou preenchimento.
 
 Mensagens já recebidas não são convertidas retroativamente pelo novo código. Para avaliar a adaptação, envie uma nova mensagem com `cancel_option`; reabrir uma mensagem antiga mantém a definição antiga.

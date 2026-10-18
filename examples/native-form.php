@@ -11,7 +11,8 @@ if (isset($options['help'])) {
         ."--auth-dir=PASTA: pasta privada de autenticação (padrão: var/whatsapp-auth do projeto)\n"
         ."--duration=SEGUNDOS: tempo máximo do worker (padrão: 300)\n"
         ."Use a mesma sessão/pasta para retomada e apenas um worker por sessão.\n"
-        ."A nova adaptação ainda depende de validação completa em clientes Web/Android reais.\n";
+        ."Casos reais verificados: texto livre no Web e Cancelar consulta no Android.\n"
+        ."O ensaio não cobre todas as versões/combinações; veja docs/FORMULARIOS.md.\n";
     exit(0);
 }
 
