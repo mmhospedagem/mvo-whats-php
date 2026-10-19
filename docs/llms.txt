@@ -14,7 +14,7 @@ Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protoc
 
 ## Conectar, receber e enviar
 
-- [Conexão e eventos de sessão](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/CONEXAO.md): QR rotativo, código, restauração e accountInfo.
+- [Conexão e eventos de sessão](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/CONEXAO.md): QR rotativo, código, restauração, ACK de nós status e accountInfo.
 - [Persistência e mensagens](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MENSAGENS.md): worker, ACK, recibos, replay e envio para usernames.
 - [Tipos de mensagem](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/TIPOS-MENSAGENS.md): conteúdo estruturado e campos de envio.
 - [Mídia](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MIDIA.md): upload/download e processamento opcional.

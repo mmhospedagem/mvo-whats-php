@@ -1034,7 +1034,11 @@ final class WaClient
             if ($code === '515' && $this->isRegistered()) { $this->reconnectRequested = true; return; }
             $reason = $node->child('conflict')?->attrs['type'] ?? '';
             $revoked = $code === '401' || in_array($reason,['device_removed','device-removed','logged_out'],true);
-            throw new ConnectionFailure('WhatsApp stream error: '.$code.' '.$reason,$code,!$revoked && self::retryCode($code),$revoked);
+            $statusAck=false;
+            if($code==='' && !$revoked && $node->child('conflict')===null)foreach(is_array($node->content)?$node->content:[] as$child)
+                if($child->tag==='ack' && ($child->attrs['class'] ?? '')==='status'){$statusAck=true;break;}
+            $message=$statusAck ? 'WhatsApp stream error: unacknowledged status' : 'WhatsApp stream error: '.$code.' '.$reason;
+            throw new ConnectionFailure($message,$code,!$revoked && (self::retryCode($code) || $statusAck),$revoked);
         }
         if ($node->tag === 'failure') {
             $code = $node->attrs['reason'] ?? 'unknown';
@@ -1047,6 +1051,13 @@ final class WaClient
         if ($node->tag==='notification' && ($node->attrs['type'] ?? '')==='server_sync') { $this->appState?->requestSync(); $this->nextAppStateSyncAt=min($this->nextAppStateSyncAt,$this->now()); }
         $this->offline?->handleNode($node);
         if (!$this->running) return;
+        if($node->tag==='status') {
+            // Protocol acknowledgement precedes application handlers; this does not decode or mark a Status viewed.
+            $attrs=['class'=>'status','id'=>$node->attrs['id'] ?? '', 'to'=>$node->attrs['from'] ?? 's.whatsapp.net'];
+            foreach(['type','participant','recipient']as$key)if(isset($node->attrs[$key]))$attrs[$key]=$node->attrs[$key];
+            $this->sendNode(new BinaryNode('ack',$attrs));
+            if(!$this->running)return;
+        }
         // Own-device peer traffic contains protocol keys/history and cannot be ignored.
         if (in_array($node->tag,['message','receipt','notification','call'],true) && ($node->attrs['category'] ?? '')!=='peer') {
             foreach ($this->incomingFilters as $filter) if ($filter($node)) {

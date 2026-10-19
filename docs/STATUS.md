@@ -142,4 +142,11 @@ $client->on('status', function (array $event): void {
 
 O evento `message` continua disponível. Os dados de Status, audiências e marcações compartilham o armazenamento persistente da sessão. A aplicação deve continuar executando o loop do cliente para receber publicações e recibos.
 
+Algumas contas também recebem um nó `<status>` diretamente no transporte. O SDK
+envia o ACK de protocolo desse nó para evitar deixá-lo sem confirmação. Esse
+tratamento não decodifica seu conteúdo, não o adiciona às consultas locais e não
+marca o Status como visualizado. A confirmação de transporte e a ação explícita
+`readStatus()` têm finalidades diferentes. Veja [Conexão](CONEXAO.md) para a
+retomada após o erro de stream relacionado a esse ACK.
+
 Os testes usam transportes locais e fixtures criptográficas. Não publicam, visualizam ou removem Status de contas reais.

@@ -41,6 +41,12 @@ Carregue `vendor/autoload.php` da aplicação. Não copie classes para outro nam
 5. Cadastre listeners antes de `connect()`. Faça operações com consultas/envio no loop externo, após o retorno dos callbacks.
 6. `stop()` e `disconnect()` mantêm o vínculo salvo. `logout()` desvincula o aparelho e tem outra finalidade.
 
+O loop confirma nós de transporte `<status>` com `ack class="status"`; isso não
+decodifica seu conteúdo nem registra visualização. Com `autoReconnect=true`, um
+erro de stream sem código explícito nem conflito, contendo `<ack class="status">`,
+agenda retomada da mesma sessão. Outros erros conservam suas regras de
+recuperação/revogação. Consultas e envios interrompidos não são repetidos.
+
 Exemplo mínimo de conexão e recebimento, executado como processo CLI:
 
 ```php

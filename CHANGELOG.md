@@ -2,6 +2,11 @@
 
 As versões da biblioteca seguem versionamento semântico. Mudanças no protocolo do WhatsApp podem exigir atualizações de compatibilidade, independentemente da versão da biblioteca.
 
+## Em desenvolvimento — WhatsApp
+
+- ACK de protocolo para nós `<status>` de contatos e canais, preservando os atributos de roteamento. A confirmação não decodifica conteúdo nem marca visualização.
+- Reconexão automática para o erro de stream sem código explícito nem conflito que contém `<ack class="status">`, usando a sessão existente e sem repetir comandos interrompidos. Revogação e os demais códigos conservam suas regras.
+
 ## 1.0.3 — 2026-10-18
 
 - Documentação separada para WhatsApp e Facebook, com navegação e busca próprias, referência PHP, exemplos e contextos para LLMs. Os links existentes dos 49 guias WhatsApp foram preservados.

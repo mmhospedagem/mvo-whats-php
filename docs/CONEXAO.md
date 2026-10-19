@@ -136,6 +136,20 @@ Estados: `connecting`, `pairing` ou `authenticating`, `reconnecting`, `connected
 
 Outros eventos: `auth_qr_expired`, `auth_code_expired`, `auth_code_refresh`, `error` e `node`. `node` contém a stanza bruta e pode incluir dados sensíveis; o exemplo `--verbose` registra somente tag, tipo e código.
 
+O transporte confirma nós `<status>` recebidos diretamente do servidor com
+`ack class="status"`, preservando o ID, o remetente e os atributos de roteamento.
+Essa confirmação não marca uma publicação como visualizada nem cria um evento
+de mensagem a partir de conteúdo ainda não decodificado. O caminho de mensagens
+de Status em `status@broadcast` continua independente.
+
+Se o servidor encerrar o stream com um filho `<ack class="status">`, sem código
+explícito nem conflito, `autoReconnect=true` agenda a retomada usando a mesma
+sessão, com a espera progressiva já usada para falhas transitórias. Isso não
+revoga credenciais nem repete consultas ou envios interrompidos. Códigos
+explícitos, conflitos, revogação, `autoReconnect=false` e `stop()` continuam
+seguindo suas próprias regras; esse tratamento não torna recuperável todo erro
+de stream sem código.
+
 ## Testar e depurar
 
 ```powershell
