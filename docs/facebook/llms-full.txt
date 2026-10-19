@@ -500,4 +500,3 @@ Mutations exigem chave de idempotência de até 256 bytes e ledger privado. O SD
 Os doc IDs, formatos e providers Web podem mudar. Fontes e hashes do catálogo permitem revisar o binding; não use IDs aleatórios ou flags de fixtures para contornar indisponibilidade. Consulte o código e testes correspondentes antes de ampliar um recurso. Preserve sessões privadas, o dono único do lock e a separação entre WhatsApp e Facebook.
 
 Referências: [FacebookException](../../packages/facebook/src/FacebookException.php), [WebGraphQL](../../packages/facebook/src/Protocol/WebGraphQL.php), [CommandLedger](../../packages/facebook/src/Storage/CommandLedger.php) e [catálogo público observado](../../packages/facebook/resources/README.md).
-

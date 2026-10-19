@@ -297,4 +297,3 @@ final class LightspeedDecoder
         return $value;
     }
 }
-

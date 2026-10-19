@@ -164,4 +164,3 @@ final class LightspeedSyncGuard implements LightspeedProcedureResolver
     /** @return array{cachedDatabases:list<int>,openTransactions:int} */
     public function __debugInfo(): array { return ['cachedDatabases'=>array_keys($this->snapshots),'openTransactions'=>count($this->transactions)]; }
 }
-

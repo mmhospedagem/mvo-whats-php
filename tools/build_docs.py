@@ -198,7 +198,7 @@ def main():
     facebook_context += 'Contexto independente da biblioteca Facebook. Não substitui os contratos do SDK WhatsApp.\n\n'
     for source in ('LLMS.md', 'REFERENCIA.md', 'LIMITES.md'):
         facebook_context += (ROOT / 'docs/facebook' / source).read_text(encoding='utf-8').rstrip() + '\n\n'
-    (ROOT / 'docs/facebook/llms-full.txt').write_bytes(facebook_context.encode('utf-8'))
+    (ROOT / 'docs/facebook/llms-full.txt').write_bytes((facebook_context.rstrip() + '\n').encode('utf-8'))
 
 
 if __name__ == '__main__':
