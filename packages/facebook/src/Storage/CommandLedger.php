@@ -14,6 +14,26 @@ final class CommandLedger
         if($path===''||!is_dir(dirname($path)))throw new \InvalidArgumentException('Create a private directory for the Facebook command ledger');
         $this->db=new \PDO('sqlite:'.$path,null,null,[\PDO::ATTR_ERRMODE=>\PDO::ERRMODE_EXCEPTION]);@chmod($path,0600);
         $this->db->exec('PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS facebook_commands(id TEXT PRIMARY KEY,scope TEXT NOT NULL,idempotency_hash TEXT NOT NULL,payload_hash TEXT NOT NULL,operation TEXT NOT NULL,state TEXT NOT NULL,result TEXT,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,UNIQUE(scope,idempotency_hash))');
+        $this->db->exec('CREATE TABLE IF NOT EXISTS facebook_client_devices(account_id TEXT PRIMARY KEY,device_id TEXT NOT NULL)');
+    }
+    /** Stable SDK-owned UUID, not a copied browser/cookie identity or an E2EE registration.
+     * ChannelClientID in the shipped Web client also creates uuidv4 client IDs.
+     */
+    public function clientDeviceId(string $accountId):string
+    {
+        $this->requireOpen();
+        if(!preg_match('/^[1-9][0-9]{0,24}$/D',$accountId))throw new \InvalidArgumentException('Invalid Facebook client identity scope');
+        $this->db->exec('BEGIN IMMEDIATE');
+        try{
+            $query=$this->db->prepare('SELECT device_id FROM facebook_client_devices WHERE account_id=?');$query->execute([$accountId]);$id=$query->fetchColumn();
+            if($id===false){
+                $bytes=random_bytes(16);$bytes[6]=chr((ord($bytes[6])&15)|64);$bytes[8]=chr((ord($bytes[8])&63)|128);$hex=bin2hex($bytes);
+                $id=substr($hex,0,8).'-'.substr($hex,8,4).'-'.substr($hex,12,4).'-'.substr($hex,16,4).'-'.substr($hex,20);
+                $save=$this->db->prepare('INSERT INTO facebook_client_devices(account_id,device_id) VALUES(?,?)');$save->execute([$accountId,$id]);
+            }
+            if(!is_string($id)||!preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/D',$id))throw new \UnexpectedValueException('The saved Facebook client device ID is invalid');
+            $this->db->exec('COMMIT');return $id;
+        }catch(\Throwable $error){try{$this->db->exec('ROLLBACK');}catch(\PDOException){}throw $error;}
     }
     /** @param array<string,mixed> $variables
      * @return array{id:string,state:string,execute:bool,result:?array<string,mixed>}

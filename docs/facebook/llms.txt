@@ -19,9 +19,13 @@
 ## Serviços
 
 - [Páginas e contexto](PAGINAS.md): descoberta parcial, identidade e seleção explícita.
+- [Administração](ADMINISTRACAO.md): pessoas, convites, tarefas e confirmação recente de identidade.
 - [Publicações](PUBLICACOES.md): leitura, cursores e criação de texto com contexto real do composer.
+- [Fotos](MIDIA.md): configuração autenticada, upload multipart e distinção entre upload/publicação.
 - [Comentários e reações](COMENTARIOS-REACOES.md): feedback IDs, ordenação, providers, contadores e pessoas.
-- [Inbox comercial](INBOX.md): consultas de conversas/mensagens, IDs e completude desconhecida.
+- [Inbox comercial](INBOX.md): consultas, contexto atual e envio experimental Lightspeed vinculado à Página.
+- [Métricas da Página](INSIGHTS.md): valores, séries, breakdowns e limites de tráfego orgânico.
+- [Dispositivo E2EE](DISPOSITIVO-E2EE.md): provisionamento explícito, GMP e transporte criptografado ainda ausente.
 - [Anúncios](ANUNCIOS.md): consultas Web limitadas, objetos por IDs conhecidos, métricas e operações indisponíveis.
 - [Monitoramento local](MONITORAMENTO.md): snapshots normalizados, baseline, persistência, diferenças e eventos.
 - [Limites e evidências](LIMITES.md): contrato implementado, testes locais e alcance da validação real.
@@ -35,7 +39,7 @@
 - Preserve os IDs Facebook exatos. Não use QR, JIDs ou schemas MCP WhatsApp nesta biblioteca. Os contextos de cada canal são separados.
 - Páginas/contas de anúncios são preferências locais entre recursos descobertos; não mudam a identidade autenticada nem concedem permissões.
 - Providers e contextos do composer/feedback precisam vir da sessão atual. Não fabricar valores para tornar uma operação executável.
-- O inbox comercial implementado é somente leitura. Gerenciamento completo de anúncios e seu fluxo Graph API interno não estão disponíveis.
+- As extensões da branch de desenvolvimento incluem inbox Lightspeed vinculado à Página, fotos/vídeo/álbuns, edição/exclusão de conteúdo, cargos/moderação, tarefas comerciais e relatórios paginados com exports locais. Consulte o contexto completo antes de chamar: as releases Facebook 0.1.0/Messenger 0.1.1 ainda não incluem esses métodos. Gerenciamento completo de anúncios e seu fluxo Graph API interno não estão disponíveis.
 - HTTP 200, `metadata_connected` e fixtures não comprovam publicação, entrega ou aprovação real. Preserve resultados parciais e comandos incertos; não repita uma escrita com outra chave.
 - A instalação da biblioteca não autoriza publicação de conteúdo no Facebook nem uso de contas reais. A autorização de uma tarefa também não se estende automaticamente a outras contas, destinos ou operações.
 

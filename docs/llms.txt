@@ -24,10 +24,11 @@ Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protoc
 
 ## Documentação por biblioteca
 
-- [WhatsApp](docs/index.html#inicio): este índice, `docs/LLMS.md` e `llms-full.txt` descrevem `MVO\WaClient` e seu MCP.
-- [Facebook](docs/facebook/index.html#inicio): portal separado para o pacote experimental `mmhospedagem/mvo-facebook-php:^0.1`, com `MVO\Facebook\FacebookConnection`.
-- [Índice Facebook para LLMs](docs/facebook/llms.txt) e [contexto completo Facebook](docs/facebook/llms-full.txt): autenticação própria, sessão salva, serviços implementados e limites, sem misturar o contrato WhatsApp.
-- [Organização dos pacotes](docs/MULTICANAL.md): isolamento entre canal/provedor/conta. Facebook e Messenger são distribuições Composer independentes na série experimental 0.1; não são dependências do SDK WhatsApp.
+- [WhatsApp](https://mmhospedagem.github.io/mvo-whats-php/#inicio): este índice, `docs/LLMS.md` e `llms-full.txt` descrevem `MVO\WaClient` e seu MCP.
+- [Facebook](https://mmhospedagem.github.io/mvo-whats-php/facebook/#inicio): portal separado para o pacote experimental `mmhospedagem/mvo-facebook-php:^0.1`, com `MVO\Facebook\FacebookConnection`.
+- [Índice Facebook para LLMs](https://mmhospedagem.github.io/mvo-whats-php/facebook/llms.txt) e [contexto completo Facebook](https://mmhospedagem.github.io/mvo-whats-php/facebook/llms-full.txt): autenticação própria, sessão salva, serviços implementados e limites, sem misturar o contrato WhatsApp.
+- [Extensões Facebook em desenvolvimento](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/facebook/REFERENCIA.md): gerenciamento, fotos/vídeo/álbuns, cargos/moderação, relatórios paginados, inbox Lightspeed e componentes de dispositivo E2EE. As primeiras releases Facebook 0.1.0/Messenger 0.1.1 não incluem essas extensões; registro do dispositivo não habilita mensagens E2EE.
+- [Organização dos pacotes](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MULTICANAL.md): isolamento entre canal/provedor/conta. Facebook e Messenger são distribuições Composer independentes na série experimental 0.1; não são dependências do SDK WhatsApp.
 
 ## Serviços WhatsApp
 

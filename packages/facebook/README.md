@@ -2,6 +2,8 @@
 
 Biblioteca PHP experimental para recursos do Facebook Web, separada do SDK WhatsApp. Pacote `mmhospedagem/mvo-facebook-php`, namespace `MVO\Facebook`, série experimental **0.1**.
 
+**Checkout em desenvolvimento:** as extensões de gerenciamento, fotos, inbox Lightspeed e provisionamento do dispositivo abaixo ainda não fazem parte das releases Facebook 0.1.0/Messenger 0.1.1. Para avaliá-las use a instalação local `path`. Contratos e testes sintéticos não comprovam execução em conta real.
+
 **Documentação Facebook:** [portal por assunto](https://mmhospedagem.github.io/mvo-whats-php/facebook/), [referência PHP](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/facebook/REFERENCIA.md) e [guia para LLMs](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/facebook/LLMS.md). O portal WhatsApp tem sua própria navegação e busca.
 
 `FacebookConnection` conecta a conta com e-mail/senha, guarda a sessão confirmada e permite restaurá-la depois sem repetir as credenciais. Também organiza os serviços PHP de Páginas, publicações, comentários, reações, inbox e consultas de anúncios. Internamente reutiliza o runtime PHP de autenticação/transporte Messenger; a aplicação não precisa instanciar outro cliente nem importar JSON de cookies. A existência de um serviço ou de um documento Relay não comprova que todos os seus fluxos estejam disponíveis em uma conta real.
@@ -43,6 +45,8 @@ Configure os pacotes `messenger` e `facebook` como repositórios `path` no Compo
 ```
 
 Execute `composer install` nessa aplicação. Ajuste somente os caminhos ao seu checkout. Essa alternativa usa os arquivos do checkout, em vez de um release publicado. O `composer.json` do pacote e as dependências transitivas do Messenger são a fonte dos requisitos de extensões.
+
+As extensões deste checkout exigem Messenger `^0.1.2`. Até a publicação coordenada, os dois aliases `0.1.x-dev` acima resolvem essa dependência local; Messenger 0.1.1 não contém as novas interfaces. Não use somente o caminho Facebook junto de um Messenger publicado anterior.
 
 ## Conectar e guardar a sessão
 
@@ -181,7 +185,12 @@ Nas operações que recebem actor, Página, publicação, comentário ou conta d
 | `posts()` | Consultar ou alterar publicações conforme o binding do método. | Documentos e providers atuais precisam ser estabelecidos; não há promessa de CRUD completo. |
 | `comments()` | Comentários e respostas nos formatos reconhecidos. | Identificadores, ordenação e paginação vêm do protocolo; escrita depende do caminho comprovado. |
 | `reactions()` | Consultas e ações de reação reconhecidas. | Contador agregado não identifica autores; tipos/IDs não são inventados. |
-| `inbox()` | Recursos de inbox comercial observados. | Não implementa o dispositivo Messenger E2EE nem garante todas as mensagens. |
+| `inbox()` | Leitura e envio experimental de texto como Página. | Contexto atual, preflight e stream Lightspeed vinculado à Página; ACK não comprova entrega. |
+| `media()` / `albums()` | Upload de fotos/vídeo, publicação de fotos e vídeo carregados e CRUD de álbuns. | Upload é separado da publicação; publicação básica de vídeo usa timeline `profile`, sem garantir processamento ou reprodução. |
+| `administration()` | Pessoas, convites/cargos de Página, tarefas comerciais e acesso a assets. | Cobertura parcial, com permissão e confirmação recente; transferência de propriedade e todos os modelos modernos de acesso ausentes. |
+| `insights()` / `contentInsights()` | Valores, séries, breakdowns, tabela paginada e export local CSV/JSON. | Células desconhecidas não viram zero; totais não viram dados exclusivamente orgânicos. |
+| `moderation()` | Banir/desbanir usuário e bloquear/desbloquear mensagens na Página. | Permissões do Facebook se aplicam; denúncias finais ausentes. |
+| `e2eeDevice()` | Preparação e registro explícito do dispositivo. | Exige GMP e confirmação do inventário; não habilita mensagens E2EE. |
 | `ads()`, `listAdAccounts()` | Consultas de anúncios quando houver documentos Web comprovados. | Criação, publicação e alterações dependentes da Graph API interna do Ads Manager permanecem indisponíveis. |
 | `monitor()` | SQLite local para snapshots, diferenças, cursores e eventos. | Não consulta o Facebook nem inicia polling sozinho. |
 | `command($id)` | Consultar um comando registrado localmente. | Resultado local não prova exibição, entrega, aprovação ou execução de uma operação indisponível. |
@@ -197,7 +206,7 @@ Métodos específicos presentes nesta revisão:
 | Publicações | `list($profileId, $variables, $actorId)`, `next($profileId, $cursor, $variables, $actorId)`, `createText($actorId, $text, $idempotencyKey, $context, $variables)` | Timeline com providers atuais. Criação exige contexto real do composer, audiência, tracking e sessão; não há preparação automática desse contexto. |
 | Comentários | `list($feedbackId, $variables = [], $actorId = null)`; `next($feedbackId, $cursor, $intentToken, $count = 20, $variables = [], $actorId = null)`; `previous($feedbackId, $cursor, $intentToken, $count = 20, $variables = [], $actorId = null)`; `create($actorId, $feedbackId, $text, $idempotencyKey, $context, $variables = [])` | Leituras exigem providers e `feedLocation` reais. Escrita exige `session_id` e enum `feedback_source`; não derive feedback ID de post ID. |
 | Reações | `summary($feedbackId, $scale = 1.0, $actorId = null)`; `list($feedbackId, $reactionId = null, $scale = 1.0, $actorId = null)`; `next($feedbackId, $cursor, $reactionId = null, $count = 10, $scale = 1.0, $actorId = null)`; `set($actorId, $feedbackId, $reactionId, $idempotencyKey, $context, $variables = [])`; `remove($actorId, $feedbackId, $idempotencyKey, $context, $variables = [])` | Reação/feedback exatos, filtro preservado na paginação; escrita exige contexto e providers. `remove()` usa o valor de remoção estabelecido pelo documento. |
-| Inbox | `threads($actorId, $pageId, $limit, $beforeTimePrecise, $tags)`, `messages($actorId, $pageId, $selectedItemId, $limit, $beforeTimePrecise)` | Somente leitura. Actor e Página podem ser distintos; mensagens usam `selection_id` retornado por threads. `has_more=null` não significa lista esgotada. |
+| Inbox | `threads(...)`, `messages(...)`, `lightspeedContext(...)`, `sendTextLightspeed(...)`, `sendText(...)` | Actor e Página separados; `selection_id` observado. Lightspeed usa gateway próprio; `sendText` é o contrato Mercury legado separado. `has_more=null` não significa lista esgotada. |
 | Anúncios | `accounts()`, `account($id)`, `campaigns($ids)`, `adsets($ids)`, `ads($ids)`, `previews($ids)`, `insights($ids, $datePreset, $metrics)`, `insightsRange($ids, $since, $until, $metrics)`, `availability()` | Leituras Web parciais; objetos por IDs já conhecidos. Não há enumeração completa ou mutations comerciais. |
 
 Na descoberta de anúncios, o documento observado fixa `first=2`: `accounts()` retorna no máximo duas opções do contexto, com `partial=true` e `exhaustive=false`, sem paginação estabelecida. A consulta não usa a ramificação que criaria uma conta automaticamente. `campaigns()`, `adsets()` e `ads()` recebem IDs conhecidos, não listam toda uma conta. Insights são agregados com `first=1` e `filter_zero_delivery=true`; não representam relatórios completos nem breakdowns arbitrários. Valores monetários/métricas conservam o formato retornado, sem conversões presumidas.
@@ -208,7 +217,9 @@ Nas leituras de comentários, a consulta inicial retorna `intent_token` da orden
 
 Nas leituras de reações, `items` é a coleção paginada e `important_items` é um subconjunto separado. Preserve `reaction_filter` em `next()`. `summary()` retorna tipos e contadores; `reaction_types_count` conta tipos, não curtidas. `facebook_reaction_count`, `instagram_reaction_count` e `aggregated_reaction_count` são medidas distintas; valores desconhecidos permanecem `null`. Nenhum contador é convertido em identidade de pessoa.
 
-O [catálogo de Páginas](resources/README.md) detalha métodos, fontes e contextos observados. Upload de mídia, edição/exclusão/moderação, insights orgânicos de Página e envio pelo inbox ainda exigem contratos próprios.
+O [catálogo de Páginas](resources/README.md) detalha métodos, fontes e contextos observados. As extensões incluem `posts()->editText/delete`, `comments()->editText/delete/setHidden`, `pages()->creationContext/creationRequestContext/categories/create/managed/next/get/field/updateField/delete`, `media()->photoContext/uploadPhoto/videoContext/uploadVideo/publishPhotos/publishVideo/editCaption/deleteMedia`, `albums()`, `administration()`, `moderation()`, `insights()` e `contentInsights()`. A criação usa o perfil pessoal e conserva o par perfil/Página delegada; `creationRequestContext()` adquire o contexto pela própria sessão PHP e o assistente posterior não é concluído automaticamente. Cada operação conserva seu contexto e limite específico; consulte a [referência completa](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/facebook/REFERENCIA.md). Upload não publica, ocultação do viewer não é moderação global e métricas agregadas não são relatórios orgânicos completos.
+
+O envio atual de texto como Página usa `inbox()->lightspeedContext($actorId, $pageId, $selectionId)` seguido de `sendTextLightspeed($actorId, $pageId, $selectionId, $text, $key, $context)`. Salve o contexto retornado junto da chave **antes de enviar** e reutilize-o exatamente. O SDK adquire configuração atual via GET autenticado e gera identidade UUIDv4 própria estável; não copia storage do navegador. Consulte [o contrato do inbox](src/Protocol/PAGE-INBOX-SEND.md). Nenhum envio real foi executado nesta etapa.
 
 ## Protocolo Web e limites
 

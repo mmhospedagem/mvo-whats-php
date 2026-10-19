@@ -1,0 +1,95 @@
+{
+  "source_license": "MIT (existing MVO repository)",
+  "files": [
+    {
+      "source": "src/Crypto/Crypto.php",
+      "sha256": "f56dab788eb3edd44360fd36bf56a3edb32cb2736f68a3ae5c5ba94595eb9853",
+      "destination": "Crypto.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Protocol/Protobuf.php",
+      "sha256": "178f509d3065bbdb20592c19ccbe5c77d1d857b08a9f24eeb4f0c6f021feedd7",
+      "destination": "Protocol/Protobuf.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Protocol/BinaryData.php",
+      "sha256": "4eff025c21f2a3548c29c3636cd03ad1c8f20939f4d7ef5471469f633755c6c2",
+      "destination": "Protocol/BinaryData.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Protocol/BinaryNode.php",
+      "sha256": "dd68e928edc814df1abfdcee335429c2cda961336b6a985b425bed765fa9d45e",
+      "destination": "Protocol/BinaryNode.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Protocol/BinaryCodec.php",
+      "sha256": "afb7a05a9260cda8d76e3451f8141b3ba2a06463ce3fd6ddcec336dc27532ec9",
+      "destination": "Protocol/BinaryCodec.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Signal/SignalState.php",
+      "sha256": "05d148b140be14cedf0b5a32684c34c68eadf6619fef530fb0c09bff24e4da2f",
+      "destination": "Signal/SignalState.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Signal/SignalCodec.php",
+      "sha256": "70089f5ff6949045b3eb624fd1340e0c45f3f2fe4aea6ebf80a204cb81a752d1",
+      "destination": "Signal/SignalCodec.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Signal/SignalRatchet.php",
+      "sha256": "863cee6a52e19c83e9896b8476b6a73de5022752afe67b6db57093d0d9897301",
+      "destination": "Signal/SignalRatchet.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Signal/SignalProtocol.php",
+      "sha256": "cf9d0a41b41c84acf33278e4ee7bc8e47d31f02d942b54a22c5af743636a0eec",
+      "destination": "Signal/SignalProtocol.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Transport/NoiseHandshake.php",
+      "sha256": "127a4431641ac9a2f4ac27b070ae35d48566e3f1598223d49c466d2f79a2c1d5",
+      "destination": "Noise/NoiseHandshake.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Transport/NoiseChannel.php",
+      "sha256": "485969030c0808aa0618ff78f5c554747d100d82d1cbfef936d29caa9b96715e",
+      "destination": "Noise/NoiseChannel.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "src/Transport/FrameCodec.php",
+      "sha256": "f029e08191c191014a7075d693fabf249ad52eec0c07f013abe421f4f5af2058",
+      "destination": "Noise/FrameCodec.php",
+      "origin": "existing MVO MIT SDK; isolated namespace adaptation"
+    },
+    {
+      "source": "resources/tokens.json",
+      "sha256": "eb90f64cd0b44d3a8598c6342203e3ae628882ac07e0b267df530be878a796cf",
+      "destination": "Protocol/tokens.json",
+      "origin": "existing WAP dictionary v3 protocol data"
+    }
+  ],
+  "limits": "No AGPL implementation copied or translated. These are local primitives, not live Messenger interoperability evidence.",
+  "first_party_protocol_facts": [
+    {
+      "module": "MAWAppVersion",
+      "observed": "2026-10-18",
+      "artifact_sha256": "2723f035edbfb9672564da69844951ae8eec172181af86fe7e21c002b34906aa",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iysK4/ye/l/pt_BR-j/D3MUUno8bSJ8hOD4085H0S44VLFa-s9iDcp5FFvN8ZTYRgKCwIaz437ub5znTY2-9alMPC84IJS5s05ILo1eecdFubLlGmWgOnzQ1rAe2dVQYNj6LjTQNAgbnFt7AA5U6Xgi4j_U4tr4BxaS1bzcumSANzHIr3cB-H-7lJPed_Za3DGPy0CrIUtxNJge5Ihko1GoWlOmNGHmBYpbsGNmUDiXtfjgQqRTK6AsXTTb97X_VizRPi7coO-Aavl0BmqXBliQNGVq-XlIeiR2iqcQtSzmu9LZDTA9RsXC-zRVCqxfMd_sMawOt5cdYPzy6vvQ3Kzw1FykiT.js",
+      "fact": "App version parts are primary 302, secondary 0, tertiary SiteData.client_revision from the current bootstrap.",
+      "implementation": "Protocol/BlueWebVersion.php",
+      "scope": "Static first-party artifact evidence; no live server interoperability claim."
+    }
+  ]
+}

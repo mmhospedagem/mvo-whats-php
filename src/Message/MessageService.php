@@ -1622,6 +1622,11 @@ final class MessageService
                         $this->history->handleMessage($record['event']);
                         if ($record['name']==='message_protocol') $this->history->handleProtocol($record['event']);
                     }
+                    if(($record['event']['fromMe'] ?? false)===true && in_array($address->server,['s.whatsapp.net','lid'],true)
+                        && ($node->attrs['category'] ?? '')!=='peer' && !isset($node->attrs['recipient']) && is_string($value['destination'] ?? null)) {
+                        // Delivery replaces the inbox body with a timestamp; retain routing only for duplicate echoes.
+                        $this->store->set('message-inbox-receipt-chat',$dedup,$value['destination']);
+                    }
                     $this->store->set('message-inbox', $dedup, BinaryData::encode($record));
                     $pending = $this->pendingInbox();
                     if (!in_array($dedup, $pending, true)) $pending[] = $dedup;
@@ -1651,7 +1656,7 @@ final class MessageService
         // If the process stops after commit, drainPending replays this durable
         // event after restart. Application callbacks can deduplicate chat + ID.
         $this->deliverInbox($dedup, false);
-        $this->receipt($node);
+        $this->receipt($node,is_string($decoded['destination'] ?? null) ? $decoded['destination'] : null);
     }
 
     /**
@@ -2014,11 +2019,25 @@ final class MessageService
         ($this->sendNode)(new BinaryNode('ack', $attrs));
     }
 
-    private function receipt(BinaryNode $node): void
+    private function receipt(BinaryNode $node,?string $destination=null): void
     {
         $attrs = ['id'=>$node->attrs['id'],'to'=>$node->attrs['from']];
         if (isset($node->attrs['participant'])) $attrs['participant'] = $node->attrs['participant'];
         if (($node->attrs['category'] ?? '') === 'peer') $attrs['type'] = 'peer_msg';
+        elseif($this->isOwn($node->attrs['participant'] ?? $node->attrs['from'],($this->getCredentials)())) {
+            $attrs['type']='sender';
+            if(in_array(Jid::parse($node->attrs['from'])->canonical()->server,['s.whatsapp.net','lid'],true)) {
+                // Own-device echoes acknowledge the sender, with the original conversation as recipient.
+                if(!isset($node->attrs['recipient']) && $destination===null)
+                    $destination=$this->store->get('message-inbox-receipt-chat',hash('sha256',$node->attrs['from']."\0".$node->attrs['id']));
+                try{$chat=Jid::parse($node->attrs['recipient'] ?? $destination ?? '')->canonical();}
+                catch(\InvalidArgumentException){$this->ack($node,'message');return;}
+                if(!in_array($chat->server,['s.whatsapp.net','lid','g.us','broadcast'],true)){$this->ack($node,'message');return;}
+                $sender=$node->attrs['participant'] ?? $node->attrs['from'];
+                if(in_array($chat->server,['g.us','broadcast'],true)){$attrs['to']=$chat->bare();$attrs['participant']=$sender;}
+                else{$attrs['to']=$sender;$attrs['recipient']=$chat->bare();unset($attrs['participant']);}
+            }
+        }
         $this->receipts->enqueue(new BinaryNode('receipt', $attrs));
     }
 

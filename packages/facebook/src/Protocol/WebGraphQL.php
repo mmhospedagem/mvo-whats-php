@@ -14,18 +14,17 @@ final class WebGraphQL
     public function accountId():string{return $this->session->accountId();}
     /** @param array<string,mixed> $variables
      * @param callable(array<string,mixed>):array<string,mixed>|null $projector Required for mutations; only its result is persisted.
+     * @param callable():void|null $preflight Read-only mutation guard, after reservation/replay and before mutation I/O.
      * @return array<string,mixed>
      */
-    public function execute(string $name,array $variables,?string $actorId=null,string $origin='https://www.facebook.com',?string $idempotencyKey=null,?callable $projector=null):array
+    public function execute(string $name,array $variables,?string $actorId=null,string $origin='https://www.facebook.com',?string $idempotencyKey=null,?callable $projector=null,?callable $preflight=null):array
     {
         $document=$this->documents->get($name);$arguments=$document->arguments($variables);
         if(!in_array($origin,['https://www.facebook.com','https://business.facebook.com','https://adsmanager.facebook.com'],true))throw new \InvalidArgumentException('Unsupported Facebook Web origin');
         if($actorId!==null&&!preg_match('/^[1-9][0-9]{0,24}$/D',$actorId))throw new \InvalidArgumentException('Use the exact Facebook actor ID');
+        if($preflight!==null&&$document->kind!=='mutation')throw new \InvalidArgumentException('A mutation preflight cannot be attached to a read query');
         $fields=$this->session->privateRequestFields();
         if(($fields['__user']??null)!==$this->session->accountId()||(!isset($fields['fb_dtsg'])&&!isset($fields['lsd'])))throw new FacebookException('facebook_csrf_unavailable','The authenticated bootstrap did not supply current Facebook request fields');
-        $form=[...$fields,'av'=>$actorId??$this->session->accountId(),'__req'=>base_convert((string)++$this->sequence,10,36),
-            'fb_api_caller_class'=>'RelayModern','fb_api_req_friendly_name'=>$document->name,'doc_id'=>$document->id,
-            'variables'=>json_encode($arguments,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),'server_timestamps'=>'true'];
         $command=null;
         if($document->kind==='mutation'){
             if($idempotencyKey===null||$this->commands===null)throw new FacebookException('facebook_mutation_requires_idempotency','Configure a private command ledger and provide an idempotency key before changing Facebook data');
@@ -33,10 +32,26 @@ final class WebGraphQL
             $command=$this->commands->reserve($this->session->accountId(),$name,$actorId,['origin'=>$origin,'variables'=>$arguments],$idempotencyKey);
             if(!$command['execute']){
                 if($command['state']==='confirmed'&&is_array($command['result']['projection']??null))return $command['result']['projection'];
+                if(($command['result']['execution_started']??null)===false&&($command['result']['outcome']??null)==='not_executed'){
+                    throw new FacebookException('facebook_command_not_executed','The saved preflight blocked this command before mutation I/O; inspect its recorded result before preparing a different attempt','not_executed',false,$command['id']);
+                }
                 throw new FacebookException('facebook_command_uncertain','This command already exists without a confirmed result; inspect the command before trying another key','unknown',false,$command['id']);
             }
-            $this->commands->finish($command['id'],'unknown');
+            if($preflight!==null){
+                try{$preflight();}
+                catch(\Throwable $error){
+                    $reason=$error instanceof FacebookException?$error->reason:'facebook_mutation_preflight_failed';
+                    $this->commands->finish($command['id'],'not_confirmed',['execution_started'=>false,'outcome'=>'not_executed','preflight_failure'=>$reason]);
+                    throw new FacebookException($reason,$error instanceof FacebookException?$error->getMessage():'The mutation preflight did not complete; no mutation was executed','not_executed',false,$command['id']);
+                }
+            }
         }
+        // A guard can issue read queries on this same client. Allocate the request
+        // sequence after it completes, in the order requests are actually sent.
+        $form=[...$fields,'av'=>$actorId??$this->session->accountId(),'__req'=>base_convert((string)++$this->sequence,10,36),
+            'fb_api_caller_class'=>'RelayModern','fb_api_req_friendly_name'=>$document->name,'doc_id'=>$document->id,
+            'variables'=>json_encode($arguments,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES),'server_timestamps'=>'true'];
+        if($command!==null)$this->commands?->finish($command['id'],'unknown');
         try{
             $data=$this->perform($document,$form,$origin);
             if($command!==null)$this->commands?->finish($command['id'],'response_received');

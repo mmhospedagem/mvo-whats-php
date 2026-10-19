@@ -17,6 +17,10 @@
     "phpunit/phpunit": "^11.5",
     "phpstan/phpstan": "^2.1"
   },
+  "suggest": {
+    "ext-gmp": "Necessária para provisionamento e componentes experimentais de certificados/Signal E2EE; não é requisito do login/metadados.",
+    "ext-zlib": "Necessária para decodificar stanzas comprimidas do componente experimental E2EE."
+  },
   "autoload": {"psr-4": {"MVO\\Messenger\\": "src/"}},
   "scripts": {
     "test": "@php vendor/bin/phpunit --configuration phpunit.xml",

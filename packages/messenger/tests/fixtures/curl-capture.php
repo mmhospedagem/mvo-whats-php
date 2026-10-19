@@ -11,13 +11,20 @@ final class CurlTransportCapture
     /** @var list<string> */ public static array $headers = [];
     public static string $body = '';
     public static int $status = 200;
+    public static string $uploadedBody = '';
+}
+
+function curl_init(?string $url=null):\CurlHandle|false
+{
+    if(CurlTransportCapture::$active)CurlTransportCapture::$options=[];
+    return \curl_init($url);
 }
 
 /** @param array<int,mixed> $options */
 function curl_setopt_array(\CurlHandle $handle, array $options): bool
 {
     if (!CurlTransportCapture::$active) return \curl_setopt_array($handle, $options);
-    CurlTransportCapture::$options = $options;
+    CurlTransportCapture::$options = array_replace(CurlTransportCapture::$options,$options);
     return true;
 }
 function curl_setopt(\CurlHandle $handle, int $option, mixed $value): bool
@@ -29,6 +36,13 @@ function curl_setopt(\CurlHandle $handle, int $option, mixed $value): bool
 function curl_exec(\CurlHandle $handle): string|bool
 {
     if (!CurlTransportCapture::$active) return \curl_exec($handle);
+    if((CurlTransportCapture::$options[CURLOPT_UPLOAD]??false)===true){
+        CurlTransportCapture::$uploadedBody='';
+        do{
+            $chunk=(CurlTransportCapture::$options[CURLOPT_READFUNCTION])($handle,null,4);
+            CurlTransportCapture::$uploadedBody.=$chunk;
+        }while($chunk!=='');
+    }
     foreach (CurlTransportCapture::$headers as $line) {
         if ((CurlTransportCapture::$options[CURLOPT_HEADERFUNCTION])($handle, $line) !== strlen($line)) return false;
     }

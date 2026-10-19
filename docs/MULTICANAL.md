@@ -77,7 +77,7 @@ Inclua **conexão + canal + identificador nativo de conversa/mensagem** em suas 
 | --- | --- | --- |
 | WhatsApp atual | Contrato e estado nativos de `WaClient` preservados | Resultados variam por recurso e evidência existente no guia correspondente. |
 | Messenger | `metadata_connected` observado em conta real; `e2ee_ready=false` | Metadados sincronizados; envio sem criptografia permanece experimental e sem validação real. |
-| Messenger pessoal E2EE | Não implementado | Cadastro de dispositivo, transporte criptografado e histórico seguro exigem trabalho separado. |
+| Messenger pessoal E2EE | Componentes experimentais de dispositivo, Noise, Signal e journal; mensagens ainda bloqueadas | Falta verificador remoto ICDC de produção e validação real. `e2ee_ready=false`; histórico seguro ausente. |
 | Biblioteca Facebook Web | Serviços parciais e monitor local, com fixtures e bindings observados | Sem validação de operações em conta real; providers atuais exigidos quando necessários e anúncios somente por leituras Web estabelecidas, sem fallback Graph. |
 | Instagram | Não implementado | Não há adaptador funcional nesta alteração. |
 
@@ -94,7 +94,7 @@ Em **18/10/2026**, a autenticação com continuação humana no navegador isolad
 | Messenger e-mail/senha e continuação humana | Formulário Web com senha cifrada; handoff privado opcional | Envelope criptográfico e fluxo simulado de cookies/identidade/desafios | Em 18/10/2026: fluxo com verificação humana, identidade confirmada pelo PHP e sessão salva; não comprova todos os desafios. |
 | Restauração, lock e cursores Messenger | Sim | Bancos temporários, rollback e replay deduplicado | Restauração real e sincronização inicial confirmadas em 18/10/2026; concorrência de lock e rollback cobertos pelos testes locais. |
 | Troca real de mensagens Messenger | Experimental, somente threads sem criptografia suportadas | Simulação de requests/resultados | Pendente. |
-| E2EE Messenger | Não | Rejeição sem fallback | Não disponível. |
+| E2EE Messenger | Dispositivo e runtime explícitos no mesmo dono; mensagens ainda bloqueadas | Peers Noise/Signal sintéticos, persistência, isolamento e incerteza; sem verificador remoto ICDC de produção | Nenhum registro, upload de pré-chaves ou envio real desta revisão; `e2ee_ready=false`. |
 | Serviços Facebook Web e monitor | Subconjunto explícito, em pacote separado | Parsing/HTTP falso, seleção por conta, projeção de mutations, ledger e SQLite | Publicações, interações, inbox comercial, anúncios e eventos reais não validados nesta etapa. |
 
 Leia [Facebook Messenger](FACEBOOK-MESSENGER.md) para fontes, evidências e o escopo exato. Nenhuma validação estática ou simulada constitui prova de conexão ou entrega em conta real.

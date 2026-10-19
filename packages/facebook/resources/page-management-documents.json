@@ -1,0 +1,736 @@
+{
+  "schema_version": 1,
+  "authority": "public-shipped-Web-artifact",
+  "captured_on": "2026-10-19",
+  "runtime_validation": false,
+  "notes": [
+    "Public CDN modules fetched anonymously; static contract evidence does not prove account permissions or successful remote changes.",
+    "Observed Page inline fields, managed profile pagination, business people and task operations, and Business Suite metric query formats.",
+    "Complete ownership/administrator CRUD, organic table renderers, and organic exports are not inferred from partial documents.",
+    "Current AdditionalProfilePlus creation was observed after opening the form in the personal actor; Page actor availability is distinct from absence of the creation contract."
+  ],
+  "edit_endpoints": [
+    "ABOUT_SECTION",
+    "BOOSTED_WEBSITE_DIALOG",
+    "BUSINESS_CENTRAL_IDENTITY_MANAGEMENT",
+    "COMET_LEFT_NAV_BAR",
+    "FINCH_ABOUT_INFO_SECTION",
+    "MOBILE_EDIT_INFO",
+    "PAGE_EDIT_COMPONENT_DIALOG",
+    "PAGE_CREATION_ADDRESS_STEP",
+    "PAGE_CREATION",
+    "PAGE_EDIT_DIALOG",
+    "PAGE_EDIT_EMAIL_COMPONENT_DIALOG",
+    "PAGE_EDIT_TEMP_SERVICE_CHANGES_HEADER",
+    "PAGE_MEGAPHONE_CHANNEL",
+    "PAGE_SURFACE",
+    "PLACE_TIPS",
+    "PROFILE_COMPLETION_DIALOG",
+    "PROFILE_PLUS_ABOUT",
+    "PROFILE_PLUS_CREATION",
+    "PROFILE_PLUS_FIXER",
+    "SETTINGS_PAGE_INFO",
+    "SETTINGS_PAGE_SETUP",
+    "SNAPSHOT_TEST",
+    "SUGGEST_EDITS",
+    "UNIT_TEST",
+    "UNKNOWN"
+  ],
+  "edit_entry_points": [
+    "ABOUT_SECTION_ADD_LOCATION_VALUE_PROP",
+    "ABOUT_SECTION_EDIT_OPTION",
+    "ABOUT_SECTION_HEADER",
+    "ABOUT_SECTION_INLINE_MOBILE",
+    "ACE_PAGE_FULFILLMENT_QP",
+    "AYMT_BIZ_GROWTH_PAGE_PROFILE_BLURB_UPSELL_TIP",
+    "AYMT_BIZ_GROWTH_PAGE_PROFILE_PHONE_UPSELL_TIP",
+    "AYMT_BIZ_GROWTH_PAGE_PROFILE_WEBSITE_UPSELL_TIP",
+    "AYMT_CHECK_NONSENSICAL_HOURS",
+    "AYMT_COVID_TEMPORARY_HOURS_EMAIL",
+    "AYMT_COVID_TEMPORARY_HOURS_MEGAPHONE",
+    "AYMT_COVID_TEMPORARY_HOURS_NOTIFICATION",
+    "AYMT_DELIVERY_OPTIONS_NOTIFICATION",
+    "AYMT_EDIT_PAGE_INFO",
+    "AYMT_HOLIDAY_HOURS_NOTIFICATION",
+    "AYMT_MEGAPHONE_TIP",
+    "AYMT_PLACE_TYPES_NOTIFICATION",
+    "AYMT_STREET_PIN_NOTIFICATION",
+    "AYMT_WA_CI_TACTIC",
+    "BIZ_WEB",
+    "BLOOD_DONATIONS_TAB",
+    "BOOKMARK_SETTINGS",
+    "BUSINESS_INFO_CENTER",
+    "BUSINESS_INFO_CENTER_CHECKLIST",
+    "BUSINESS_INFO_CENTER_CHECKLIST_OVERVIEW",
+    "COMET",
+    "COMPLETION_NOTIFICATION",
+    "COMPLETION_NOTIFICATION_ADDRESS",
+    "COMPLETION_NOTIFICATION_BLURB",
+    "COMPLETION_NOTIFICATION_CATEGORY",
+    "COMPLETION_NOTIFICATION_HOURS",
+    "COMPLETION_NOTIFICATION_PHONE",
+    "COMPLETION_NOTIFICATION_WEBSITE",
+    "CREATOR_PROGRESSION",
+    "CROWDSOURCING_PROPOSAL",
+    "E_TEST",
+    "EDIT_PAGE_INFO",
+    "EDIT_PAGE_INFO_HEADER",
+    "EDIT_PIN_STREET_WARNING_BOTTOM_SHEET",
+    "FACEBOOK_FOR_BUSINESS",
+    "FB_LITE_ADMIN_JOURNEY",
+    "FB_LITE_AYMT",
+    "FB_LITE_EDIT_INFO",
+    "FBLITE_MISSING_FIELD_HEADER",
+    "FINCH_ABOUT_INFO_HEADER",
+    "HSCROLL_COMPLETION",
+    "INTERNAL",
+    "MENU_ADMIN_SETTINGS",
+    "MOBILE_EDIT_PAGE_ACTION_BAR_ITEM",
+    "MOBILE_LINKED_ACCOUNT_RECOMMENDATION_EDIT_PAGE_INFO",
+    "MOBILE_MISSING_FIELD_HEADER",
+    "MOBILE_PHONE_VERIFICATION",
+    "NEW_PAGE_LIKES_SCREEN",
+    "PAGE_ABOUT_TAB_COLUMNS",
+    "PAGE_ACTIONS_UNIT",
+    "PAGE_ADMIN_COMPLETION_METER",
+    "PAGE_ADMIN_COMPLETION_NEWSFEED_QP",
+    "PAGE_ADMIN_JOURNEY",
+    "PAGE_ADMIN_MEGAPHONE",
+    "PAGE_BADGE_ADMIN_HUB",
+    "PAGE_CREATION_ADDRESS_STEP",
+    "PAGE_CREATION_ADDRESS_STEP_FBLITE",
+    "PAGE_EDIT_DIALOG",
+    "PAGE_EDIT_EMAIL_COMPONENT_DIALOG",
+    "PAGE_EDIT_HOLIDAY_HOURS_MEGAPHONE",
+    "PAGE_EDIT_LOCATION_MEGAPHONE",
+    "PAGE_EDIT_PICKUP_OPTIONS",
+    "PAGE_INFO_TAB_CALLOUT",
+    "PAGE_INFO_UP_TO_DATE_BADGE",
+    "PAGE_NAV_ABOUT_ITEM",
+    "PAGE_ONBOARDING_FLOW",
+    "PAGE_SETTINGS",
+    "PAGE_SURFACE_ABOUT_CARD",
+    "PAGE_SURFACE_ABOUT_CARD_EDIT_FIELD",
+    "PLACES_DATA_GROWTH",
+    "PROFILE_COMPLETION_DIALOG",
+    "PROFILE_PLUS_ABOUT",
+    "PROFILE_PLUS_CREATION",
+    "PROFILE_PLUS_FIXER",
+    "RESURRECTION_FLOW",
+    "SMART_REPLIES",
+    "SNAPSHOT_TEST",
+    "STRUCTURED_CONTENT_UNIT_ADDRESS",
+    "STRUCTURED_CONTENT_UNIT_HOURS",
+    "STRUCTURED_CONTENT_UNIT_PHONE",
+    "STRUCTURED_CONTENT_UNIT_PRICE",
+    "STRUCTURED_CONTENT_UNIT_WEBSITE",
+    "STRUCTURED_CONTEXT_PAGE_CATEGORY",
+    "SUGGEST_EDITS",
+    "SUGGESTED_ACTION",
+    "SYNC_TO_WHATSAPP_EMPTY_FIELDS_EDUCATION",
+    "O_CLAIM",
+    "UNIT_TEST",
+    "UNIVERSAL_CHAINING_FLOW",
+    "UNKNOWN",
+    "WA_CI_AYMT",
+    "WEEKLY_PROGRESS",
+    "WHATSAPP_LINKING_PAGE_CREATION"
+  ],
+  "documents": [
+    {
+      "name": "PagesCometLaunchpointUnifiedQueryPagesListRedesignedQuery",
+      "id": "28874624495496979",
+      "kind": "query",
+      "variables": [
+        "scale"
+      ],
+      "defaults": {
+        "scale": null
+      },
+      "providers": [],
+      "source_sha256": "c63c5cf76089ea8820960abc28d5fe5e5a8b59866bb553047ff81c4c39af7f4f",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i_3J4/yp/l/pt_BR-j/Q9KPbeU1q4qSOYF6GasPVefDTbnM2VUk_29eVVCLx-z_d7ONewuAEuQD3MUUno8bSJRgKCwIaz437ub5znTY2-9aS1bzcumSANzHIr3cB-H-7lJPed_Za3DGPkynOZWE7UiD7coO-Aavl0BmqXBliQNGVqQtSzmu9LZDTA9RsXC-zRVCqxfMd_sMawOt5cdYPzy6vv-PxVv3tK_pudrjVMpj7ym9M1jzW5pMQejWWMJBZvg4_S.js",
+      "module_sha256": "db1bd16b01dc9ed1321a745ff93fbffa41bbca1fe06d89a6ffa1af00f8c4c008"
+    },
+    {
+      "name": "PagesCometLaunchPointUnifiedQueryPagesListRedesignedUpdatedPagesSectionQuery",
+      "id": "28970191379242230",
+      "kind": "query",
+      "variables": [
+        "count",
+        "cursor",
+        "scale"
+      ],
+      "defaults": {
+        "count": 20,
+        "cursor": null,
+        "scale": null
+      },
+      "providers": [],
+      "source_sha256": "c63c5cf76089ea8820960abc28d5fe5e5a8b59866bb553047ff81c4c39af7f4f",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i_3J4/yp/l/pt_BR-j/Q9KPbeU1q4qSOYF6GasPVefDTbnM2VUk_29eVVCLx-z_d7ONewuAEuQD3MUUno8bSJRgKCwIaz437ub5znTY2-9aS1bzcumSANzHIr3cB-H-7lJPed_Za3DGPkynOZWE7UiD7coO-Aavl0BmqXBliQNGVqQtSzmu9LZDTA9RsXC-zRVCqxfMd_sMawOt5cdYPzy6vv-PxVv3tK_pudrjVMpj7ym9M1jzW5pMQejWWMJBZvg4_S.js",
+      "module_sha256": "2834d84b8c52417ea3f997307895a841e958d68a0f65dca549eb4002dfa541b1"
+    },
+    {
+      "name": "PagesCometAdminEditingInlineFieldQuery",
+      "id": "27019054584368121",
+      "kind": "query",
+      "variables": [
+        "pageID",
+        "entryPoint",
+        "endPoint",
+        "field",
+        "scale"
+      ],
+      "defaults": {
+        "pageID": null,
+        "entryPoint": null,
+        "endPoint": null,
+        "field": null,
+        "scale": null
+      },
+      "providers": [],
+      "source_sha256": "1f2fb783347ad246be9e5437be65ab9a4292b35f2d519d54c2195a9c2e46a7ec",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iums4/yx/l/pt_BR-j/hbYzXRPynYo5wIzmfoZ3vCFTEn82ATrsKy9O1o_2ncJ182Yz_4vfOJLJ8_wgwP0xAGJReBjJyH8qxv_kkAv_-wGQlRWOtPuaUTCo444dPwK5j6W56hehM5RFVvEUXCmbPdFqfAozIMNFBkkRm3IunJkmriiXq2k4bkhPVeIHwSuUgER7KSRJBfUIT1Q9keV0hCnGoeW-9OxJVvnwhN22QQIMUVuMljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh-5J5F_z70Rgixowq4R8vzZ.js",
+      "module_sha256": "3922e0a59a55a60711bed093719c9e3dc92b1327b30ec652bd317a358cd056b6"
+    },
+    {
+      "name": "PagesCometPagesYouManageDeletePageDialogQuery",
+      "id": "24495048320083893",
+      "kind": "query",
+      "variables": [
+        "pageID"
+      ],
+      "defaults": {
+        "pageID": null
+      },
+      "providers": [],
+      "source_sha256": "1f2fb783347ad246be9e5437be65ab9a4292b35f2d519d54c2195a9c2e46a7ec",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iums4/yx/l/pt_BR-j/hbYzXRPynYo5wIzmfoZ3vCFTEn82ATrsKy9O1o_2ncJ182Yz_4vfOJLJ8_wgwP0xAGJReBjJyH8qxv_kkAv_-wGQlRWOtPuaUTCo444dPwK5j6W56hehM5RFVvEUXCmbPdFqfAozIMNFBkkRm3IunJkmriiXq2k4bkhPVeIHwSuUgER7KSRJBfUIT1Q9keV0hCnGoeW-9OxJVvnwhN22QQIMUVuMljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh-5J5F_z70Rgixowq4R8vzZ.js",
+      "module_sha256": "e912a5a9b0b4b685b2a630c643a09961bf16c13546be137584c7ca96950a6103"
+    },
+    {
+      "name": "usePagesCometDeletePageMutation",
+      "id": "9810008399046090",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "1f2fb783347ad246be9e5437be65ab9a4292b35f2d519d54c2195a9c2e46a7ec",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iums4/yx/l/pt_BR-j/hbYzXRPynYo5wIzmfoZ3vCFTEn82ATrsKy9O1o_2ncJ182Yz_4vfOJLJ8_wgwP0xAGJReBjJyH8qxv_kkAv_-wGQlRWOtPuaUTCo444dPwK5j6W56hehM5RFVvEUXCmbPdFqfAozIMNFBkkRm3IunJkmriiXq2k4bkhPVeIHwSuUgER7KSRJBfUIT1Q9keV0hCnGoeW-9OxJVvnwhN22QQIMUVuMljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh-5J5F_z70Rgixowq4R8vzZ.js",
+      "module_sha256": "37136088f362c60cf0588ea0ce86a264ea20bc640982e7f2ef9ba1965edfe21b"
+    },
+    {
+      "name": "ProfilePlusRemoveLimitedAccessRoleMutation",
+      "id": "28968459102770852",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "scale"
+      ],
+      "defaults": {
+        "input": null,
+        "scale": null
+      },
+      "providers": [],
+      "source_sha256": "1f2fb783347ad246be9e5437be65ab9a4292b35f2d519d54c2195a9c2e46a7ec",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iums4/yx/l/pt_BR-j/hbYzXRPynYo5wIzmfoZ3vCFTEn82ATrsKy9O1o_2ncJ182Yz_4vfOJLJ8_wgwP0xAGJReBjJyH8qxv_kkAv_-wGQlRWOtPuaUTCo444dPwK5j6W56hehM5RFVvEUXCmbPdFqfAozIMNFBkkRm3IunJkmriiXq2k4bkhPVeIHwSuUgER7KSRJBfUIT1Q9keV0hCnGoeW-9OxJVvnwhN22QQIMUVuMljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh-5J5F_z70Rgixowq4R8vzZ.js",
+      "module_sha256": "b585a4fc6626aba3ce5f07b084012bccf96f3c4247f7813b46df7a01caa72c51"
+    },
+    {
+      "name": "ProfilePlusMarkReauthedMutation",
+      "id": "24066063156313418",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "1f2fb783347ad246be9e5437be65ab9a4292b35f2d519d54c2195a9c2e46a7ec",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iums4/yx/l/pt_BR-j/hbYzXRPynYo5wIzmfoZ3vCFTEn82ATrsKy9O1o_2ncJ182Yz_4vfOJLJ8_wgwP0xAGJReBjJyH8qxv_kkAv_-wGQlRWOtPuaUTCo444dPwK5j6W56hehM5RFVvEUXCmbPdFqfAozIMNFBkkRm3IunJkmriiXq2k4bkhPVeIHwSuUgER7KSRJBfUIT1Q9keV0hCnGoeW-9OxJVvnwhN22QQIMUVuMljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh-5J5F_z70Rgixowq4R8vzZ.js",
+      "module_sha256": "7a71f44ce6b1025a6edba02e4ebf3cb243f16d3e5fadac345f10f28983bd1c60"
+    },
+    {
+      "name": "PagesCometPageWithLimitedAccessRemoveYourselfDialogQuery",
+      "id": "29291536177158275",
+      "kind": "query",
+      "variables": [
+        "id"
+      ],
+      "defaults": {
+        "id": null
+      },
+      "providers": [],
+      "source_sha256": "1f2fb783347ad246be9e5437be65ab9a4292b35f2d519d54c2195a9c2e46a7ec",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iums4/yx/l/pt_BR-j/hbYzXRPynYo5wIzmfoZ3vCFTEn82ATrsKy9O1o_2ncJ182Yz_4vfOJLJ8_wgwP0xAGJReBjJyH8qxv_kkAv_-wGQlRWOtPuaUTCo444dPwK5j6W56hehM5RFVvEUXCmbPdFqfAozIMNFBkkRm3IunJkmriiXq2k4bkhPVeIHwSuUgER7KSRJBfUIT1Q9keV0hCnGoeW-9OxJVvnwhN22QQIMUVuMljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh-5J5F_z70Rgixowq4R8vzZ.js",
+      "module_sha256": "f7fc150c6d1da2b2f766c94bbe393dba9ad41901dc2ac8ded35da9559e36ffdd"
+    },
+    {
+      "name": "ProfilePlusCometLARManagePageDialogQuery",
+      "id": "29254709147510352",
+      "kind": "query",
+      "variables": [
+        "profileID",
+        "actorID"
+      ],
+      "defaults": {
+        "profileID": null,
+        "actorID": null
+      },
+      "providers": [],
+      "source_sha256": "f0ae129c5dccff8f10f84f72aec72f0c8fe736d7670c69c233e905faf37fa268",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iYZ04/yx/l/pt_BR-j/Nb_wH4Q-1uC.js",
+      "module_sha256": "dbdea14b5d65de76f71b6b6a5c09f02baeca820ea16ebcbdba3c2ede8f8469a4"
+    },
+    {
+      "name": "PagesCometAboutRootQuery",
+      "id": "26728877926813725",
+      "kind": "query",
+      "variables": [
+        "pageID",
+        "scale"
+      ],
+      "defaults": {
+        "pageID": null,
+        "scale": null
+      },
+      "providers": [],
+      "source_sha256": "f2cb5c1ad36f08489d8a7afb1dab8bdf5e8439988492e61ebddf3b147df023d0",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ibdL4/yW/l/pt_BR-j/DqyMOal0_JleYlIbF0IDWJgekR7Oq7-MgoP8AaG6Jg_T6ksuRPkBabO7rVilgmvRAEmFXl6vRk2YgEovd9EblpWPM8XnQz4PI1RaRyRh0z1uJRvEUXCmbPdFqzwpV-8ImkW_JNwzFa9l10UFUdKQnI8VhXq7xEEgjJ-kQpM0dMEGypsDfAozIMNFBkkRm3IunJkmriuCqfqYwmuRGe-HxHsWz4jNg9f7BBHoImEMsmdb8AdZ263TZVnA9uJCyUqx9krA3a_yLY-Ku3ahVu8KzAVM2n0sBCZEAQVOkiJP2LgAXk7NeCyYygWub6VxOhAGK1HgZ7ShnO.js",
+      "module_sha256": "7fa38a26c91fc959f3a4cfc6a09520c9a58bf86fad52ce279666808c4e90e644"
+    },
+    {
+      "name": "PagesCometEditPageEmailMutation",
+      "id": "9756854814407281",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "cf29282a4e872e2c4be1d29ee05699f49bf73c89615b6d8d8bb77fbc7f2ea1d4",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i0CT4/y5/l/pt_BR-j/Xk6JH-uztiXBt_g5rk09wg-TH1XmrxdrM2C7J1Koa8sXamEs_xluWzCl3nzlTPLzXQfAozIMNFBkkRm3IunJkmriRzGrrKnN5hacHzzVPb_UkFFRszagZthpDNdM7oBIbMtkJ-7SCM7pwhqPpeT1TRlxJIL1-zjl_BEQiXg5cR1xNv-KQn-joIPiBv27P0XEm2bbYFpRUA4QCE3F9-M89rUqf542BFFfeoSVR3M9ZxDRchWtbF5ckEo3P1UXyc1RmlcBToy07ue_N73u9Srwp3YkZLEZ09UW64HnyKTlQ8wypiAW_bfk-Alq0X98Dvh70-ajbEgmyo.js",
+      "module_sha256": "0806dd56e113c7a5daa797271e3e37e63d7cb3eb11f6b6ae0abc8c6c93e273cd"
+    },
+    {
+      "name": "PagesCometAdminEditingPageNameMutation",
+      "id": "9893625804017523",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "cf29282a4e872e2c4be1d29ee05699f49bf73c89615b6d8d8bb77fbc7f2ea1d4",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i0CT4/y5/l/pt_BR-j/Xk6JH-uztiXBt_g5rk09wg-TH1XmrxdrM2C7J1Koa8sXamEs_xluWzCl3nzlTPLzXQfAozIMNFBkkRm3IunJkmriRzGrrKnN5hacHzzVPb_UkFFRszagZthpDNdM7oBIbMtkJ-7SCM7pwhqPpeT1TRlxJIL1-zjl_BEQiXg5cR1xNv-KQn-joIPiBv27P0XEm2bbYFpRUA4QCE3F9-M89rUqf542BFFfeoSVR3M9ZxDRchWtbF5ckEo3P1UXyc1RmlcBToy07ue_N73u9Srwp3YkZLEZ09UW64HnyKTlQ8wypiAW_bfk-Alq0X98Dvh70-ajbEgmyo.js",
+      "module_sha256": "7ce228dc21c2115285bcf1f080e005ca054292f1af3a65cee2f4cd93d354ea8d"
+    },
+    {
+      "name": "PagesCometEditPageBlurbMutation",
+      "id": "9847150508677887",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "cf29282a4e872e2c4be1d29ee05699f49bf73c89615b6d8d8bb77fbc7f2ea1d4",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i0CT4/y5/l/pt_BR-j/Xk6JH-uztiXBt_g5rk09wg-TH1XmrxdrM2C7J1Koa8sXamEs_xluWzCl3nzlTPLzXQfAozIMNFBkkRm3IunJkmriRzGrrKnN5hacHzzVPb_UkFFRszagZthpDNdM7oBIbMtkJ-7SCM7pwhqPpeT1TRlxJIL1-zjl_BEQiXg5cR1xNv-KQn-joIPiBv27P0XEm2bbYFpRUA4QCE3F9-M89rUqf542BFFfeoSVR3M9ZxDRchWtbF5ckEo3P1UXyc1RmlcBToy07ue_N73u9Srwp3YkZLEZ09UW64HnyKTlQ8wypiAW_bfk-Alq0X98Dvh70-ajbEgmyo.js",
+      "module_sha256": "a71d3ec1fc7bc184de10215f9537db0c2bd8545e8be936245153c1f4544b9be0"
+    },
+    {
+      "name": "PagesCometEditPagePhoneMutation",
+      "id": "29404405035870207",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "cf29282a4e872e2c4be1d29ee05699f49bf73c89615b6d8d8bb77fbc7f2ea1d4",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i0CT4/y5/l/pt_BR-j/Xk6JH-uztiXBt_g5rk09wg-TH1XmrxdrM2C7J1Koa8sXamEs_xluWzCl3nzlTPLzXQfAozIMNFBkkRm3IunJkmriRzGrrKnN5hacHzzVPb_UkFFRszagZthpDNdM7oBIbMtkJ-7SCM7pwhqPpeT1TRlxJIL1-zjl_BEQiXg5cR1xNv-KQn-joIPiBv27P0XEm2bbYFpRUA4QCE3F9-M89rUqf542BFFfeoSVR3M9ZxDRchWtbF5ckEo3P1UXyc1RmlcBToy07ue_N73u9Srwp3YkZLEZ09UW64HnyKTlQ8wypiAW_bfk-Alq0X98Dvh70-ajbEgmyo.js",
+      "module_sha256": "939512d90654eb5a30df4542f0deff8577f8ee086d755675f2c8cc8ab2295e29"
+    },
+    {
+      "name": "PagesCometEditPageWebsiteMutation",
+      "id": "24145876535104515",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "cf29282a4e872e2c4be1d29ee05699f49bf73c89615b6d8d8bb77fbc7f2ea1d4",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i0CT4/y5/l/pt_BR-j/Xk6JH-uztiXBt_g5rk09wg-TH1XmrxdrM2C7J1Koa8sXamEs_xluWzCl3nzlTPLzXQfAozIMNFBkkRm3IunJkmriRzGrrKnN5hacHzzVPb_UkFFRszagZthpDNdM7oBIbMtkJ-7SCM7pwhqPpeT1TRlxJIL1-zjl_BEQiXg5cR1xNv-KQn-joIPiBv27P0XEm2bbYFpRUA4QCE3F9-M89rUqf542BFFfeoSVR3M9ZxDRchWtbF5ckEo3P1UXyc1RmlcBToy07ue_N73u9Srwp3YkZLEZ09UW64HnyKTlQ8wypiAW_bfk-Alq0X98Dvh70-ajbEgmyo.js",
+      "module_sha256": "766c665ee2522c17cba5cdbd48aec22a88c66a632e24aefc9a25610b1210d380"
+    },
+    {
+      "name": "useBizWebInsightsSingleValueQuery",
+      "id": "31321294414185827",
+      "kind": "query",
+      "variables": [
+        "arg",
+        "callerID",
+        "shouldQueryDefinition"
+      ],
+      "defaults": {
+        "arg": null,
+        "callerID": null,
+        "shouldQueryDefinition": null
+      },
+      "providers": [],
+      "source_sha256": "060abdb97f35839bc21840680d0b46825a3094f2c17e88c5967a691f90edf96d",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ibgI4/ym/l/pt_BR-j/IJBhLJnO_DaCWtk2fHhxr3wt9s0U9Jc8u_Qgd0hUp-HTzpl1YQpi9pqUqNwAtwwBhuHHaQENqG-OSmj83S_lHbJbRwg2xOmEWDdaQefV7MxBnxi2a31__OH_pOtVz3TbgmwbTelA1ZjBakkURXkkj3hcwrRSD0bouUM6wqG9UFgBIbfxKnWMFrTGhIrwn9Hrm5rCMVx_BGO8bcixcZSPFd9GfuI5052wjaHdS55Kh35fpHZ1BHi8Q-HiCOTQSGzkBLIUHxTdY35p1mHYhYo8eD-i2mIBBX55BtPDIszh5jyp2J73U9GsTBKgxjWJE_hA5jj4BnhFTN.js",
+      "module_sha256": "6a3e8100aa2949378604ee793a43e8fd96c80c12001985f14cbf90f93b7d2f36"
+    },
+    {
+      "name": "useBizWebInsightsPrivateSingleLineChartWithoutBreakdownQuery",
+      "id": "10032545723449890",
+      "kind": "query",
+      "variables": [
+        "arg",
+        "callerID"
+      ],
+      "defaults": {
+        "arg": null,
+        "callerID": null
+      },
+      "providers": [],
+      "source_sha256": "060abdb97f35839bc21840680d0b46825a3094f2c17e88c5967a691f90edf96d",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ibgI4/ym/l/pt_BR-j/IJBhLJnO_DaCWtk2fHhxr3wt9s0U9Jc8u_Qgd0hUp-HTzpl1YQpi9pqUqNwAtwwBhuHHaQENqG-OSmj83S_lHbJbRwg2xOmEWDdaQefV7MxBnxi2a31__OH_pOtVz3TbgmwbTelA1ZjBakkURXkkj3hcwrRSD0bouUM6wqG9UFgBIbfxKnWMFrTGhIrwn9Hrm5rCMVx_BGO8bcixcZSPFd9GfuI5052wjaHdS55Kh35fpHZ1BHi8Q-HiCOTQSGzkBLIUHxTdY35p1mHYhYo8eD-i2mIBBX55BtPDIszh5jyp2J73U9GsTBKgxjWJE_hA5jj4BnhFTN.js",
+      "module_sha256": "2bf42eb755932cf30a4de18a461674b524353c7a529224039bf4fac816087742"
+    },
+    {
+      "name": "useBizWebInsightsRankingChartQueryQuery",
+      "id": "24447146281630581",
+      "kind": "query",
+      "variables": [
+        "arg",
+        "callerID"
+      ],
+      "defaults": {
+        "arg": null,
+        "callerID": null
+      },
+      "providers": [],
+      "source_sha256": "060abdb97f35839bc21840680d0b46825a3094f2c17e88c5967a691f90edf96d",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ibgI4/ym/l/pt_BR-j/IJBhLJnO_DaCWtk2fHhxr3wt9s0U9Jc8u_Qgd0hUp-HTzpl1YQpi9pqUqNwAtwwBhuHHaQENqG-OSmj83S_lHbJbRwg2xOmEWDdaQefV7MxBnxi2a31__OH_pOtVz3TbgmwbTelA1ZjBakkURXkkj3hcwrRSD0bouUM6wqG9UFgBIbfxKnWMFrTGhIrwn9Hrm5rCMVx_BGO8bcixcZSPFd9GfuI5052wjaHdS55Kh35fpHZ1BHi8Q-HiCOTQSGzkBLIUHxTdY35p1mHYhYo8eD-i2mIBBX55BtPDIszh5jyp2J73U9GsTBKgxjWJE_hA5jj4BnhFTN.js",
+      "module_sha256": "928526ea40f3a231019a0ee902a608e3331670922240699d4c7530887453891c"
+    },
+    {
+      "name": "BizWebInsightsContentOrganicTableQueryRendererQuery",
+      "id": "29267729046145944",
+      "kind": "query",
+      "variables": [
+        "callerID",
+        "count",
+        "ids",
+        "initialFilters",
+        "timeRange",
+        "skip",
+        "scale",
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider",
+        "__relay_internal__pv__shouldFetchAMPostPreviewrelayprovider"
+      ],
+      "defaults": {
+        "callerID": null,
+        "count": null,
+        "ids": null,
+        "initialFilters": null,
+        "timeRange": null,
+        "skip": null,
+        "scale": null,
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider": null,
+        "__relay_internal__pv__shouldFetchAMPostPreviewrelayprovider": null
+      },
+      "providers": [
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider",
+        "__relay_internal__pv__shouldFetchAMPostPreviewrelayprovider"
+      ],
+      "source_sha256": "0c72ba934ca2bba76a3a825fd36bfdf815e61f110c229f15bc9c84a9a9177e00",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4idgr4/yO/l/pt_BR-j/gekR7Oq7-MgoP8AaG6Jg_T6ksuRPkBabOBt_g5rk09wgO6tp1RxhvItEovd9EblpWPbSbM4QpDPavd1NRv2Bf2U7rzYauUfNHHbxKACClsXgACaRyRh0z1uJRvEUXCmbPdFqfrqh-kQm41PanMpCPkRz4Y26JXKUp22CtPhlCnR3boHRMCFQ2ogXJgBfAozIMNFBkkRm3IunJkmrijlpp4zeKEXYrAFSQKgRlvRNdM7oBIbMtkVHlgP0VAZNLg9f7BBHoImEPpmTNWxgosv3DWgCCZRIJhMsmdb8AdZ26MLc5XE3Y2gpkfZUzAaVol05zKvs46UtvZ.js",
+      "module_sha256": "bbbe27b5f3e3eabc3013fa753cb358eb048a887c610483b88fe0f717a265bc12"
+    },
+    {
+      "name": "BusinessCometBizSuiteSettingsBusinessUsersViewContainerQuery",
+      "id": "28454158487572100",
+      "kind": "query",
+      "variables": [
+        "businessID",
+        "isUnifiedSettings",
+        "first",
+        "orderBy",
+        "__relay_internal__pv__BizKitSettingsPeopleEmptyStaterelayprovider"
+      ],
+      "defaults": {
+        "businessID": null,
+        "isUnifiedSettings": true,
+        "first": null,
+        "orderBy": null,
+        "__relay_internal__pv__BizKitSettingsPeopleEmptyStaterelayprovider": null
+      },
+      "providers": [
+        "__relay_internal__pv__BizKitSettingsPeopleEmptyStaterelayprovider"
+      ],
+      "source_sha256": "5053443411e5523c6c1cfb2dac163475bfd4a4cacd87ee3fd30b355dd5148a18",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ig324/yD/l/pt_BR-j/BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkib8OA2VYyizSJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibj618QdVjVvrEj3QACaxyQd6fSa828ztBRJUZStkRCvv5q76DzIxo7CFNRErzfucaeTzekdTFXP1kHzgyelQQc2adA1YauKEhRgY_uhJXf2uNZBnCcG6v0aVYJHweDleUHwLyK0w2sUp8PBd2eaLgRuzkZ7kCb6UNRjAuD7fcdRv0gjuhwvjGBGQiJh7HdCpfWJTpVYpQXGAekd8wDqIu7bUj2-Rxp.js",
+      "module_sha256": "0f830fcb5aa2e44e928aa17a132607621f51998fa42566f3d5feacaaec16d28b"
+    },
+    {
+      "name": "BizKitSettingsPageRolesContextProviderQuery",
+      "id": "26439401965723225",
+      "kind": "query",
+      "variables": [
+        "pageID"
+      ],
+      "defaults": {
+        "pageID": null
+      },
+      "providers": [],
+      "source_sha256": "d601d7a7abd141ce3e91b57cda24fc105f3837b60edf051ee62b554371e11fa3",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iMeY4/yP/l/pt_BR-j/DDNyiA6IVECvBhpzoLGMuAF9vnAwD4d1Il9j_9w1ntItb8CDyX_WBZPT_uO7Sdj75qCQ9HTGboA0qB6qO-tLoatC.js",
+      "module_sha256": "77d7b915afdf26d75aa5765bb9e1030b79d0212ca0c1f2096fecb72c702e191e"
+    },
+    {
+      "name": "BizKitUserAssignedAssetsListForAssetTypeQuery",
+      "id": "28105870649006599",
+      "kind": "query",
+      "variables": [
+        "userID",
+        "assetTypes",
+        "searchTerm",
+        "businessID"
+      ],
+      "defaults": {
+        "userID": null,
+        "assetTypes": null,
+        "searchTerm": null,
+        "businessID": null
+      },
+      "providers": [],
+      "source_sha256": "ffb97218e3e78200e8152ae6ce3cffafa37357b8c774a522d990d35b72ca62d1",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iPsA4/yb/l/pt_BR-j/nDCNKY7SLidTNmx9lg_OT30aGbbXLZDL54FB_aT8txQ-UkSS-TBttNsP1eDpFn9yVeWofwfwQy0eYrPnHRE6r1w73PUUC32BXW7edotNvo2rvHBCaqsdZHqtYeTvgJEbCBq7R-uEVx1SPfYKkFvb_dphZw2vJwfE9ilBC9HRcSjzIRVbdaS0AQGhMdmf6n7JmFbgvrefHNxbqpfGYBVMixMDyWU39CKtjfyCEZBCfnedv-AcFyIfE5CGEi3ZNZbQAheRpLCRrjKvZHWDq_6N-1DmFoXesCC3kEX_fPYzVKde-zxJkRW_FEtIml9zqW-hGwb0xjrnk1.js",
+      "module_sha256": "3ed709e2eebbb04957149ed9fe32a554e7d837556b9e026a08d322009d56ecf9"
+    },
+    {
+      "name": "BizKitUserAssignedAssetsListPaginationQuery",
+      "id": "27864667233191296",
+      "kind": "query",
+      "variables": [
+        "assetTypes",
+        "businessID",
+        "count",
+        "cursor",
+        "searchTerm",
+        "userID"
+      ],
+      "defaults": {
+        "assetTypes": null,
+        "businessID": null,
+        "count": 10,
+        "cursor": null,
+        "searchTerm": null,
+        "userID": null
+      },
+      "providers": [],
+      "source_sha256": "ffb97218e3e78200e8152ae6ce3cffafa37357b8c774a522d990d35b72ca62d1",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iPsA4/yb/l/pt_BR-j/nDCNKY7SLidTNmx9lg_OT30aGbbXLZDL54FB_aT8txQ-UkSS-TBttNsP1eDpFn9yVeWofwfwQy0eYrPnHRE6r1w73PUUC32BXW7edotNvo2rvHBCaqsdZHqtYeTvgJEbCBq7R-uEVx1SPfYKkFvb_dphZw2vJwfE9ilBC9HRcSjzIRVbdaS0AQGhMdmf6n7JmFbgvrefHNxbqpfGYBVMixMDyWU39CKtjfyCEZBCfnedv-AcFyIfE5CGEi3ZNZbQAheRpLCRrjKvZHWDq_6N-1DmFoXesCC3kEX_fPYzVKde-zxJkRW_FEtIml9zqW-hGwb0xjrnk1.js",
+      "module_sha256": "950c34142b7f97234446f50c55ed797b1e0debe8b8136d99919860c0435a4104"
+    },
+    {
+      "name": "BizKitSettingsUpdateBusinessUserMutation",
+      "id": "27970567992612943",
+      "kind": "mutation",
+      "variables": [
+        "businessUserID",
+        "firstName",
+        "lastName",
+        "email",
+        "business_account_task_ids",
+        "expireTime",
+        "clientTimezoneID",
+        "isUnifiedSettings"
+      ],
+      "defaults": {
+        "businessUserID": null,
+        "firstName": null,
+        "lastName": null,
+        "email": null,
+        "business_account_task_ids": null,
+        "expireTime": null,
+        "clientTimezoneID": null,
+        "isUnifiedSettings": false
+      },
+      "providers": [],
+      "source_sha256": "c86568cd2f86b82b29c018867eb43007c7509c9218b6d12dce9a15393a6be25c",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4igqK4/yQ/l/pt_BR-j/wIe7T7JXg82YJkWLUh9hOU9a66O5nsEy9Ch0blbu_uRtF7PHhgp4QebO5yJAr-YnCHR0Nm6VhxCXOq_09DBmTFcl3cxmbyOWkI8uJRot3BhYNC.js",
+      "module_sha256": "81dac867c2c34265045ceecb37cb004aabe7310e03d14ef400b1a7f62b922762"
+    },
+    {
+      "name": "BizKitSettingsPeopleTableListPaginationQuery",
+      "id": "28599798393006825",
+      "kind": "query",
+      "variables": [
+        "asset_types",
+        "businessAccessType",
+        "businessAccountTypes",
+        "businessUserStatusType",
+        "cursor",
+        "first",
+        "isUnifiedSettings",
+        "orderBy",
+        "permissions",
+        "searchTerm",
+        "shouldUseNewEmptyState",
+        "id",
+        "__relay_internal__pv__BizKitSettingsPeopleEmptyStaterelayprovider"
+      ],
+      "defaults": {
+        "asset_types": null,
+        "businessAccessType": null,
+        "businessAccountTypes": null,
+        "businessUserStatusType": null,
+        "cursor": null,
+        "first": 20,
+        "isUnifiedSettings": null,
+        "orderBy": null,
+        "permissions": null,
+        "searchTerm": null,
+        "shouldUseNewEmptyState": null,
+        "id": null,
+        "__relay_internal__pv__BizKitSettingsPeopleEmptyStaterelayprovider": null
+      },
+      "providers": [
+        "__relay_internal__pv__BizKitSettingsPeopleEmptyStaterelayprovider"
+      ],
+      "source_sha256": "5053443411e5523c6c1cfb2dac163475bfd4a4cacd87ee3fd30b355dd5148a18",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ig324/yD/l/pt_BR-j/BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkib8OA2VYyizSJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibj618QdVjVvrEj3QACaxyQd6fSa828ztBRJUZStkRCvv5q76DzIxo7CFNRErzfucaeTzekdTFXP1kHzgyelQQc2adA1YauKEhRgY_uhJXf2uNZBnCcG6v0aVYJHweDleUHwLyK0w2sUp8PBd2eaLgRuzkZ7kCb6UNRjAuD7fcdRv0gjuhwvjGBGQiJh7HdCpfWJTpVYpQXGAekd8wDqIu7bUj2-Rxp.js",
+      "module_sha256": "cba9fa8e8f39349cdc01a83866e98ac2a4fba5836e5d1acebfb79853d86285d2"
+    },
+    {
+      "name": "BizKitSettingsInvitePeopleModalMutation",
+      "id": "31295717360015609",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "a966094fa051b2461844b0bace8490d39c1f295aa93dcb11d3164ee79a4cc14f",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iAbK4/yC/l/pt_BR-j/5wIzmfoZ3vCyOZFnN_OcLPyBpJHy4oxPXfQagRRCzLs3FTEn82ATrsKmuZuW6B824h4arhXfmNnm9y9O1o_2ncJ1nCDMPhhlFe-UaodMcS9blXCOc4897tU7D1orDYCtbe9DA2nzOeYFl9BE_BfDODH3P4iPnfI6DDbTvJ8_wgwP0xAG8D91AX3m-HT5LLpd-T4dARzQ5YF3bKfvUs8iKaFvlAkFFcoZe-M7GclSVtJgRt5zkK5oCP3I-99kSAHilGSSfSfgtxkevC5AzVBufxtxvF7laImEEfuQT2ldXv_kkAv_-wGQjzF-IjwW0IWTMMCmYtQsK5.js",
+      "module_sha256": "b6554a02334b6dec909228fa1387e4e5a96db0931d9153611b33748d763d051f"
+    },
+    {
+      "name": "AdditionalProfilePlusCreationMutation",
+      "id": "23863457623296585",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {
+        "input": null
+      },
+      "providers": [],
+      "source_sha256": "7ca04ec8cda5fd159dd1a10ec681280fd94db7ceb89ee85feac0a985299b3637",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iNvr4/yh/l/pt_BR-j/kjSVD_f4HluSOYF6GasPVefDTbnM2VUk_29eVVCLx-z_d7ONewuAEuQD3MUUno8bSJRgKCwIaz437ub5znTY2-9aaToFL0ZfnfHS1bzcumSANzHIr3cB-H-7lJPed_Za3DGP7coO-Aavl0BmqXBliQNGVqQtSzmu9LZDTA9RsXC-zRVC.js",
+      "module_sha256": "25294725b219e11f625f0f619cb86d61ad092f2d33072973288dcb05d6d0f61c"
+    },
+    {
+      "name": "AdditionalProfilePlusCreationRootQuery",
+      "id": "28981446454853803",
+      "kind": "query",
+      "variables": [
+        "scale"
+      ],
+      "defaults": {
+        "scale": null
+      },
+      "providers": [],
+      "source_sha256": "7ca04ec8cda5fd159dd1a10ec681280fd94db7ceb89ee85feac0a985299b3637",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iNvr4/yh/l/pt_BR-j/kjSVD_f4HluSOYF6GasPVefDTbnM2VUk_29eVVCLx-z_d7ONewuAEuQD3MUUno8bSJRgKCwIaz437ub5znTY2-9aaToFL0ZfnfHS1bzcumSANzHIr3cB-H-7lJPed_Za3DGP7coO-Aavl0BmqXBliQNGVqQtSzmu9LZDTA9RsXC-zRVC.js",
+      "module_sha256": "de613bda6e1b87352511d685941f2768005d73142d72f4dac37a508248dd9e54"
+    },
+    {
+      "name": "usePagesCometAdminEditingCategoryDataSourceQuery",
+      "id": "9868446276528106",
+      "kind": "query",
+      "variables": [
+        "params"
+      ],
+      "defaults": {
+        "params": null
+      },
+      "providers": [],
+      "source_sha256": "7ca04ec8cda5fd159dd1a10ec681280fd94db7ceb89ee85feac0a985299b3637",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iNvr4/yh/l/pt_BR-j/kjSVD_f4HluSOYF6GasPVefDTbnM2VUk_29eVVCLx-z_d7ONewuAEuQD3MUUno8bSJRgKCwIaz437ub5znTY2-9aaToFL0ZfnfHS1bzcumSANzHIr3cB-H-7lJPed_Za3DGP7coO-Aavl0BmqXBliQNGVqQtSzmu9LZDTA9RsXC-zRVC.js",
+      "module_sha256": "76bdf9bf592156a70fa74d7ae6f91b6d4f19109db3e249eafaf4e8134f6a19fb"
+    }
+  ],
+  "insight_metrics": {
+    "Reach": {
+      "event": "IMPRESSION",
+      "metric": "UNIQUE_USERS"
+    },
+    "NetFollows": {
+      "event": "NET_FOLLOW",
+      "metric": "UNIQUE_USERS"
+    },
+    "NewFollowers": {
+      "event": "FOLLOW",
+      "metric": "NEW_USERS"
+    },
+    "Interactions": {
+      "event": "INTERACTION",
+      "metric": "COUNT"
+    },
+    "Viewers": {
+      "event": "VIEW",
+      "metric": "UNIQUE_USERS"
+    },
+    "Comments": {
+      "event": "COMMENT",
+      "metric": "COUNT"
+    },
+    "Shares": {
+      "event": "SHARE",
+      "metric": "COUNT"
+    },
+    "Visits": {
+      "event": "VISIT",
+      "metric": "COUNT"
+    },
+    "Views": {
+      "event": "VIEW",
+      "metric": "COUNT"
+    }
+  },
+  "insight_breakdowns": {
+    "AGE_BUCKET_AND_GENDER": "age_bucket_and_gender",
+    "CITY": "city",
+    "CONTENT_TYPE": "content_type",
+    "COUNTRY": "country",
+    "FOLLOWER_NON_FOLLOWER": "follower_non_follower",
+    "GENDER": "gender",
+    "MEDIA_PRODUCT_TYPE": "media_product_type",
+    "PAID_ORGANIC": "paid_organic",
+    "PUBLISHER_PLATFORM": "publisher_platform"
+  }
+}

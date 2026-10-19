@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace MVO\Facebook;
 
 use MVO\Facebook\Monitoring\SnapshotMonitor;
-use MVO\Facebook\Service\{AdsService,CommentsService,InboxService,PagesService,PostsService,ReactionsService};
+use MVO\Facebook\Service\{AdsService,CommentsService,InboxService,PagesService,PostsService,ReactionsService,MediaService,PageAdministrationService,InsightsService,AlbumService,ModerationService,ContentInsightsService};
 use MVO\Messenger\Auth\{CookieJar,WebLoginService};
 use MVO\Messenger\MessengerClient;
 use MVO\Messenger\Transport\{HttpClient,Socket};
@@ -113,6 +113,16 @@ final class FacebookConnection
     public function comments():CommentsService{return $this->services()->comments();}
     public function reactions():ReactionsService{return $this->services()->reactions();}
     public function inbox():InboxService{return $this->services()->inbox();}
+    public function media():MediaService{return $this->services()->media();}
+    public function albums():AlbumService{return $this->services()->albums();}
+    public function moderation():ModerationService{return $this->services()->moderation();}
+    public function contentInsights():ContentInsightsService{return $this->services()->contentInsights();}
+    public function administration():PageAdministrationService{return $this->services()->administration();}
+    public function insights():InsightsService{return $this->services()->insights();}
+    /** Explicit device provisioning; does not enable encrypted messaging. */
+    public function e2eeDevice(?\MVO\Messenger\E2ee\RegistrationTransport $transport=null):\MVO\Messenger\E2ee\DeviceManager{return $this->owner->e2eeDevice($transport);}
+    /** Explicit experimental encrypted lifecycle; ordinary connect() never starts it. */
+    public function e2eeRuntime():\MVO\Messenger\E2ee\Runtime{return $this->owner->e2eeRuntime();}
     public function ads():AdsService{return $this->services()->ads();}
     /** @return array<string,mixed> */
     public function listPages():array{return $this->services()->listPages();}

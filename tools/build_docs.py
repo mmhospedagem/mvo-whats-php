@@ -58,6 +58,10 @@ FACEBOOK_GROUPS = {
     'Avançado': [('MESSENGER', 'Messenger e sincronização', 'docs/FACEBOOK-MESSENGER.md')],
     'Referência': [('EXEMPLOS', 'Exemplos em PHP', 'docs/facebook/EXEMPLOS.md'), ('REFERENCIA', 'Referência PHP', 'docs/facebook/REFERENCIA.md'), ('LLMS', 'LLMs e agentes', 'docs/facebook/LLMS.md'), ('LIMITES', 'Cobertura e limites', 'docs/facebook/LIMITES.md')],
 }
+FACEBOOK_GROUPS['Facebook'].insert(1, ('ADMINISTRACAO', 'Pessoas e acesso', 'docs/facebook/ADMINISTRACAO.md'))
+FACEBOOK_GROUPS['Facebook'].insert(3, ('MIDIA', 'Fotos e upload', 'docs/facebook/MIDIA.md'))
+FACEBOOK_GROUPS['Facebook'].insert(6, ('INSIGHTS', 'Insights e métricas', 'docs/facebook/INSIGHTS.md'))
+FACEBOOK_GROUPS['Avançado'].insert(0, ('DISPOSITIVO-E2EE', 'Dispositivo E2EE', 'docs/facebook/DISPOSITIVO-E2EE.md'))
 
 PORTALS = [
     dict(key='whatsapp', label='WhatsApp', title='MVO WHATS PHP', output='docs/index.html', groups=GROUPS,

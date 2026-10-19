@@ -38,6 +38,25 @@ composer message:send -- --session=default --to=5511999999999 --text-file=mensag
 
 O resultado `server_ack` confirma que o servidor aceitou aquele ID. Não significa que o destinatário recebeu ou leu; esses estados chegam pelo evento `message_receipt`. Não há retransmissão automática de envios incertos para evitar duplicatas. O código persistido na outbox permite `retryMessage($id)`, explicitamente, reutilizando o mesmo ID e ciphertext.
 
+Os recibos enviados pelo próprio protocolo usam uma fila separada: o nó exato e
+seu prazo de retry são persistidos antes do transporte. Uma escrita concluída
+remove o recibo da fila, sem aguardar um ACK de recibo que pode não chegar.
+Falhas de escrita preservam o registro para nova tentativa; um ACK correspondente
+também pode encerrar um registro ainda pendente. O dono da sessão reconstrói índices locais por páginas ao
+retomar, encontra confirmações além da primeira página e consulta novamente o
+registro antes de retransmitir. Enquanto os prazos não vencem, cada `poll()` evita
+reler e decodificar toda essa fila. Os retries têm orçamento por ciclo; recibos
+novos continuam sendo enviados imediatamente. Essa fila não autoriza reenvio de
+mensagens de usuário nem confirma entrega ou leitura dessas mensagens. Completar
+a escrita de um recibo não muda o significado de `server_ack` nem dos recibos
+recebidos do contato.
+
+Uma cópia autenticada de mensagem enviada por outro aparelho da própria conta
+usa recibo `sender`. Em conversas individuais, o recibo conserva também
+`recipient`, com a conversa de destino: sincronizar uma cópia entre seus
+aparelhos não é uma entrega ao contato. Mensagens de outras contas continuam
+usando o recibo de entrega comum; mensagens de protocolo `peer` usam `peer_msg`.
+
 ## Enviar para username
 
 Com a sessão conectada, `sendText()` e `sendMessage()` também aceitam usernames do WhatsApp:

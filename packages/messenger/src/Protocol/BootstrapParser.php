@@ -9,7 +9,7 @@ use MVO\Messenger\MessengerException;
 final class BootstrapParser
 {
     private const MODULES = ['CurrentUserInitialData','DTSGInitialData','DTSGInitData','LSD','SiteData',
-        'SprinkleConfig','MqttWebDeviceID','DGWWebConfig','MessengerWebInitData','LSPlatformMessengerSyncParams','LSVersion'];
+        'SprinkleConfig','MqttWebDeviceID','DGWWebConfig','MessengerWebInitData','LSPlatformMessengerSyncParams','LSVersion','ReactComposerMediaConfig'];
     private int $nodes = 0;
     /** @var array<string,mixed> */ private array $modules = [];
     /** @var list<array<string,mixed>> */ private array $payloads = [];

@@ -128,4 +128,4 @@ Uma integração privada opcional pode usar `exportPrivateLoginChallenge()` para
 | `metadata_connected` | Metadados sincronizados; não equivale a E2EE pronto. |
 | `stop()` | Encerra localmente e preserva a sessão. |
 
-Não serialize a conexão nem exponha `WebSession`. `e2ee_ready=false` permanece um limite real: o dispositivo criptografado não foi implementado. Veja [limites e erros](LIMITES.md) e continue com [Páginas](PAGINAS.md).
+Não serialize a conexão nem exponha `WebSession`. `e2ee_ready=false` permanece um limite real: o transporte de mensagens criptografadas não foi implementado; [provisionamento do dispositivo](DISPOSITIVO-E2EE.md) é uma operação explícita separada. Veja [limites e erros](LIMITES.md) e continue com [Páginas](PAGINAS.md).

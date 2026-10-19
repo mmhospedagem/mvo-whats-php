@@ -1,0 +1,131 @@
+{
+  "observed_at": "2026-10-19",
+  "caller_id": "BIZWEB_INSIGHTS_ORGANIC_CONTENT",
+  "column_fields": {
+    "ADD_PAYMENT_INFO": "add_payment_info",
+    "ADD_TO_CART": "add_to_cart",
+    "BUDGET": "budget",
+    "CLICK_THROUGH_RATE": "click_through_rate",
+    "COMMENTS": "comments",
+    "COST_PER_RESULT": "cost_per_result",
+    "CREATOR_MONETIZATION_QUALIFIED_VIEWS": "creator_monetization_qualified_views",
+    "CREATOR_MONETIZATION_QUALIFIED_VIEWS_RPM": "creator_monetization_qualified_views_rpm",
+    "CREATOR_MONETIZATION_UNIFIED_PROGRAM_EARNINGS": "creator_monetization_unified_program_earnings",
+    "DATE": "date",
+    "DATE_ENDED": "date_ended",
+    "DATE_STARTED": "date_started",
+    "DELIVERY": "delivery",
+    "ENGAGEMENT": "engagement",
+    "INITIATE_CHECKOUT": "initiate_checkout",
+    "INSTREAM_ADS_COST_PER_MILLE": "instream_ads_cost_per_mille",
+    "INSTREAM_ADS_ESTIMATED_EARNINGS": "instream_ads_estimated_earnings",
+    "INSTREAM_ADS_IMPRESSIONS": "instream_ads_impressions",
+    "INTERACTIONS": "interactions",
+    "LEADS": "leads",
+    "LINK_CLICKS": "link_clicks",
+    "NET_COMMENTS": "net_comments",
+    "NET_INTERACTIONS": "net_interactions",
+    "NET_REACTIONS": "net_reactions",
+    "NET_SAVES": "net_saves",
+    "NEW_FOLLOWS": "new_follows",
+    "PURCHASES": "purchases",
+    "REACH": "reach",
+    "REACTIONS": "reactions",
+    "REPLIES": "replies",
+    "RESULTS": "results",
+    "SAVES": "saves",
+    "SCHEDULES": "schedules",
+    "SHARES": "shares",
+    "SPEND": "spend",
+    "TITLE": "title",
+    "VIDEO_AVERAGE_PLAY_TIME": "video_average_play_time",
+    "VIDEO_DISTRIBUTION_SCORE": "video_distribution_score",
+    "VIDEO_ONE_MINUTE_VIEWS": "video_one_minute_views",
+    "VIDEO_PLAY_TIME": "video_play_time",
+    "VIDEO_RETURNING_VIEWERS": "video_returning_viewers",
+    "VIDEO_STATUS": "video_status",
+    "VIDEO_THREE_SECOND_VIEWS": "video_three_second_views",
+    "VIDEO_THRUPLAYS": "video_thruplays",
+    "VIEWERS": "viewers",
+    "VIEWS": "views"
+  },
+  "documents": [
+    {
+      "name": "BizWebUnifiedTableCursorPaginator_data_refetchable",
+      "id": "39052890231021381",
+      "kind": "query",
+      "variables": [
+        "callerID",
+        "count",
+        "cursor",
+        "filters",
+        "ids",
+        "initialFilters",
+        "scale",
+        "searchString",
+        "skip",
+        "sortDirection",
+        "sortKey",
+        "timeRange",
+        "visibleColumnKeys",
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider",
+        "__relay_internal__pv__shouldFetchAMPostPreviewrelayprovider"
+      ],
+      "defaults": {
+        "callerID": null,
+        "count": 10,
+        "cursor": null,
+        "filters": [],
+        "ids": null,
+        "initialFilters": null,
+        "scale": null,
+        "searchString": "",
+        "skip": true,
+        "sortDirection": "DESC",
+        "sortKey": null,
+        "timeRange": null,
+        "visibleColumnKeys": null,
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider": null,
+        "__relay_internal__pv__shouldFetchAMPostPreviewrelayprovider": null
+      },
+      "providers": [
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider",
+        "__relay_internal__pv__shouldFetchAMPostPreviewrelayprovider"
+      ],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ipKz4/yu/l/pt_BR-j/Z9jLsi48tEXDDNyiA6IVEC5zoekRJBL4Ul9j_9w1ntItb8CDyX_WBZPT_uO7Sdj75qCQ9HTGboA0q7G-gYaq5wHEBUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkFpByhkiBMTOSJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibjXbiZCo7Ijxlp4QQ9p6awaEj3QACaxyQd6fSa828ztBRJUZStkRCvv5qRErzfucaeTzekdTFXP1kHz.js",
+      "source_sha256": "f3319466ab7ac9c39b441c58f83ed54ab226b17c3dddd930f457c751c33f5989",
+      "module_sha256": "3bbd8f03492a8b396a639314837a2881942e3dcdf5ffebbd9e4ff03727cebfa8"
+    },
+    {
+      "name": "BizWebUnifiedTableCustomColumnModalQuery",
+      "id": "28513279061615805",
+      "kind": "query",
+      "variables": [
+        "callerID",
+        "ids",
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider"
+      ],
+      "defaults": {
+        "callerID": null,
+        "ids": null,
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider": null
+      },
+      "providers": [
+        "__relay_internal__pv__shouldFetchAssociatedAdsInforelayprovider"
+      ],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iBr_4/y1/l/pt_BR-j/p98oL4MZEJB.js",
+      "source_sha256": "fa17b4214f0dab08404ee447a29b17eee85be034e313d78df81fdc0e47f32789",
+      "module_sha256": "8534e7c7b8d13f296d4d3cd60dba76d389d1453b95bc0ae444868c99c3702569"
+    }
+  ],
+  "supported_renderers": [
+    "TofuUnifiedTableSingleValueMetricKPICell",
+    "TofuUnifiedTableDateTimeCell",
+    "TofuUnifiedTableErrorCell",
+    "TofuUnifiedTableNoopCellDoNotRenderThis"
+  ],
+  "limits": [
+    "Paid-breakdown and ads-liquidity renderer contracts are not complete; unsupported cells remain unavailable, never organic-only totals.",
+    "CSV/JSON exports are produced locally from collected projections; no Meta server export endpoint is implied."
+  ]
+}

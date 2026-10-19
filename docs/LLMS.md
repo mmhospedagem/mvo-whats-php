@@ -13,6 +13,8 @@ Este guia e o servidor MCP abaixo são específicos para **WhatsApp**. A documen
 
 Não use QR, JIDs ou ferramentas MCP WhatsApp como se fossem recursos Facebook. Instale Facebook com `composer require "mmhospedagem/mvo-facebook-php:^0.1"`; o Composer resolve Messenger como dependência. O SDK WhatsApp permanece independente.
 
+As extensões Facebook da branch de desenvolvimento para gerenciamento, fotos/vídeo/álbuns, cargos/moderação, relatórios paginados, inbox Lightspeed e componentes de dispositivo E2EE estão descritas no contexto próprio. As releases Facebook 0.1.0/Messenger 0.1.1 ainda não as incluem. Registro do dispositivo não habilita mensagens E2EE. Nenhuma nova ferramenta foi adicionada ao MCP WhatsApp.
+
 ## Integrações WhatsApp
 
 | Objetivo | Integração |

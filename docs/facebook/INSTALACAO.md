@@ -6,6 +6,10 @@ O pacote `mmhospedagem/mvo-facebook-php` é distribuído na série experimental 
 
 Use PHP 8.2+ de 64 bits, com `curl`, `json`, `openssl`, `sodium`, `pdo` e `pdo_sqlite`. As exigências efetivas estão nos arquivos [Composer Facebook](../../packages/facebook/composer.json) e [Composer Messenger](../../packages/messenger/composer.json). O protocolo e o loop executam em PHP; Node.js e Go não são runtimes deste pacote.
 
+O [dispositivo e os componentes experimentais E2EE](DISPOSITIVO-E2EE.md) do checkout também exigem `gmp`; stanzas comprimidas exigem `zlib`. São adicionais ao login, metadados e serviços Web. Preparar/registrar o dispositivo não habilita mensagens criptografadas. Facebook 0.1.0/Messenger 0.1.1 ainda não incluem essas extensões; para avaliá-las localmente use os repositórios `path` abaixo.
+
+O Composer deste checkout exige Messenger `^0.1.2`, para não aceitar um runtime publicado anterior às novas interfaces. Até a publicação coordenada dos pacotes, o alias local `0.1.x-dev` do exemplo satisfaz essa dependência; os dois caminhos locais são necessários.
+
 ## Composer na aplicação consumidora
 
 Na pasta da sua aplicação:

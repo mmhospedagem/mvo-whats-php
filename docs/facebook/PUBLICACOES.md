@@ -1,6 +1,6 @@
 # Publicações e timeline
 
-`posts()` agrupa consultas paginadas de timeline e o binding do compositor de publicações de texto. Essas operações exigem contexto Web atual; a biblioteca não descobre automaticamente os providers Relay nem prepara o composer.
+`posts()` agrupa consultas paginadas de timeline, criação e edição de texto e exclusão de publicações. Essas operações exigem contexto Web atual; a biblioteca não descobre automaticamente os providers Relay nem prepara o composer.
 
 ## Pré-condições do protocolo
 
@@ -92,10 +92,71 @@ function publicarTexto(
 }
 ```
 
-A aplicação precisa estabelecer e validar esse contexto antes de habilitar a ação. Não há preparação automática, anexos, menções estruturadas, upload, edição, exclusão ou publicação cruzada nesse método. A escrita concreta ainda não foi validada em conta real.
+A aplicação precisa estabelecer e validar esse contexto antes de habilitar a ação. `createText()` não adiciona anexos, menções estruturadas ou publicação cruzada. O [upload de fotos](MIDIA.md) é uma operação separada e não publica automaticamente um post. A escrita concreta ainda não foi validada em conta real.
+
+## Editar o texto de uma publicação
+
+`editText($actorId, $storyId, $text, $idempotencyKey, $context, $variables)` usa o **ID GraphQL exato da story**, não um `post_id` transformado. Este helper atende publicações existentes somente de texto; não reconstrói ou remove fotos, links, enquetes e anexos de uma publicação complexa.
+
+| Campo de `$context` | Obrigação |
+| --- | --- |
+| `composer_entry_point` | Entrada do composer de edição atual. |
+| `composer_source_surface` | Superfície real da edição. |
+| `composer_type` | Tipo efetivo do composer de edição; sem copiar o tipo do composer de criação. |
+| `logging.composer_session_id` | Sessão desse composer. |
+| `tracking` | Lista de strings do contexto atual. |
+
+`$variables` contém os providers de **`ContentManagementDocuments::providers('ComposerStoryEditMutation')`** e também `feedLocation`, `renderLocation`, `scale` positivo e `ppeEnabled` booleano atuais. Não derive esse último valor do nome do provider nem use um valor de fixture. As variáveis do catálogo anterior `PageDocuments` continuam valendo para criação e leitura, não substituem o novo documento de edição.
+
+```php
+use MVO\Facebook\FacebookConnection;
+
+function editarTextoPublicacao(
+    FacebookConnection $facebook,
+    string $actorId,
+    string $storyId,
+    string $novoTexto,
+    string $chaveIdempotencia,
+    array $contextoDoComposerDeEdicao,
+    array $variaveisAtuaisDeEdicao,
+): array {
+    return $facebook->posts()->editText(
+        $actorId, $storyId, $novoTexto, $chaveIdempotencia,
+        $contextoDoComposerDeEdicao, $variaveisAtuaisDeEdicao,
+    );
+}
+```
+
+O resultado projeta `story_id`, `post_id`, `text` e `url`. A confirmação exige a mesma story e o texto solicitado no resultado reconhecido; uma resposta HTTP 200 sem esses campos não vira sucesso. Isso não garante distribuição ou leitura.
+
+## Excluir uma publicação
+
+`delete($actorId, $storyId, $idempotencyKey, $variables)` executa a ação Comet de exclusão de uma story do feed. Não significa arquivar, ocultar para o viewer, apagar um anúncio ou excluir uma Página.
+
+Forneça o ID GraphQL exato, os providers atuais de `ContentManagementDocuments::providers('useCometFeedStoryDeleteMutation')` e `scale` positivo. As permissões continuam sendo verificadas pelo Facebook no contexto do actor escolhido.
+
+```php
+use MVO\Facebook\FacebookConnection;
+
+function excluirPublicacao(
+    FacebookConnection $facebook,
+    string $actorId,
+    string $storyId,
+    string $chaveIdempotencia,
+    array $variaveisAtuais,
+): array {
+    return $facebook->posts()->delete(
+        $actorId, $storyId, $chaveIdempotencia, $variaveisAtuais,
+    );
+}
+```
+
+A projeção `['story_id' => ..., 'deleted' => true]` só é retornada quando `deleted_story_id` corresponde ao ID solicitado. O código não infere exclusão apenas porque o post sumiu de uma listagem parcial.
 
 ## Resultado e reenvio
 
-O retorno normalizado conserva `post_id`, `story_id`, `url`, `publishing_flow` e `scheduled_publish_time` quando reconhecidos. Isso não prova visibilidade, distribuição ou aprovação. A mutation usa ledger privado e idempotência: chave confirmada devolve a mesma projeção sem HTTP; resultado incerto não é reenviado automaticamente. Veja [erros e estados dos comandos](LIMITES.md).
+O retorno de criação conserva `post_id`, `story_id`, `url`, `publishing_flow` e `scheduled_publish_time` quando reconhecidos. Isso não prova visibilidade, distribuição ou aprovação. Criação, edição e exclusão usam ledger privado e idempotência: chave confirmada devolve a mesma projeção sem HTTP; resultado incerto não é reenviado automaticamente. Uma mesma chave com conteúdo diferente é conflito. Veja [erros e estados dos comandos](LIMITES.md).
 
-Fontes: [PostsService](../../packages/facebook/src/Service/PostsService.php) e [PageDocuments](../../packages/facebook/src/Catalog/PageDocuments.php). Próximo: [comentários e reações](COMENTARIOS-REACOES.md).
+Os documentos e formatos de edição/exclusão foram conferidos em artefatos públicos do Facebook Web e exercitados com transporte sintético. Nenhuma dessas escritas foi executada em conta real nesta revisão. Conteúdo com anexos, edição de enquetes, agendamento e outros fluxos continuam exigindo contratos específicos.
+
+Fontes: [PostsService](../../packages/facebook/src/Service/PostsService.php), [PageDocuments](../../packages/facebook/src/Catalog/PageDocuments.php) e [ContentManagementDocuments](../../packages/facebook/src/Catalog/ContentManagementDocuments.php). Próximo: [comentários e reações](COMENTARIOS-REACOES.md).

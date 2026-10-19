@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "observed_at": "2026-10-18",
+  "scope": "Public CDN modules observed in the operator-opened Inbox, anonymously downloaded; no send performed",
+  "protocols": [
+    {
+      "name": "page.inbox.sendText.mercury",
+      "kind": "experimental_http_mutation",
+      "path": "/messaging/send/",
+      "method": "POST",
+      "relative_origin": true,
+      "current_inbox_transport": false,
+      "fields": [
+        "client",
+        "action_type",
+        "body",
+        "client_thread_id",
+        "message_id",
+        "offline_threading_id",
+        "other_user_fbid",
+        "thread_fbid",
+        "timestamp",
+        "source",
+        "signature_id",
+        "has_attachment"
+      ],
+      "sender_scope": "request_user_id=Page ID, av=actor ID, __user=authenticated account",
+      "response": "AsyncRequest payload.actions; strict OTID, message ID, author, body and thread correlation required",
+      "remaining": "Current Inbox uses Lightspeed task 46; Page-scoped LS runtime is not implemented"
+    }
+  ],
+  "sources": [
+    {
+      "module": "MercuryLocalIDs",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iWyc4/yq/l/pt_BR-j/7Xk8DQfSL8nHVicCKgHnu3SJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibjp4QQ9p6awaEyXCzzm06X5kj3QACaxyQd6fSa828ztBRJDGBgwNVwb58UZStkRCvv5qRErzfucaeTzekdTFXP1kHzgyelQQc2adA1YauKEhRgY_571voDBeRRIbJj9sBNOFvXXzx1ohu_JmDuhJXf2uNZBn0w2sUp8PBd2eaLgRuzkZ7kfcdRv0gjuhw8S31L_k5JzgvjGBGQiJh7H9qUN-xODI4jdCpfWJTpVYpQXGAekd8wDqIu7bUj2-Rxp.js",
+      "source_sha256": "4721d238189022dbbcf32b0167c6651dc944593ca81f13d05d09e3c9fccb4dde",
+      "module_sha256": "990d160f17ae4e96240c8b3a4782df3ef7e52b8d3583d3465ca188e297fd2a69"
+    },
+    {
+      "module": "useBizInboxLSSendMessage",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iWyc4/yq/l/pt_BR-j/7Xk8DQfSL8nHVicCKgHnu3SJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibjp4QQ9p6awaEyXCzzm06X5kj3QACaxyQd6fSa828ztBRJDGBgwNVwb58UZStkRCvv5qRErzfucaeTzekdTFXP1kHzgyelQQc2adA1YauKEhRgY_571voDBeRRIbJj9sBNOFvXXzx1ohu_JmDuhJXf2uNZBn0w2sUp8PBd2eaLgRuzkZ7kfcdRv0gjuhw8S31L_k5JzgvjGBGQiJh7H9qUN-xODI4jdCpfWJTpVYpQXGAekd8wDqIu7bUj2-Rxp.js",
+      "source_sha256": "4721d238189022dbbcf32b0167c6651dc944593ca81f13d05d09e3c9fccb4dde",
+      "module_sha256": "729ac86533d5d52858774d6813417a8266437258d678447ebca241c1b54f2831"
+    },
+    {
+      "module": "MercuryServerDispatcher",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "9fa62ee6aa1ce891126c509dbf6c27ca96c1f9aacfd847b1c904df0a21f5c6a9"
+    },
+    {
+      "module": "XMessagingSendController",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "ee6a0793be9e22319bbdbd6b89eae673a5f07df638695095a18b11f8fcb53fa5"
+    },
+    {
+      "module": "MercuryServerSendMessageQueue",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "dad8bbc8f19c6523dd3311a244cee8761e971b71d8aa8b27361d1972d697017a"
+    },
+    {
+      "module": "MercuryIDs",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "191d6210c5010f49b04b968893205d8dd1e6dbb21e3dcc3906e0b96391587987"
+    },
+    {
+      "module": "useBizInboxLSMessengerMessageActions",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4id9B4/yx/l/pt_BR-j/_MwlEgr3L5N.js",
+      "source_sha256": "7a651e46f92d33bb0dd94eb7c34f55bfa36bd857502c89e9acf70e1a15f5d175",
+      "module_sha256": "648e2e23ecc8eeb861670654d569ef3aed0a6d54de9e93924df15665d38bbcdb"
+    }
+  ],
+  "static_analysis": {
+    "evidence_id": "ev_143e6fffdb53ca4a0de5f980dcd4aa05165462e975a96746e30ff59158f43173",
+    "artifact_root_sha256": "b4f214afb469e2996ba346c0016384f4c1038507876bf757abd55ea042099539",
+    "parsed_files": 7,
+    "parse_failures": 0,
+    "semantic_coverage": "unknown",
+    "semantic_unknowns": 1838,
+    "executed": false
+  }
+}

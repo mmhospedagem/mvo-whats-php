@@ -1,0 +1,159 @@
+{
+  "schema": 1,
+  "observed_at": "2026-10-18",
+  "protocol": "Page-scoped Lightspeed tasks through realtime DGW; GraphQL wrapper is observed for initial/read sync only",
+  "page_asset_header": "x-dgw-app-asset_ids",
+  "page_asset_value": {
+    "PAGE": "actual Page ID"
+  },
+  "task_label": "46",
+  "page_database": 205,
+  "business_source": 4456448,
+  "bootstrap_modules": [
+    "DGWWebConfig",
+    "ServerAppID",
+    "LSVersion",
+    "LSPlatformDeviceId",
+    "LSPlatformBizInboxSyncParams"
+  ],
+  "graphql_sync_document": {
+    "name": "LSBizInboxGraphQLLightspeedRequestQuery",
+    "id": "24374347955599176",
+    "variables": [
+      "deviceId",
+      "igdAssetId",
+      "pageAssetId",
+      "requestId",
+      "requestPayload",
+      "requestType",
+      "waAssetId"
+    ],
+    "response": "viewer.unified_inbox_lightspeed_web_request"
+  },
+  "sources": [
+    {
+      "module": "useBizInboxLSSendMessage",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iWyc4/yq/l/pt_BR-j/7Xk8DQfSL8nHVicCKgHnu3SJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibjp4QQ9p6awaEyXCzzm06X5kj3QACaxyQd6fSa828ztBRJDGBgwNVwb58UZStkRCvv5qRErzfucaeTzekdTFXP1kHzgyelQQc2adA1YauKEhRgY_571voDBeRRIbJj9sBNOFvXXzx1ohu_JmDuhJXf2uNZBn0w2sUp8PBd2eaLgRuzkZ7kfcdRv0gjuhw8S31L_k5JzgvjGBGQiJh7H9qUN-xODI4jdCpfWJTpVYpQXGAekd8wDqIu7bUj2-Rxp.js",
+      "source_sha256": "4721d238189022dbbcf32b0167c6651dc944593ca81f13d05d09e3c9fccb4dde",
+      "module_sha256": "729ac86533d5d52858774d6813417a8266437258d678447ebca241c1b54f2831"
+    },
+    {
+      "module": "LSBizInboxGraphQLLightspeedRequestQuery.graphql",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "4d2488cd520586a7c6f26f41dea2c423a916953ba737c6058795a177698ae217"
+    },
+    {
+      "module": "LSBizInboxGraphQLLightspeedRequest",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "c612e317ed52c8d0057dc60339ea9ba20ace1a0ced57ee0c954c6de1f8851718"
+    },
+    {
+      "module": "LSPlatformDeviceId",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "ba0e61d1653194ebb6bfe6f0cccc8ee643f37d337c2822b43496470c45088417"
+    },
+    {
+      "module": "LSBizInboxClientConfig",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "6ca8144dc00cdd423b3b8bf96753b0dc38348bb6ad9b5a14515eb945d468b251"
+    },
+    {
+      "module": "LSPlatformTaskSyncGroupId",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "72c9e4c67a9d9a602b3502a7fe9f906e86e2c5ac8f457671339af6d20edb2f9e"
+    },
+    {
+      "module": "LSTaskSerializerSendMessageV2",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "5a45ccb44bc8cfc348630959d21f83e3d83643258801cf89af1ce1e2e8c19e3e"
+    },
+    {
+      "module": "LSPlatformTaskSystemTransport",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "89f99e75fe9ac07382e23ab7fb458570674f497fb6f5c41df36e234d0165acea"
+    },
+    {
+      "module": "LSBizInboxTaskSystemPipeline",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "a1d2a1b1106d440c293628f9cb394e45512b195f79b0723d99e3461b0423ebcc"
+    },
+    {
+      "module": "LSMailboxInitialSyncCursor",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "3e541a48177876585300205538bb581e20001ce9f56b6f437fa625c96898cb2c"
+    },
+    {
+      "module": "LSMessagingThreadAttributionType",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "eeacd138808f7b1faccd3e636d2cab5438ef61784e6c6e19eeb9db1d7fdb56ab"
+    },
+    {
+      "module": "BizInboxLSUtils",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i-f14/yy/l/pt_BR-j/UsLy1rwWd7PDDNyiA6IVECAydCx-pMAocAd52ftaddDhF9vnAwD4d1Ifx4ck6Kl5Gjl9j_9w1ntItK4L-juRl3ifb8CDyX_WBZP1IiDNB0rYlAT_uO7Sdj75qCQ9HTGboA0qYm_9ooprsxbJHr6aNAbl15BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkmBzMWVAFfUzJ7Aa0Mcma7r.js",
+      "source_sha256": "460e3c862c12343e24c4efa3663a747fef6db6b5dd238e09a711f6821583f7fe",
+      "module_sha256": "4521b11236ce5652a4d0b07c5ac9f22a553fe245f10cf8b464e5fdf586eb06e6"
+    },
+    {
+      "module": "LSPlatformRealtimeTransport",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ivyH4/yN/l/pt_BR-j/NUt3r_8oZTt67T7YqiRXqddG1UjPbPX6PckcF1ANvBtdFHeq8gAQmSrgxA-fvp_sZsnXPDWGRLxfb8m676IWKY_II7-GOPxUpATIJBhLJnO_DaCWtk2fHhxr3wt9s0U9Jc8u_Qgd0hUp-HTUqNwAtwwBhuHHaQENqG-OSRwg2xOmEWDdaQefV7MxBnx_Dt9WM6mvMege6oPPDFpoROtVz3TbgmwbURXkkj3hcwrRSD0bouUM6wqG9UFgBIbfxKnWMFrTGhIrx_BGO8bcixcZSPFd9GfuI5yjD1EOwQhZs052wjaHdS55Kh35fpHZ1BHi8Q-HiCOTQS.js",
+      "source_sha256": "1f65548ef9f9eae34c019b7041ea62f44a2a431f348b829d620891dd849714f5",
+      "module_sha256": "1331c38c1eff3111f52510d7ce3e63855c501a22db02c658a3b31103346ee11f"
+    },
+    {
+      "module": "LSVersion",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ivyH4/yN/l/pt_BR-j/NUt3r_8oZTt67T7YqiRXqddG1UjPbPX6PckcF1ANvBtdFHeq8gAQmSrgxA-fvp_sZsnXPDWGRLxfb8m676IWKY_II7-GOPxUpATIJBhLJnO_DaCWtk2fHhxr3wt9s0U9Jc8u_Qgd0hUp-HTUqNwAtwwBhuHHaQENqG-OSRwg2xOmEWDdaQefV7MxBnx_Dt9WM6mvMege6oPPDFpoROtVz3TbgmwbURXkkj3hcwrRSD0bouUM6wqG9UFgBIbfxKnWMFrTGhIrx_BGO8bcixcZSPFd9GfuI5yjD1EOwQhZs052wjaHdS55Kh35fpHZ1BHi8Q-HiCOTQS.js",
+      "source_sha256": "1f65548ef9f9eae34c019b7041ea62f44a2a431f348b829d620891dd849714f5",
+      "module_sha256": "c440c5827cb14aed6d3fe3fe3c076a96a8310174727e9b8109c0f693860970f5"
+    },
+    {
+      "module": "LSPlatformGraphQLTransport",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iIuC4/yH/l/pt_BR-j/c6-odjZRKr4Cb6UNRjAuD7NApzJdirNQOOlbN3UDQdBrANljR3ZwBvOv1CHEABchEJwIe7T7JXg82qiQ_dB73XW3FlHEVTP5UvYflBWOKGhGFKYJkWLUh9hOUjADKl_E23Kt9a66O5nsEy905hyEMRDi9vbP0gikPhNPDwGcRudZRYcylsGHGP8z5gwCWbtWKkBbXRgkt0XGgzDslETIpyFBlIzs3L1RmNnTihV9pOPjoWlMVFkPko8lFFPAXWM5S9V6AhDQQafzvnBspVNw5cgX00f78AYJWpnHNdE6cZVrqm8WYAU8.js",
+      "source_sha256": "adc874a55bf39c3484b4a123a7cccb70d5f96992447cc1406025a9a4612d7fef",
+      "module_sha256": "15c4f82809898e9e9d0f6093fcfb324257c3604f1eb28372db100a93f1fd07c7"
+    },
+    {
+      "module": "LSBizInboxHardCodedInitSyncWithThreadAwareness",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iIuC4/yH/l/pt_BR-j/c6-odjZRKr4Cb6UNRjAuD7NApzJdirNQOOlbN3UDQdBrANljR3ZwBvOv1CHEABchEJwIe7T7JXg82qiQ_dB73XW3FlHEVTP5UvYflBWOKGhGFKYJkWLUh9hOUjADKl_E23Kt9a66O5nsEy905hyEMRDi9vbP0gikPhNPDwGcRudZRYcylsGHGP8z5gwCWbtWKkBbXRgkt0XGgzDslETIpyFBlIzs3L1RmNnTihV9pOPjoWlMVFkPko8lFFPAXWM5S9V6AhDQQafzvnBspVNw5cgX00f78AYJWpnHNdE6cZVrqm8WYAU8.js",
+      "source_sha256": "adc874a55bf39c3484b4a123a7cccb70d5f96992447cc1406025a9a4612d7fef",
+      "module_sha256": "67f9e840b71fa4f53fab81a2e4a9c3af833376318b74bd6458da36e430e696e4"
+    },
+    {
+      "module": "LSWeaveInboxDGWTransport",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iCWR4/yB/l/pt_BR-j/CtbNMnAF5_TYjQDkopP7e3pkMRr533aVSMagZmvh68joJUFnpZj1prPj8UyfodyZI-2ruTK2oQcKCNWB7mD24ap4m0_XppM01FFe8Krfj5kkNOU7An8SOVctUU2m0K4-c7n6GpYlR_ttWaQ41Vk-2zIB3T2SC_8-rOpFLuJRot3BhYNChj-JL-b9MXhk8VheldYg_BAQRJzjGw0_x1uFh5Zil9UUIpOqhejmRsE73fROknpXZVlq2cxGVl1hFPJ2T7qkeVIA.js",
+      "source_sha256": "3a5adb98028b6a7d670e018ac12b84ca7d610695d414244984de7fb61591245e",
+      "module_sha256": "9145f9243126cd8a3be6f08a5a9600ed2f7962980d57aeb59664299af60d5cff"
+    },
+    {
+      "module": "ChannelClientID",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iWyc4/yq/l/pt_BR-j/7Xk8DQfSL8nHVicCKgHnu3SJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibjp4QQ9p6awaEyXCzzm06X5kj3QACaxyQd6fSa828ztBRJDGBgwNVwb58UZStkRCvv5qRErzfucaeTzekdTFXP1kHzgyelQQc2adA1YauKEhRgY_571voDBeRRIbJj9sBNOFvXXzx1ohu_JmDuhJXf2uNZBn0w2sUp8PBd2eaLgRuzkZ7kfcdRv0gjuhw8S31L_k5JzgvjGBGQiJh7H9qUN-xODI4jdCpfWJTpVYpQXGAekd8wDqIu7bUj2-Rxp.js",
+      "source_sha256": "4721d238189022dbbcf32b0167c6651dc944593ca81f13d05d09e3c9fccb4dde",
+      "module_sha256": "49f9093b8bb36c5dd2d72a62772470af308ed46c789fe6711b15e640370fefbd"
+    },
+    {
+      "module": "BizSuiteAllICERoute",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iKGm4/yd/l/pt_BR-j/w8BLteOT5cWC6QikD0s_8wHpZKcdX8VCkchaPlRa8uM7FsCgxSgRtTRNxEoYpCt-zzxdYXShhu6r5WMSopkGey9WqMCDbtbaLOcTu4K7T7IzgMvy8IaPPEdseHP8OxG0nUNgb5Nf4juiGEGQIRJxiZzdX-XDENX1EiYXhS9jNwlGwXifCShyL--f6-JjU7CunpEn7oTXBDLPJI0Ss6txs0oVjYfw2pqbEJJ6W_MNXKp2mzZd3JdHS76VCqrXAtLOFT-4AFtiS4qm0qgDz3FnCu66s6wr7yLBAM7IQ77mzzhY19M3RtMiub_RIL9tuLlcX1Uxbk0_nO.js",
+      "source_sha256": "87d4ef0d29710863e4fabe129f327c3b7122c13d26f547627d56bab25bb7644f",
+      "module_sha256": "8da2caafbaf53d9a9abc54b86099e6368e95c1de49c88aff5e77df9a6f30d59b"
+    }
+  ],
+  "client_device_identity": "Ephemeral BizInbox uses LSPlatformDeviceId via ChannelClientID, which can generate uuidv4. The SDK persists its own account-scoped UUIDv4; it does not copy browser storage/cookies or claim E2EE provisioning.",
+  "bootstrap_route": {
+    "path": "/latest/inbox/all",
+    "query": [
+      "asset_id",
+      "selected_item_id"
+    ],
+    "owner": "CurrentUserInitialData.USER_ID / ACCOUNT_ID",
+    "page_scope": "selected_page.id and thread returned by BizInboxUnifiedThreadsQuery; document-selected Page must agree when present"
+  }
+}

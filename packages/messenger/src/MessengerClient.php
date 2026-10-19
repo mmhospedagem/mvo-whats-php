@@ -8,7 +8,7 @@ use MVO\Messenger\Auth\WebLoginService;
 use MVO\Messenger\Protocol\{BootstrapConfig,BootstrapParser,EventProjector,LightspeedDecoder,LightspeedSyncGuard,TaskBuilder};
 use MVO\Messenger\Transport\{CurlHttpClient,DgwConnection,HttpClient,PublicBundleLoader,Socket,WebSocket};
 
-/** Experimental Facebook Web client. Device E2EE is a separate, unimplemented capability. */
+/** Experimental Facebook Web client. Device provisioning does not enable encrypted messaging. */
 final class MessengerClient
 {
     private SessionStore $store;
@@ -24,6 +24,10 @@ final class MessengerClient
     private bool $loginOwnsLock=false;
     private int $requestId=0;
     private int $taskId=0;
+    /** @var \WeakMap<\MVO\Messenger\Transport\PageMailboxGateway,bool>|null */
+    private ?\WeakMap $pageMailboxes=null;
+    /** @var \WeakReference<\MVO\Messenger\E2ee\Runtime>|null */
+    private ?\WeakReference $encryptedRuntime=null;
     /** @var array<string,list<callable(array<string,mixed>):void>> */ private array $listeners=[];
     /** @var array<int,int> */ private array $syncStreams=[];
     /** @var array<int,?string> */ private array $requestedCursors=[];
@@ -49,6 +53,32 @@ final class MessengerClient
         $this->bundleLoader=$bundleLoader===null?(new PublicBundleLoader())->loadVersionBundles(...):\Closure::fromCallable($bundleLoader);
     }
     public function channel():string{return 'messenger';}
+    /** Explicit device provisioning; never registers from connect()/poll().
+     * Registration is experimental and separate from the pending encrypted transport.
+     */
+    public function e2eeDevice(?\MVO\Messenger\E2ee\RegistrationTransport $transport=null):\MVO\Messenger\E2ee\DeviceManager
+    {
+        $this->requireConnected();
+        $bootstrap=$this->bootstrap??throw new \LogicException('The Messenger bootstrap is unavailable');
+        return new \MVO\Messenger\E2ee\DeviceManager($this->store,$bootstrap->userId,
+            $transport??new \MVO\Messenger\E2ee\CurlRegistrationTransport($bootstrap->origin,$this->timeoutSeconds),
+            fn():\MVO\Messenger\E2ee\CryptoAuthToken=>\MVO\Messenger\E2ee\CryptoAuthToken::fromBootstrap($this->bootstrap??throw new \LogicException('The Messenger bootstrap is unavailable')),
+            fn()=>$this->requireConnected());
+    }
+    /** Experimental explicit lifecycle, separate from ordinary metadata/text.
+     * connect() on this component can publish public prekeys after confirmed registration.
+     * Native ICDC roster verification remains unavailable; the facade cannot bypass it.
+     */
+    public function e2eeRuntime():\MVO\Messenger\E2ee\Runtime
+    {
+        $this->requireConnected();
+        $existing=$this->encryptedRuntime?->get();if($existing instanceof \MVO\Messenger\E2ee\Runtime)return $existing;
+        $runtime=new \MVO\Messenger\E2ee\Runtime($this->store,$this->bootstrap->userId,
+            fn():BootstrapConfig=>$this->bootstrap??throw new \LogicException('The Messenger bootstrap is unavailable'),
+            CurlHttpClient::USER_AGENT,fn()=>$this->requireConnected(),$this->socketFactory,
+            eventHandler:fn(string $event,array $payload)=>$this->emit($event,$payload),timeoutSeconds:$this->timeoutSeconds);
+        $this->encryptedRuntime=\WeakReference::create($runtime);return $runtime;
+    }
     /** Optional Facebook modules share this owner instead of copying credentials.
      * Private context: never publish fields or HTTP response bodies indiscriminately.
      */
@@ -62,15 +92,59 @@ final class MessengerClient
                 $parts=parse_url($url);$host=$parts['host']??'';$path=$parts['path']??'/';
                 if(($parts['scheme']??null)!=='https'||!in_array($host,['www.facebook.com','business.facebook.com','adsmanager.facebook.com'],true)||isset($parts['user'])||isset($parts['pass'])||isset($parts['fragment'])||(isset($parts['port'])&&$parts['port']!==443))throw new \InvalidArgumentException('Unsupported Facebook Web origin');
                 if($method==='POST'){
-                    if($path!=='/api/graphql/'||isset($parts['query']))throw new \InvalidArgumentException('Unsupported Facebook Web operation endpoint');
+                    if(!in_array($path,['/api/graphql/','/messaging/send/'],true)||isset($parts['query'])||($path==='/messaging/send/'&&$host==='adsmanager.facebook.com'))throw new \InvalidArgumentException('Unsupported Facebook Web operation endpoint');
                 }elseif($method==='GET'){
-                    if(!in_array($path,['/pages/','/professional_dashboard/','/latest/home','/latest/inbox/all','/adsmanager/manage/'],true)||$form!==[])throw new \InvalidArgumentException('Unsupported Facebook Web document route');
+                    if(!in_array($path,['/pages/','/pages/creation/','/professional_dashboard/','/latest/home','/latest/inbox/all','/latest/inbox/all/','/latest/insights/content','/adsmanager/manage/'],true)||$form!==[]||($path==='/pages/creation/'&&$host!=='www.facebook.com')||($path==='/latest/insights/content'&&$host!=='business.facebook.com'))throw new \InvalidArgumentException('Unsupported Facebook Web document route');
                 }else throw new \InvalidArgumentException('Unsupported Facebook Web method');
                 $cookies=$this->store->loadCookies()??throw new MessengerException('session_required','Restore the Facebook session before using its modules');
                 $header=$cookies->headerFor($url);
                 if(!preg_match('/(?:^|; )c_user=([^;]+)/',$header,$identity)||$identity[1]!==$cookies->accountId()||!preg_match('/(?:^|; )xs=[^;]+/',$header))throw new MessengerException('facebook_scope_unavailable','The saved cookies do not authenticate this Facebook Web origin');
                 return $this->http->request($method,$url,$cookies,$form);
+            },
+            function(string $url,array $form,array $files):\MVO\Messenger\Transport\HttpResponse{
+                $this->requireConnected();
+                $parts=parse_url($url);
+                if(($parts['scheme']??null)!=='https'||($parts['host']??null)!=='upload.facebook.com'
+                    ||($parts['path']??null)!=='/ajax/react_composer/attachments/photo/upload'
+                    ||isset($parts['user'])||isset($parts['pass'])||isset($parts['fragment'])||(isset($parts['port'])&&$parts['port']!==443)
+                    ||preg_match('/^av=[1-9][0-9]{0,24}$/D',$parts['query']??'')!==1
+                    ||array_keys($files)!==['farr'])throw new \InvalidArgumentException('Unsupported Facebook photo upload endpoint or fields');
+                if(($form['__user']??null)!==$this->bootstrap?->userId)throw new \InvalidArgumentException('The upload must retain the authenticated account identity');
+                if(!$this->http instanceof \MVO\Messenger\Transport\MultipartHttpClient)throw new MessengerException('facebook_upload_transport_unavailable','The configured HTTP transport does not implement multipart uploads');
+                $cookies=$this->store->loadCookies()??throw new MessengerException('session_required','Restore the Facebook session before uploading');
+                $header=$cookies->headerFor($url);
+                if(!preg_match('/(?:^|; )c_user=([^;]+)/',$header,$identity)||$identity[1]!==$cookies->accountId()||!preg_match('/(?:^|; )xs=[^;]+/',$header))throw new MessengerException('facebook_scope_unavailable','The saved cookies do not authenticate the photo upload origin');
+                return $this->http->upload($url,$cookies,$form,$files);
+            },
+            function(string $name):mixed{$this->requireConnected();return $this->bootstrap?->module($name);},
+            function(\MVO\Messenger\Protocol\PageMailboxConfig $config):\MVO\Messenger\Transport\PageMailboxTransport{
+                $this->requireConnected();
+                if($config->accountId!==$this->bootstrap?->userId)throw new \InvalidArgumentException('The Page mailbox must retain the connected account identity');
+                $gateway=new \MVO\Messenger\Transport\PageMailboxGateway($this->store,$config,$this->socketFactory,fn()=>$this->requireConnected(),$this->timeoutSeconds);
+                $this->pageMailboxes??=new \WeakMap();$this->pageMailboxes[$gateway]=true;
+                return $gateway;
+            },
+            function(string $method,string $url,#[\SensitiveParameter] array $form,array $headers):\MVO\Messenger\Transport\HttpResponse{
+                $this->requireConnected();
+                \MVO\Messenger\Transport\VideoUploadPolicy::validate($method,$url,$form,$headers);
+                if($method==='POST'&&($form['__user']??null)!==$this->bootstrap?->userId)throw new \InvalidArgumentException('The video upload must retain the authenticated account identity');
+                if(!$this->http instanceof \MVO\Messenger\Transport\RawUploadHttpClient)throw new MessengerException('facebook_upload_transport_unavailable','The configured HTTP transport does not implement resumable video uploads');
+                return $this->http->requestWithHeaders($method,$url,$this->videoUploadCookies($url),$form,$headers);
+            },
+            function(string $url,\MVO\Messenger\Transport\UploadFile $file,int $offset,int $length,array $headers):\MVO\Messenger\Transport\HttpResponse{
+                $this->requireConnected();
+                \MVO\Messenger\Transport\VideoUploadPolicy::validate('POST',$url,[],$headers,true);
+                \MVO\Messenger\Transport\VideoUploadPolicy::validateRange($file,$offset,$length,$headers);
+                if(!$this->http instanceof \MVO\Messenger\Transport\RawUploadHttpClient)throw new MessengerException('facebook_upload_transport_unavailable','The configured HTTP transport does not implement raw range uploads');
+                return $this->http->uploadRange($url,$this->videoUploadCookies($url),$file,$offset,$length,$headers);
             });
+    }
+    private function videoUploadCookies(string $url):CookieJar
+    {
+        $cookies=$this->store->loadCookies()??throw new MessengerException('session_required','Restore the Facebook session before uploading');
+        $header=$cookies->headerFor($url);
+        if(!preg_match('/(?:^|; )c_user=([^;]+)/',$header,$identity)||$identity[1]!==$this->bootstrap?->userId||!preg_match('/(?:^|; )xs=[^;]+/',$header))throw new MessengerException('facebook_scope_unavailable','The saved cookies do not authenticate the video upload origin');
+        return $cookies;
     }
     public function provider():string{return 'mvo_protocol';}
     /** @return list<string> */
@@ -219,7 +293,7 @@ final class MessengerClient
             }
             $this->changeState('metadata_connected');
         }catch(\Throwable $error){
-            $this->running=false;$this->connection?->close();$this->connection=null;$this->state=$error instanceof MessengerException?$error->reason:'connection_failed';
+            $this->running=false;$this->closePageMailboxes();$this->connection?->close();$this->connection=null;$this->state=$error instanceof MessengerException?$error->reason:'connection_failed';
             try{$this->store->event('connection',['state'=>$this->state,'e2ee_ready'=>false]);}finally{$this->store->release();}
             throw $error;
         }
@@ -230,12 +304,12 @@ final class MessengerClient
         $this->loginChallenge();
         if(!$this->isConnected())return;
         try{$this->receive($timeoutSeconds);$this->drainSync();}
-        catch(\Throwable $error){$this->running=false;$this->connection?->close();$this->connection=null;$this->state='disconnected';try{if($this->store->ownsLock())$this->store->event('connection',['state'=>'disconnected','e2ee_ready'=>false]);}finally{$this->store->release();}throw $error;}
+        catch(\Throwable $error){$this->running=false;$this->closePageMailboxes();$this->connection?->close();$this->connection=null;$this->state='disconnected';try{if($this->store->ownsLock())$this->store->event('connection',['state'=>'disconnected','e2ee_ready'=>false]);}finally{$this->store->release();}throw $error;}
     }
     public function stop():void
     {
         $this->loginService?->cancel();$this->loginService=null;$this->loginOwnsLock=false;
-        $this->running=false;$this->connection?->close();$this->connection=null;$this->state='stopped';
+        $this->running=false;$this->closePageMailboxes();$this->connection?->close();$this->connection=null;$this->state='stopped';
         if($this->store->ownsLock()){try{$this->store->event('connection',['state'=>'stopped','e2ee_ready'=>false]);}finally{$this->store->release();}}
     }
     /** @return list<array<string,mixed>> */
@@ -397,6 +471,13 @@ final class MessengerClient
         throw new MessengerException('session_domain_mismatch','The authenticated cookies do not cover a supported Facebook/Messenger Web origin');
     }
     private function requireConnected():void{$this->outsideCallback();if(!$this->isConnected())throw new MessengerException('not_connected','Connect and synchronize the Messenger session before executing this operation');}
+    private function closePageMailboxes():void
+    {
+        try{$this->encryptedRuntime?->get()?->ownerStopped();}catch(\Throwable){/* Release the original owner even if child cleanup fails. */}
+        foreach($this->pageMailboxes??[] as $gateway=>$unused){
+            try{$gateway->close();}catch(\Throwable){/* Child cleanup must not prevent releasing the original owner's lock. */}
+        }
+    }
     private function outsideCallback():void{if($this->inCallback)throw new \LogicException('Execute Messenger commands in the outer loop, after event callbacks return');}
     private function changeState(string $state):void{$this->state=$state;$payload=['state'=>$state,'e2ee_ready'=>false,'session_id'=>$this->sessionId];$this->store->event('connection',$payload);$this->emit('connection',$payload);}
     /** @param array<string,mixed> $payload */

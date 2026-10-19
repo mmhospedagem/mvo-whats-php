@@ -71,10 +71,11 @@ class DocsPortalTest(unittest.TestCase):
 
     def test_facebook_corpus_is_complete_and_separate(self):
         pages = self.facebook[1]
-        self.assertEqual(len(pages), 14)
+        self.assertEqual(len(pages), 18)
         self.assertEqual({page['id'] for page in pages}, {
             'inicio', 'INSTALACAO', 'CONEXAO', 'PAGINAS', 'PUBLICACOES', 'COMENTARIOS-REACOES',
             'INBOX', 'ANUNCIOS', 'MONITORAMENTO', 'EXEMPLOS', 'REFERENCIA', 'MESSENGER', 'LLMS', 'LIMITES',
+            'MIDIA', 'ADMINISTRACAO', 'INSIGHTS', 'DISPOSITIVO-E2EE',
         })
         self.assertTrue(all(page['source'].startswith('docs/facebook/') or page['source'] == 'docs/FACEBOOK-MESSENGER.md' for page in pages))
         body = ''.join(page['body'] for page in pages)

@@ -57,6 +57,25 @@ final class MessengerClientTest extends TestCase
         try{$context->privateRequestFields();self::fail('Stopped session cannot expose live request fields');}
         catch(MessengerException $error){self::assertSame('not_connected',$error->reason);}
     }
+    public function testNativeVideoBoundaryChecksIdentityEndpointsAndOwnerBeforeUsingOptionalHttpTransport():void
+    {
+        $http=new class implements \MVO\Messenger\Transport\RawUploadHttpClient{
+            public array $calls=[];
+            public function request(string $method,string $url,CookieJar $cookies,array $form=[]):HttpResponse{return (new MessengerBootstrapHttp())->request($method,$url,$cookies,$form);}
+            public function requestWithHeaders(string $method,string $url,CookieJar $cookies,array $form=[],array $headers=[]):HttpResponse{$this->calls[]=[$method,$url,$cookies->accountId(),$form,$headers];return new HttpResponse(200,'{}');}
+            public function uploadRange(string $url,CookieJar $cookies,\MVO\Messenger\Transport\UploadFile $file,int $offset,int $length,array $headers):HttpResponse{$this->calls[]=['POST',$url,$cookies->accountId(),$offset,$length];return new HttpResponse(200,'{}');}
+        };
+        $client=$this->client($this->root(),http:$http);$this->import($client);$client->connect();$session=$client->webSession();
+        $start='https://vupload-edge.facebook.com/ajax/video/upload/requests/start/?av=20002';
+        $session->requestWithHeaders('POST',$start,['__user'=>'12345678901234567'],['X_FB_VIDEO_WATERFALL_ID'=>'SYNTHETIC']);
+        self::assertSame('12345678901234567',$http->calls[0][2]);
+        foreach([[$start,['__user'=>'20002']],[$start.'&extra=1',['__user'=>'12345678901234567']],['https://attacker.invalid/upload',['__user'=>'12345678901234567']]] as [$url,$form]){
+            try{$session->requestWithHeaders('POST',$url,$form);self::fail('Invalid identity or route');}catch(\InvalidArgumentException){self::assertCount(1,$http->calls);}
+        }
+        $client->stop();
+        try{$session->requestWithHeaders('POST',$start,['__user'=>'12345678901234567']);self::fail('Stopped upload owner');}
+        catch(MessengerException $error){self::assertSame('not_connected',$error->reason);self::assertCount(1,$http->calls);}
+    }
     public function testRestoredCutoverLinkBlocksLegacyThreadBeforeAnySendTask():void
     {
         $root=$this->root();$peer=new MessengerPeer();$client=$this->client($root,$peer);$this->import($client);

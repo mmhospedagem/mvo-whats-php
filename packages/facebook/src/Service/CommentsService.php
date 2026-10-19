@@ -4,11 +4,121 @@ declare(strict_types=1);
 namespace MVO\Facebook\Service;
 
 use MVO\Facebook\Catalog\PageDocuments;
+use MVO\Facebook\Catalog\ContentManagementDocuments;
 use MVO\Facebook\Protocol\WebGraphQL;
 
 final class CommentsService
 {
     public function __construct(private readonly WebGraphQL $graph) {}
+
+    /** Edit an existing text-only comment. The current formatting style is preserved explicitly.
+     * @param array<string,mixed> $context formatting_style, attribution_id_v2, tracking and optional AI disclosure.
+     * @param array<string,mixed> $variables Current providers, feedLocation, translationType, useDefaultActor and scale.
+     * @return array<string,mixed>
+     */
+    public function editText(string $actorId, string $commentId, string $text, string $idempotencyKey, array $context, array $variables): array
+    {
+        ServiceInput::actor($actorId);
+        ServiceInput::opaque($commentId, 'GraphQL comment ID');
+        ServiceInput::key($idempotencyKey);
+        $text = ServiceInput::text($text);
+        ServiceInput::keys($context, ['formatting_style', 'attribution_id_v2', 'tracking', 'is_self_disclosed_as_ai_generated']);
+        $input = ['comment_id' => $commentId, 'message' => ['ranges' => [], 'text' => $text], 'attachments' => [],
+            'formatting_style' => ServiceInput::requiredString($context, 'formatting_style'),
+            'attribution_id_v2' => ServiceInput::requiredString($context, 'attribution_id_v2'), 'tracking' => self::tracking($context)];
+        if (array_key_exists('is_self_disclosed_as_ai_generated', $context)) {
+            if (!is_bool($context['is_self_disclosed_as_ai_generated'])) throw new \InvalidArgumentException('AI disclosure must be boolean');
+            $input['is_self_disclosed_as_ai_generated'] = $context['is_self_disclosed_as_ai_generated'];
+        }
+        self::renderingContext($variables);
+        ServiceInput::requiredString($variables, 'translationType');
+        $arguments = ContentManagementDocuments::arguments('useCometUFIEditCommentMutation', [...$variables, 'input' => $input]);
+        return $this->graph->execute('useCometUFIEditCommentMutation', $arguments, $actorId, 'https://www.facebook.com', $idempotencyKey,
+            static function (array $data) use ($commentId, $text): array {
+                $comment = $data['comment_edit']['comment'] ?? null;
+                if (!is_array($comment) || ($comment['id'] ?? null) !== $commentId || ($comment['body']['text'] ?? null) !== $text) ServiceInput::unexpected(true);
+                return ['id' => $commentId, 'text' => $text];
+            });
+    }
+
+    /** Delete a comment through the observed Comet menu action, with exact opaque IDs.
+     * @param array<string,mixed> $context attribution_id_v2 and tracking from the current menu.
+     * @param array<string,mixed> $variables Current providers, scale and optional group/render context.
+     * @return array<string,mixed>
+     */
+    public function delete(string $actorId, string $commentId, string $idempotencyKey, array $context, array $variables): array
+    {
+        ServiceInput::actor($actorId);
+        ServiceInput::opaque($commentId, 'GraphQL comment ID');
+        ServiceInput::key($idempotencyKey);
+        ServiceInput::keys($context, ['attribution_id_v2', 'tracking']);
+        self::scale($variables);
+        $arguments = ContentManagementDocuments::arguments('useCometUFIDeleteCommentMutation', [...$variables,
+            'input' => ['comment_id' => $commentId, 'remove_location' => 'MENU',
+                'attribution_id_v2' => ServiceInput::requiredString($context, 'attribution_id_v2'), 'tracking' => self::tracking($context)]]);
+        return $this->graph->execute('useCometUFIDeleteCommentMutation', $arguments, $actorId, 'https://www.facebook.com', $idempotencyKey,
+            static function (array $data) use ($commentId): array {
+                if (($data['comment_delete']['deleted_comment_id'] ?? null) !== $commentId) ServiceInput::unexpected(true);
+                return ['id' => $commentId, 'deleted' => true];
+            });
+    }
+
+    /** Hide or unhide through the observed comment menu action. The returned owner/viewer flags
+     * describe the actual server state; hiding for the viewer is not proof of global moderation.
+     * @param array<string,mixed> $context numeric feedback_source; hiding also needs attribution_id_v2.
+     * @param array<string,mixed> $variables Current providers, feedLocation, scale and commentActionLinksRewriteEnabled.
+     * @return array<string,mixed>
+     */
+    public function setHidden(string $actorId, string $commentId, bool $hidden, string $idempotencyKey, array $context, array $variables): array
+    {
+        ServiceInput::actor($actorId);
+        ServiceInput::opaque($commentId, 'GraphQL comment ID');
+        ServiceInput::key($idempotencyKey);
+        ServiceInput::keys($context, $hidden ? ['feedback_source', 'attribution_id_v2'] : ['feedback_source']);
+        if (!is_int($context['feedback_source'] ?? null) || $context['feedback_source'] < 0) throw new \InvalidArgumentException('Use the actual numeric feedback source from the comment menu');
+        ServiceInput::requiredString($variables, 'feedLocation');
+        self::scale($variables);
+        if (!is_bool($variables['commentActionLinksRewriteEnabled'] ?? null)) throw new \InvalidArgumentException('Supply the current action-links rewrite provider value');
+        $input = ['comment_id' => $commentId, 'feedback_source' => $context['feedback_source'], 'site' => 'comet'];
+        if ($hidden) {
+            $input['hide_location'] = 'MENU';
+            $input['attribution_id_v2'] = ServiceInput::requiredString($context, 'attribution_id_v2');
+        }
+        $name = $hidden ? 'CometUFIHideCommentMutation' : 'CometUFIUnhideCommentMutation';
+        $arguments = ContentManagementDocuments::arguments($name, [...$variables, 'input' => $input, 'useDefaultActor' => false]);
+        return $this->graph->execute($name, $arguments, $actorId, 'https://www.facebook.com', $idempotencyKey,
+            static function (array $data) use ($commentId, $hidden): array {
+                $comment = $data[$hidden ? 'comment_hide' : 'comment_unhide']['comment'] ?? null;
+                if (!is_array($comment) || ($comment['id'] ?? null) !== $commentId || ($comment['is_hidden_by_viewer'] ?? null) !== $hidden
+                    || !is_bool($comment['is_hidden_by_content_owner'] ?? null)) ServiceInput::unexpected(true);
+                return ['id' => $commentId, 'is_hidden_by_viewer' => $hidden, 'is_hidden_by_content_owner' => $comment['is_hidden_by_content_owner'],
+                    'spam_display_mode' => is_string($comment['spam_display_mode'] ?? null) ? $comment['spam_display_mode'] : null];
+            });
+    }
+
+    /** @param array<string,mixed> $context
+     * @return list<string>
+     */
+    private static function tracking(array $context): array
+    {
+        $tracking = ServiceInput::requiredArray($context, 'tracking');
+        if (!array_is_list($tracking) || count(array_filter($tracking, 'is_string')) !== count($tracking)) throw new \InvalidArgumentException('Tracking must be a list of current menu strings');
+        return $tracking;
+    }
+
+    /** @param array<string,mixed> $variables */
+    private static function renderingContext(array $variables): void
+    {
+        ServiceInput::requiredString($variables, 'feedLocation');
+        if (!is_bool($variables['useDefaultActor'] ?? null)) throw new \InvalidArgumentException('Supply the actual default-actor rendering choice');
+        self::scale($variables);
+    }
+
+    /** @param array<string,mixed> $variables */
+    private static function scale(array $variables): void
+    {
+        if (!is_numeric($variables['scale'] ?? null) || (float)$variables['scale'] <= 0 || !is_finite((float)$variables['scale'])) throw new \InvalidArgumentException('Supply the current display scale');
+    }
 
     /** Initial server-selected comment ordering; return intent_token for subsequent pages.
      * @param array<string,mixed> $variables Requires current providers and the actual feedLocation.

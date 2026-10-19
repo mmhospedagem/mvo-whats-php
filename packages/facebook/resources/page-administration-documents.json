@@ -1,0 +1,175 @@
+{
+  "scope": "Observed Facebook/Business Suite Web documents; static protocol evidence, no real-account writes validated",
+  "page_roles": {
+    "ADMIN": 0,
+    "EDITOR": 1,
+    "MODERATOR": 2,
+    "ADVERTISER": 3,
+    "ANALYST": 4,
+    "CUSTOM": 7
+  },
+  "documents": [
+    {
+      "name": "BusinessCometBizSuiteSettingsPageRolesViewContainerQuery",
+      "id": "26328130086837920",
+      "kind": "query",
+      "variables": [
+        "pageID"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iFMK4/yi/l/pt_BR-j/8Ya3rSvC3S4Eovd9EblpWPd1NRv2Bf2U7vEUXCmbPdFqTgZiczflpO7fAozIMNFBkkRm3IunJkmrig9f7BBHoImEMsmdb8AdZ26G8dg0fj6MR7vtgx0HdIS1mjYUBK9nLxPmxVru5dWIuOVhPR22TFCZbdf1wiQAA8cTU8NEMQQ2GAAqlodxazgh78i1HR2ezwoEsP5qUcSrXLxXgiS2JB5hEOea2Ow1q613EhAw9TfmdwGzWjWKq6DfWe64fnd5mQ1doGLYExd7VWvN_z4R696fG3wkbLMXCKqL8f4MeMm-WweN9YbSCsNSbE_WUOqC580M0u675L.js",
+      "source_sha256": "100d48a65b9444a2888cbb9a022308178717df598b2ed7ce73182461cd3e6549",
+      "module_sha256": "2e1dc5291d6e2904f55293b0bc6823bfaca687b36738febf5f6872ccfc83d71a"
+    },
+    {
+      "name": "BizKitSettingsPageRolesListViewPaginationQuery",
+      "id": "10057813860906793",
+      "kind": "query",
+      "variables": [
+        "count",
+        "cursor",
+        "pageID",
+        "id"
+      ],
+      "defaults": {
+        "count": 10
+      },
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iFMK4/yi/l/pt_BR-j/8Ya3rSvC3S4Eovd9EblpWPd1NRv2Bf2U7vEUXCmbPdFqTgZiczflpO7fAozIMNFBkkRm3IunJkmrig9f7BBHoImEMsmdb8AdZ26G8dg0fj6MR7vtgx0HdIS1mjYUBK9nLxPmxVru5dWIuOVhPR22TFCZbdf1wiQAA8cTU8NEMQQ2GAAqlodxazgh78i1HR2ezwoEsP5qUcSrXLxXgiS2JB5hEOea2Ow1q613EhAw9TfmdwGzWjWKq6DfWe64fnd5mQ1doGLYExd7VWvN_z4R696fG3wkbLMXCKqL8f4MeMm-WweN9YbSCsNSbE_WUOqC580M0u675L.js",
+      "source_sha256": "100d48a65b9444a2888cbb9a022308178717df598b2ed7ce73182461cd3e6549",
+      "module_sha256": "e518691eae0636da735dee22b5fd8cbf9c9b47f9bac11798a90a7b52f6f7dcac"
+    },
+    {
+      "name": "BizKitSettingsPageRolesReauthPasswordDialogQuery",
+      "id": "27234893386098749",
+      "kind": "query",
+      "variables": [
+        "pageID"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4inua4/yg/l/pt_BR-j/vTTSNL-SPA4zEKvzOSVm8HTe6kAU0evm6FIMeB-k5G6BiikyQSCDmHwR696fG3wkbLMXCKqL8f4MepPgr7rraGTMC580M0u675LCsNSbE_WUOqKABUN1E5z42p7IzMPJUmGwh0CPnNEs8QANmlSd51xuR5GuISrXe6gvtPR61a5vJXQZnork-iguF5IsNbcIkRl_uFUhTeDJi1dC64_wcp8PCMveNJ2c6G0_F68JVNVQKpX4YXAZFxIiExFErSpLWRl6TWJzkiNxM3YRzFX6Qj54m9ZQVAiUJKwiQBM2TZVf6Ut3IpNr7NuJ30fq9Z_jZ6HdQM3r4j.js",
+      "source_sha256": "da1adfe70eec53306871b7d1baa0212b777e3e544c285e5bf235bce826ad7ef0",
+      "module_sha256": "9f34094ad16fd4313eb375f64b65777dbf1d6265e8ff310ccb8d53a930c01c07"
+    },
+    {
+      "name": "BizKitSettingsPageRolesReauthPasswordDialogMutation",
+      "id": "27069183179349978",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4inua4/yg/l/pt_BR-j/vTTSNL-SPA4zEKvzOSVm8HTe6kAU0evm6FIMeB-k5G6BiikyQSCDmHwR696fG3wkbLMXCKqL8f4MepPgr7rraGTMC580M0u675LCsNSbE_WUOqKABUN1E5z42p7IzMPJUmGwh0CPnNEs8QANmlSd51xuR5GuISrXe6gvtPR61a5vJXQZnork-iguF5IsNbcIkRl_uFUhTeDJi1dC64_wcp8PCMveNJ2c6G0_F68JVNVQKpX4YXAZFxIiExFErSpLWRl6TWJzkiNxM3YRzFX6Qj54m9ZQVAiUJKwiQBM2TZVf6Ut3IpNr7NuJ30fq9Z_jZ6HdQM3r4j.js",
+      "source_sha256": "da1adfe70eec53306871b7d1baa0212b777e3e544c285e5bf235bce826ad7ef0",
+      "module_sha256": "bad068e99c672eef14b6f0c98cf9e17f85f0de18a0847f92d2fbffa1a0ad35d3"
+    },
+    {
+      "name": "BizKitSettingsPageRolesMutationUserBasedRoleMutation",
+      "id": "9747683945298042",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "pageID"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iFMK4/yi/l/pt_BR-j/8Ya3rSvC3S4Eovd9EblpWPd1NRv2Bf2U7vEUXCmbPdFqTgZiczflpO7fAozIMNFBkkRm3IunJkmrig9f7BBHoImEMsmdb8AdZ26G8dg0fj6MR7vtgx0HdIS1mjYUBK9nLxPmxVru5dWIuOVhPR22TFCZbdf1wiQAA8cTU8NEMQQ2GAAqlodxazgh78i1HR2ezwoEsP5qUcSrXLxXgiS2JB5hEOea2Ow1q613EhAw9TfmdwGzWjWKq6DfWe64fnd5mQ1doGLYExd7VWvN_z4R696fG3wkbLMXCKqL8f4MeMm-WweN9YbSCsNSbE_WUOqC580M0u675L.js",
+      "source_sha256": "100d48a65b9444a2888cbb9a022308178717df598b2ed7ce73182461cd3e6549",
+      "module_sha256": "6d61e3957b3cd17592ef492b283a4f6b10222555c8de92aae85a3346ad46b03a"
+    },
+    {
+      "name": "BizKitContextCardBlockWithProductLogicMutation",
+      "id": "25016089424740158",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4inua4/yg/l/pt_BR-j/vTTSNL-SPA4zEKvzOSVm8HTe6kAU0evm6FIMeB-k5G6BiikyQSCDmHwR696fG3wkbLMXCKqL8f4MepPgr7rraGTMC580M0u675LCsNSbE_WUOqKABUN1E5z42p7IzMPJUmGwh0CPnNEs8QANmlSd51xuR5GuISrXe6gvtPR61a5vJXQZnork-iguF5IsNbcIkRl_uFUhTeDJi1dC64_wcp8PCMveNJ2c6G0_F68JVNVQKpX4YXAZFxIiExFErSpLWRl6TWJzkiNxM3YRzFX6Qj54m9ZQVAiUJKwiQBM2TZVf6Ut3IpNr7NuJ30fq9Z_jZ6HdQM3r4j.js",
+      "source_sha256": "da1adfe70eec53306871b7d1baa0212b777e3e544c285e5bf235bce826ad7ef0",
+      "module_sha256": "3b2cbe786e37182a2b7f4343042613ed41bb6d1c6d261cac4f24e64174af0702"
+    },
+    {
+      "name": "BizKitContextCardUnblockMutation",
+      "id": "9460330484090382",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4inua4/yg/l/pt_BR-j/vTTSNL-SPA4zEKvzOSVm8HTe6kAU0evm6FIMeB-k5G6BiikyQSCDmHwR696fG3wkbLMXCKqL8f4MepPgr7rraGTMC580M0u675LCsNSbE_WUOqKABUN1E5z42p7IzMPJUmGwh0CPnNEs8QANmlSd51xuR5GuISrXe6gvtPR61a5vJXQZnork-iguF5IsNbcIkRl_uFUhTeDJi1dC64_wcp8PCMveNJ2c6G0_F68JVNVQKpX4YXAZFxIiExFErSpLWRl6TWJzkiNxM3YRzFX6Qj54m9ZQVAiUJKwiQBM2TZVf6Ut3IpNr7NuJ30fq9Z_jZ6HdQM3r4j.js",
+      "source_sha256": "da1adfe70eec53306871b7d1baa0212b777e3e544c285e5bf235bce826ad7ef0",
+      "module_sha256": "f8fb6eb80fb373905c4de3fd2dca47dfabca6733ae26f2e9bf4b255fe3ec59f0"
+    },
+    {
+      "name": "BizKitContextCardMessengerBlockMutation",
+      "id": "9759335534142383",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4inua4/yg/l/pt_BR-j/vTTSNL-SPA4zEKvzOSVm8HTe6kAU0evm6FIMeB-k5G6BiikyQSCDmHwR696fG3wkbLMXCKqL8f4MepPgr7rraGTMC580M0u675LCsNSbE_WUOqKABUN1E5z42p7IzMPJUmGwh0CPnNEs8QANmlSd51xuR5GuISrXe6gvtPR61a5vJXQZnork-iguF5IsNbcIkRl_uFUhTeDJi1dC64_wcp8PCMveNJ2c6G0_F68JVNVQKpX4YXAZFxIiExFErSpLWRl6TWJzkiNxM3YRzFX6Qj54m9ZQVAiUJKwiQBM2TZVf6Ut3IpNr7NuJ30fq9Z_jZ6HdQM3r4j.js",
+      "source_sha256": "da1adfe70eec53306871b7d1baa0212b777e3e544c285e5bf235bce826ad7ef0",
+      "module_sha256": "ee177cf85bba825dd22d925d44e38f199488c452d945160515ebbb095cbbc1cf"
+    },
+    {
+      "name": "BizKitRemoveUserAssetConnectionModalQuery",
+      "id": "34635560462724702",
+      "kind": "query",
+      "variables": [
+        "assetID",
+        "businessID",
+        "userID"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iAaH4/yL/l/pt_BR-j/gekR7Oq7-MgoP8AaG6Jg_T3SKHmn_STZp6ksuRPkBabOBt_g5rk09wgO6tp1RxhvItcQqdsQCTSg9Eovd9EblpWPd1NRv2Bf2U7RcTDqvRXWOSvEUXCmbPdFqOZ2GQqeSpUNDIjk6HfjV4FRz8lqarYUihv-zzhcrfTsHsX0kaob42-tLVmN6hvwZS-fAozIMNFBkkRm3IunJkmriQ9jl7rHDHkkg6hzDfWtwn2Vae9-u3nDjjZUTFNSGH-hnnUaL2yB-zrR55IaPKgfkatg9f7BBHoImEMsmdb8AdZ26BUGKDz3eHtHvtgx0HdIS1mT-tBsf1BuXM.js",
+      "source_sha256": "0862a70e2ad218b4999b8e147cd24a4fe05630dc82249c2c4470e23deec0808d",
+      "module_sha256": "a1077680aa6770e00e86b700ad0fcc4cffb1e0f5e8206d26f315ee9855695c13"
+    },
+    {
+      "name": "BizKitSettingsAddUserAssetConnectionMutation",
+      "id": "10073595179327842",
+      "kind": "mutation",
+      "variables": [
+        "businessID",
+        "userID",
+        "assetID",
+        "taskIDs",
+        "assetTypes"
+      ],
+      "defaults": {},
+      "providers": [],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4ig324/yD/l/pt_BR-j/BUbbwInXA_DKOqmyGWVDTJ6EOjt0Pgj5SH2tIwzCqOvkib8OA2VYyizSJv3bSnx3Zs1c3gHmVzVd5qX78H9KNVMWNczzCYJpwEPXSVgtHggibj618QdVjVvrEj3QACaxyQd6fSa828ztBRJUZStkRCvv5q76DzIxo7CFNRErzfucaeTzekdTFXP1kHzgyelQQc2adA1YauKEhRgY_uhJXf2uNZBnCcG6v0aVYJHweDleUHwLyK0w2sUp8PBd2eaLgRuzkZ7kCb6UNRjAuD7fcdRv0gjuhwvjGBGQiJh7HdCpfWJTpVYpQXGAekd8wDqIu7bUj2-Rxp.js",
+      "source_sha256": "5053443411e5523c6c1cfb2dac163475bfd4a4cacd87ee3fd30b355dd5148a18",
+      "module_sha256": "3634fd4613fd30b1d6d3145cc7edf3526513a5092558f9f7c2a151a95489e8a8"
+    },
+    {
+      "name": "BizKitRemoveUserAssetConnectionMutation",
+      "id": "28083676047977348",
+      "kind": "mutation",
+      "variables": [
+        "businessID",
+        "userID",
+        "assetID",
+        "assetTypes",
+        "isDirectAdmin",
+        "__relay_internal__pv__BillingHubContextFieldCutoverrelayprovider"
+      ],
+      "defaults": {},
+      "providers": [
+        "__relay_internal__pv__BillingHubContextFieldCutoverrelayprovider"
+      ],
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iAaH4/yL/l/pt_BR-j/gekR7Oq7-MgoP8AaG6Jg_T3SKHmn_STZp6ksuRPkBabOBt_g5rk09wgO6tp1RxhvItcQqdsQCTSg9Eovd9EblpWPd1NRv2Bf2U7RcTDqvRXWOSvEUXCmbPdFqOZ2GQqeSpUNDIjk6HfjV4FRz8lqarYUihv-zzhcrfTsHsX0kaob42-tLVmN6hvwZS-fAozIMNFBkkRm3IunJkmriQ9jl7rHDHkkg6hzDfWtwn2Vae9-u3nDjjZUTFNSGH-hnnUaL2yB-zrR55IaPKgfkatg9f7BBHoImEMsmdb8AdZ26BUGKDz3eHtHvtgx0HdIS1mT-tBsf1BuXM.js",
+      "source_sha256": "0862a70e2ad218b4999b8e147cd24a4fe05630dc82249c2c4470e23deec0808d",
+      "module_sha256": "17298dc5667b179a23e9f2c71b3938f9b9fe93e0369d2aa3e8e9c01adcd54d55"
+    }
+  ]
+}

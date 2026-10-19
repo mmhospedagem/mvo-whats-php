@@ -1,0 +1,272 @@
+{
+  "schema": 1,
+  "observed_at": "2026-10-18",
+  "evidence": "Public CDN Relay document and caller contracts; no authenticated operation executed",
+  "documents": [
+    {
+      "name": "ComposerStoryEditMutation",
+      "id": "28748637488155344",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "feedLocation",
+        "feedbackSource",
+        "focusCommentID",
+        "scale",
+        "privacySelectorRenderLocation",
+        "referringStoryRenderLocation",
+        "renderLocation",
+        "useDefaultActor",
+        "isGroupViewerContent",
+        "shouldFetchProDashContentLibraryStory",
+        "isSocialLearning",
+        "isWorkDraftFor",
+        "ppeEnabled",
+        "isStarsEdited",
+        "__relay_internal__pv__CometFeedStory_enable_reactor_facepilerelayprovider",
+        "__relay_internal__pv__CometFeedStory_enable_social_bubblesrelayprovider",
+        "__relay_internal__pv__CometFeedStory_enable_post_permalink_white_space_clickrelayprovider",
+        "__relay_internal__pv__CometUFICommentActionLinksRewriteEnabledrelayprovider",
+        "__relay_internal__pv__CometUFICommentAvatarStickerAnimatedImagerelayprovider",
+        "__relay_internal__pv__IsWorkUserrelayprovider",
+        "__relay_internal__pv__GHLShouldChangeSponsoredDataFieldNamerelayprovider",
+        "__relay_internal__pv__TestPilotShouldIncludeDemoAdUseCaserelayprovider",
+        "__relay_internal__pv__FBReels_deprecate_short_form_video_context_gkrelayprovider",
+        "__relay_internal__pv__GHLShouldChangeAdIdFieldNamerelayprovider",
+        "__relay_internal__pv__CometUFI_dedicated_comment_routable_dialog_gkrelayprovider",
+        "__relay_internal__pv__FBReels_enable_view_dubbed_audio_type_gkrelayprovider",
+        "__relay_internal__pv__CometFeedShareMedia_shouldPrefetchShareImagerelayprovider",
+        "__relay_internal__pv__CometImmersivePhotoCanUserDisable3DMotionrelayprovider",
+        "__relay_internal__pv__WorkCometIsEmployeeGKProviderrelayprovider",
+        "__relay_internal__pv__IsMergQAPollsrelayprovider",
+        "__relay_internal__pv__FBReelsMediaFooter_comet_enable_reels_ads_gkrelayprovider",
+        "__relay_internal__pv__CometUFIReactionsEnableShortNamerelayprovider",
+        "__relay_internal__pv__CometUFICommentAutoTranslationTyperelayprovider",
+        "__relay_internal__pv__CometUFIShareActionMigrationrelayprovider",
+        "__relay_internal__pv__CometUFISingleLineUFIrelayprovider",
+        "__relay_internal__pv__relay_provider_comet_ufi_ssr_seo_deferrelayprovider",
+        "__relay_internal__pv__FBReelsIFUTileContent_reelsIFUPlayOnHoverrelayprovider",
+        "__relay_internal__pv__GroupsCometGYSJFeedItemHeightrelayprovider",
+        "__relay_internal__pv__StoriesShouldEnablePhotosensitiveContentWarningrelayprovider",
+        "__relay_internal__pv__ShouldEnableBakedInTextStoriesrelayprovider",
+        "__relay_internal__pv__StoriesShouldIncludeFbNotesrelayprovider",
+        "__relay_internal__pv__CometComposerPPEAddCollaboratorsEnabledrelayprovider",
+        "__relay_internal__pv__ContentLibraryStatusColumnGKrelayprovider",
+        "__relay_internal__pv__ContentLibraryHighQualityPillGKrelayprovider",
+        "__relay_internal__pv__enableProdashWebCrossPostInsightsrelayprovider",
+        "__relay_internal__pv__ContentLibraryUnifiedContentStatusGKrelayprovider",
+        "__relay_internal__pv__ProdashWebIGContentGKrelayprovider"
+      ],
+      "defaults": {
+        "input": null,
+        "feedLocation": null,
+        "feedbackSource": null,
+        "focusCommentID": null,
+        "scale": null,
+        "privacySelectorRenderLocation": null,
+        "referringStoryRenderLocation": null,
+        "renderLocation": null,
+        "useDefaultActor": false,
+        "isGroupViewerContent": null,
+        "shouldFetchProDashContentLibraryStory": false,
+        "isSocialLearning": false,
+        "isWorkDraftFor": false,
+        "ppeEnabled": false,
+        "isStarsEdited": false
+      },
+      "providers": [
+        "__relay_internal__pv__CometFeedStory_enable_reactor_facepilerelayprovider",
+        "__relay_internal__pv__CometFeedStory_enable_social_bubblesrelayprovider",
+        "__relay_internal__pv__CometFeedStory_enable_post_permalink_white_space_clickrelayprovider",
+        "__relay_internal__pv__CometUFICommentActionLinksRewriteEnabledrelayprovider",
+        "__relay_internal__pv__CometUFICommentAvatarStickerAnimatedImagerelayprovider",
+        "__relay_internal__pv__IsWorkUserrelayprovider",
+        "__relay_internal__pv__GHLShouldChangeSponsoredDataFieldNamerelayprovider",
+        "__relay_internal__pv__TestPilotShouldIncludeDemoAdUseCaserelayprovider",
+        "__relay_internal__pv__FBReels_deprecate_short_form_video_context_gkrelayprovider",
+        "__relay_internal__pv__GHLShouldChangeAdIdFieldNamerelayprovider",
+        "__relay_internal__pv__CometUFI_dedicated_comment_routable_dialog_gkrelayprovider",
+        "__relay_internal__pv__FBReels_enable_view_dubbed_audio_type_gkrelayprovider",
+        "__relay_internal__pv__CometFeedShareMedia_shouldPrefetchShareImagerelayprovider",
+        "__relay_internal__pv__CometImmersivePhotoCanUserDisable3DMotionrelayprovider",
+        "__relay_internal__pv__WorkCometIsEmployeeGKProviderrelayprovider",
+        "__relay_internal__pv__IsMergQAPollsrelayprovider",
+        "__relay_internal__pv__FBReelsMediaFooter_comet_enable_reels_ads_gkrelayprovider",
+        "__relay_internal__pv__CometUFIReactionsEnableShortNamerelayprovider",
+        "__relay_internal__pv__CometUFICommentAutoTranslationTyperelayprovider",
+        "__relay_internal__pv__CometUFIShareActionMigrationrelayprovider",
+        "__relay_internal__pv__CometUFISingleLineUFIrelayprovider",
+        "__relay_internal__pv__relay_provider_comet_ufi_ssr_seo_deferrelayprovider",
+        "__relay_internal__pv__FBReelsIFUTileContent_reelsIFUPlayOnHoverrelayprovider",
+        "__relay_internal__pv__GroupsCometGYSJFeedItemHeightrelayprovider",
+        "__relay_internal__pv__StoriesShouldEnablePhotosensitiveContentWarningrelayprovider",
+        "__relay_internal__pv__ShouldEnableBakedInTextStoriesrelayprovider",
+        "__relay_internal__pv__StoriesShouldIncludeFbNotesrelayprovider",
+        "__relay_internal__pv__CometComposerPPEAddCollaboratorsEnabledrelayprovider",
+        "__relay_internal__pv__ContentLibraryStatusColumnGKrelayprovider",
+        "__relay_internal__pv__ContentLibraryHighQualityPillGKrelayprovider",
+        "__relay_internal__pv__enableProdashWebCrossPostInsightsrelayprovider",
+        "__relay_internal__pv__ContentLibraryUnifiedContentStatusGKrelayprovider",
+        "__relay_internal__pv__ProdashWebIGContentGKrelayprovider"
+      ],
+      "source_sha256": "518d9a3d855f5e733497df6c2fcdac2f312eded31e7c5e9f9e102ba299f39f8f",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i5vW4/yU/l/pt_BR-j/80Wns4nE8a5.js",
+      "module_sha256": "db246686961a702182095e535c2bc5a8b28f6278cc454f4d3c68b74d7260f366"
+    },
+    {
+      "name": "useCometFeedStoryDeleteMutation",
+      "id": "39262542526694122",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "groupID",
+        "inviteShortLinkKey",
+        "renderLocation",
+        "scale",
+        "__relay_internal__pv__groups_comet_use_glvrelayprovider"
+      ],
+      "defaults": {
+        "input": null,
+        "groupID": null,
+        "inviteShortLinkKey": null,
+        "renderLocation": null,
+        "scale": null
+      },
+      "providers": [
+        "__relay_internal__pv__groups_comet_use_glvrelayprovider"
+      ],
+      "source_sha256": "efc712d13aea3bd8b4169c7e9d8b6b658ba69714af54333cc669edccab18be91",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4izhY4/y4/l/pt_BR-j/HdvbJ2SLV6YzL4U8ibR_KwJwyhUcxfiGVMxLB_YJ8PwuaLRRZD5Dj-rIMyShCyRsne7ivQfkck4KUZT3NBEaP-qUY7Ez7LH9qjv9ssx_aaYc_EulR6mRJj9NNFwjcEWCgZ9p-YgGwbTNQvJNTXUunwe2-YNCgTHFmW-LRFUw3T3ihIM6DyM2JsewnzxIOY1z-tkTFai1kxTkaV3OCGSk58BOSvR_7uJWhcwZ6JuEiPuJSSf8-NhbYzXRPynYonpjnrLkuHLIpOvgJsv7oUa9ojquwQ7LjcMzm-_a1TAU05wIzmfoZ3vC8u0gHd1B2TyfQagRRCzLs3.js",
+      "module_sha256": "3ca681b7f902537ec071e90fc69f6c4538627f9e25d9759e42720f97c4cd1d48"
+    },
+    {
+      "name": "useCometUFIEditCommentMutation",
+      "id": "29199228703101461",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "feedLocation",
+        "scale",
+        "useDefaultActor",
+        "translationType",
+        "__relay_internal__pv__CometUFICommentActionLinksRewriteEnabledrelayprovider",
+        "__relay_internal__pv__CometUFICommentAvatarStickerAnimatedImagerelayprovider",
+        "__relay_internal__pv__IsWorkUserrelayprovider"
+      ],
+      "defaults": {
+        "input": null,
+        "feedLocation": null,
+        "scale": null,
+        "useDefaultActor": null,
+        "translationType": null
+      },
+      "providers": [
+        "__relay_internal__pv__CometUFICommentActionLinksRewriteEnabledrelayprovider",
+        "__relay_internal__pv__CometUFICommentAvatarStickerAnimatedImagerelayprovider",
+        "__relay_internal__pv__IsWorkUserrelayprovider"
+      ],
+      "source_sha256": "af927cdda650e086dd304ebea5957bd4d81ed93608e71ac7b9e592e9bb6550ae",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4isDD4/yH/l/pt_BR-j/5wIzmfoZ3vC8u0gHd1B2TyFTEn82ATrsKmuZuW6B824hy9O1o_2ncJ1nCDMPhhlFe-A2nzOeYFl9BJ8_wgwP0xAGsithtz-xbzwUIGyw5OgXwRtxkevC5AzVBjtQKecz8ZPnv_kkAv_-wGQo444dPwK5j6wVIQIn9IaNS6ksuRPkBabOd1NRv2Bf2U7g_kjLLoWFVTvEUXCmbPdFqBW1jhcu7nNR62u1J4ikQuD8h4uYBtfRmPfAozIMNFBkkRm3IunJkmriNXURzZVh3CZ41mM3BvKG79yd0bHLXcaSHljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh.js",
+      "module_sha256": "f1a5a7f9338b97ba02db09d10655b56a4642022f05789ab49b834403cea3d09e"
+    },
+    {
+      "name": "useCometUFIDeleteCommentMutation",
+      "id": "28286113047755979",
+      "kind": "mutation",
+      "variables": [
+        "groupID",
+        "input",
+        "inviteShortLinkKey",
+        "renderLocation",
+        "scale",
+        "canUseNicknameOnComet",
+        "__relay_internal__pv__groups_comet_use_glvrelayprovider"
+      ],
+      "defaults": {
+        "groupID": null,
+        "input": null,
+        "inviteShortLinkKey": null,
+        "renderLocation": null,
+        "scale": 1.5,
+        "canUseNicknameOnComet": false
+      },
+      "providers": [
+        "__relay_internal__pv__groups_comet_use_glvrelayprovider"
+      ],
+      "source_sha256": "af927cdda650e086dd304ebea5957bd4d81ed93608e71ac7b9e592e9bb6550ae",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4isDD4/yH/l/pt_BR-j/5wIzmfoZ3vC8u0gHd1B2TyFTEn82ATrsKmuZuW6B824hy9O1o_2ncJ1nCDMPhhlFe-A2nzOeYFl9BJ8_wgwP0xAGsithtz-xbzwUIGyw5OgXwRtxkevC5AzVBjtQKecz8ZPnv_kkAv_-wGQo444dPwK5j6wVIQIn9IaNS6ksuRPkBabOd1NRv2Bf2U7g_kjLLoWFVTvEUXCmbPdFqBW1jhcu7nNR62u1J4ikQuD8h4uYBtfRmPfAozIMNFBkkRm3IunJkmriNXURzZVh3CZ41mM3BvKG79yd0bHLXcaSHljONo7sXdYs8wypiAW_bfk-Alq0X98Dvh.js",
+      "module_sha256": "e5d1019b4ed0a231542621d4ab1ba32648f21c99e374fb75f21f06318f41d321"
+    },
+    {
+      "name": "CometUFIHideCommentMutation",
+      "id": "28877346155195142",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "feedLocation",
+        "useDefaultActor",
+        "scale",
+        "commentActionLinksRewriteEnabled",
+        "__relay_internal__pv__CometUFI_dedicated_comment_routable_dialog_gkrelayprovider"
+      ],
+      "defaults": {
+        "input": null,
+        "feedLocation": null,
+        "useDefaultActor": null,
+        "scale": null,
+        "commentActionLinksRewriteEnabled": null
+      },
+      "providers": [
+        "__relay_internal__pv__CometUFI_dedicated_comment_routable_dialog_gkrelayprovider"
+      ],
+      "source_sha256": "4cf3f60d13b19b443287251ad609c760f8d2f36fe4ee3784fea315c262a09520",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4/yU/r/3lFW5GkgcUj.js",
+      "module_sha256": "7649b0f7e230a0bda9185e35fd83385642bb73729afef6a5ef3f12b8a95cd70a"
+    },
+    {
+      "name": "CometUFIUnhideCommentMutation",
+      "id": "28546978741595614",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "feedLocation",
+        "useDefaultActor",
+        "scale",
+        "commentActionLinksRewriteEnabled",
+        "__relay_internal__pv__CometUFI_dedicated_comment_routable_dialog_gkrelayprovider"
+      ],
+      "defaults": {
+        "input": null,
+        "feedLocation": null,
+        "useDefaultActor": null,
+        "scale": null,
+        "commentActionLinksRewriteEnabled": null
+      },
+      "providers": [
+        "__relay_internal__pv__CometUFI_dedicated_comment_routable_dialog_gkrelayprovider"
+      ],
+      "source_sha256": "ea1b7ac24211eca38d751680198c7e62a00f90da508e9ece1d9773403c82a636",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4/yP/r/EmppB508ag_.js",
+      "module_sha256": "cc5c7ee11332764cd20f3e56eb7b360f388693ccb421554318c4216da1003f3a"
+    }
+  ],
+  "photo_upload": {
+    "endpoint": "https://upload.facebook.com/ajax/react_composer/attachments/photo/upload",
+    "method": "POST",
+    "encoding": "multipart/form-data",
+    "actor_parameter": "av",
+    "file_field": "farr",
+    "correlation_field": "upload_id",
+    "response_path": "payload.photoID",
+    "source_module": "ComposerMediaFileUploader",
+    "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iqOC4/ya/l/pt_BR-j/KNcRcwJ9d0yTLtRlJs3cleHWKeSghJUKL5_KcBqlB_kjRenqJK5Q8WGHdvbJ2SLV6YzL4U8ibR_KwJwyhUcxfiGVMxLB_YJ8PwuaLRRZD5Dj-r7ivQfkck4KUZT3NBEaP-qUY7Ez7LH9qjv9ssx_aaYc_EFwjcEWCgZ9p-YgGwbTNQvJNCgTHFmW-LRDyM2Jsewnzx.js",
+    "source_sha256": "d5f7a87ec615f21471d30004ff52e8c5ef526afdcb1d316709f81306f57cf2ac",
+    "module_sha256": "7a071589bbffb5d632f07f023f9ad25b45f3dd60d091d4fdeedeaa627e7c539c",
+    "configuration_bootstrap_sha256": "c4013602e84db87411b3356ac71f0a8207ba6e879b7dfc273a3b16a7cfe5ed6b",
+    "limitations": [
+      "Photo upload only; no story publication is implied",
+      "uploadData must come from the current authenticated composer, not the anonymous bootstrap",
+      "No real-account upload was executed"
+    ]
+  }
+}

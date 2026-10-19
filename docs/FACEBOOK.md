@@ -2,6 +2,8 @@
 
 Os guias agora estão organizados na [documentação Facebook](facebook/index.html#inicio), separada do WhatsApp: instalação, conexão e sessão, Páginas, publicações, interações, inbox, anúncios, monitoramento, exemplos, [referência PHP](facebook/REFERENCIA.md) e [limites](facebook/LIMITES.md). Esta página conserva a visão geral do contrato.
 
+As extensões da branch de desenvolvimento incluem gerenciamento, fotos/vídeo/álbuns, envio pelo inbox e componentes de dispositivo E2EE. Elas não fazem parte das releases Facebook 0.1.0/Messenger 0.1.1. Veja também [administração](facebook/ADMINISTRACAO.md), [mídia](facebook/MIDIA.md), [métricas](facebook/INSIGHTS.md) e [dispositivo E2EE](facebook/DISPOSITIVO-E2EE.md).
+
 `packages/facebook/` é o pacote PHP separado `mmhospedagem/mvo-facebook-php`, namespace `MVO\Facebook`. Organiza recursos Web de Páginas, publicações, comentários, reações, inbox, anúncios parciais e acompanhamento local. Instale a série experimental 0.1 com `composer require "mmhospedagem/mvo-facebook-php:^0.1"`; o Composer resolve o runtime Messenger. O [README do pacote](../packages/facebook/README.md) também descreve a alternativa `path` para desenvolvimento no monorepo.
 
 A entrega é uma biblioteca. Não acrescenta rotas REST, painel, daemon de produto ou ferramentas ao MCP WhatsApp. `MVO\WaClient` e seus caminhos de autenticação permanecem separados. Instagram e Messenger E2EE não são habilitados por este pacote.
@@ -84,7 +86,7 @@ Publicações expõem `list()`, `next()` e `createText()`. Comentários expõem 
 
 Reações expõem `summary($feedbackId, $scale = 1.0, $actorId = null)`, `list($feedbackId, $reactionId = null, $scale = 1.0, $actorId = null)`, `next($feedbackId, $cursor, $reactionId = null, $count = 10, $scale = 1.0, $actorId = null)`, `set()` e `remove()`. Preserve o filtro de reação ao seguir o cursor. `important_items` é um subconjunto separado da coleção paginada `items`; `reaction_types_count` conta tipos, não pessoas ou curtidas. Contadores Facebook, Instagram e agregados permanecem distintos, e desconhecidos continuam `null`.
 
-As escritas exigem actor explícito, chave de idempotência e contexto real do composer/feedback, além dos providers quando requeridos. O pacote não preenche esses contextos com valores fictícios. O [README](../packages/facebook/README.md) e o [catálogo de Páginas](../packages/facebook/resources/README.md) listam assinaturas e pré-condições. Upload de mídia, edição/exclusão/moderação, insights orgânicos de Página e envio no inbox ainda precisam de contratos próprios.
+As escritas exigem actor explícito, chave de idempotência e contexto real do composer/feedback, além dos providers quando requeridos. O pacote não preenche esses contextos com valores fictícios. O [README](../packages/facebook/README.md) e o [catálogo de Páginas](../packages/facebook/resources/README.md) listam assinaturas e pré-condições. Agora há contratos próprios para edição/exclusão de texto, ocultação de comentário, upload de fotos, tarefas comerciais, métricas da Página e envio Lightspeed vinculado ao inbox da Página. Seus limites e o alcance dos testes estão nos guias; nenhum deles foi demonstrado por escrita real nesta etapa.
 
 Inbox é somente leitura, por `threads()` e `messages()`. Preserve separadamente o GraphQL ID e o `selection_id` devolvido; não substitua pela thread pessoal do Messenger. Actor e Página podem ser diferentes em uma Página delegada. O resultado `has_more=null` mantém a completude desconhecida.
 

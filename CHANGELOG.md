@@ -6,6 +6,19 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 - ACK de protocolo para nós `<status>` de contatos e canais, preservando os atributos de roteamento. A confirmação não decodifica conteúdo nem marca visualização.
 - Reconexão automática para o erro de stream sem código explícito nem conflito que contém `<ack class="status">`, usando a sessão existente e sem repetir comandos interrompidos. Revogação e os demais códigos conservam suas regras.
+- Fila de recibos com índices reconstruídos por páginas, retries limitados por ciclo e remoção após escrita concluída. Falhas preservam o nó exato para nova tentativa, sem exigir um ACK que pode não chegar nem autorizar reenvio de mensagens de usuário.
+- Recibos de cópias autenticadas enviadas por outros aparelhos da própria conta usam `sender` e conservam o destinatário da conversa, inclusive nas redeliveries, sem confundir sincronização entre aparelhos com entrega ao contato.
+
+## Em desenvolvimento — Facebook e Messenger
+
+- Serviços de Páginas, pessoas/tarefas comerciais, métricas, edição/exclusão de conteúdo, ocultação de comentários e upload multipart de fotos, com contratos Web observados, contexto explícito e ledger privado.
+- Álbuns, upload resumable de vídeo pelo transporte PHP, publicação de fotos e vídeo já carregados, cargos/convites de Página, acesso a assets e bloqueio de usuários/mensagens.
+- Tabela de conteúdo com providers atuais, paginação delimitada e exportação local CSV/JSON, preservando células indisponíveis e a distinção de totais/pago/orgânico.
+- Inbox de Página com caminho Lightspeed em stream DGW vinculado ao asset da Página e contrato Mercury legado separado. Preflight de destinatário/composer, OTID persistido e confirmação correlacionada; ACK não comprova entrega ou leitura.
+- Provisionamento experimental explícito de dispositivo E2EE, separado de mensagens criptografadas. Não registra durante conexão nem habilita `e2ee_ready`.
+- Componentes locais E2EE de Noise/certificados, Signal, trust, fanout/DSM, franking e inbox/outbox/recibos, no mesmo armazenamento privado Messenger. Testes sintéticos não comprovam login/interoperabilidade atual; o envio comum permanece bloqueado para threads criptografadas.
+- Novos guias, referência e contexto para LLMs. Estas extensões locais não estão nas releases Facebook 0.1.0/Messenger 0.1.1. Testes sintéticos e fontes públicas não comprovam escritas em conta real.
+- Runtime WhatsApp preservado. Nenhuma mudança na API consumidora ou publicação de pacote nesta etapa.
 
 ## 1.0.3 — 2026-10-18
 

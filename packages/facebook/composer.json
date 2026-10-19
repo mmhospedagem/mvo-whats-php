@@ -9,7 +9,7 @@
     "ext-json": "*",
     "ext-pdo": "*",
     "ext-pdo_sqlite": "*",
-    "mmhospedagem/mvo-messenger-php": "^0.1"
+    "mmhospedagem/mvo-messenger-php": "^0.1.2"
   },
   "require-dev": {
     "phpunit/phpunit": "^11.5",

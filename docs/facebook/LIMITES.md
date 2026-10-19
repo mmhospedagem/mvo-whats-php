@@ -2,6 +2,8 @@
 
 A biblioteca Facebook é experimental. Cobertura implementada, teste com transporte simulado e resultado observado numa conta real são evidências distintas. Métodos e documentos persistidos não comprovam compatibilidade total do Facebook.
 
+**Em desenvolvimento:** as extensões de dispositivo, administração, conteúdo, upload e inbox descritas nesta revisão estão na branch de desenvolvimento; as primeiras releases Facebook 0.1.0/Messenger 0.1.1 não as incluem. Testes locais e contratos observados não comprovam execução em conta real.
+
 ## Matriz de cobertura
 
 | Recurso | Contrato implementado | Evidência e limite |
@@ -10,10 +12,13 @@ A biblioteca Facebook é experimental. Cobertura implementada, teste com transpo
 | 2FA | Desafio reconhecido em memória e confirmação de autenticador. | Testes locais; conclusão completa desse caminho em conta real não demonstrada. |
 | CAPTCHA | Handoff privado opcional e confirmação independente da identidade. | Exige ação humana; pacote não abre navegador nem resolve desafio automaticamente. |
 | Metadados Messenger | DGW/Lightspeed, cursores e loop PHP. | Conta real chegou a `metadata_connected`, com 13 conversas e observações curtas; não comprova estabilidade prolongada. |
-| Messenger E2EE | Não implementado. | `e2ee_ready=false`; sem fallback plaintext. |
-| Páginas | Descoberta parcial e escolhas locais. | Projeção de sete recursos `profile_plus` num bootstrap autenticado real; não prova inventário completo. |
+| Dispositivo e componentes E2EE | Chaves próprias, ICDC/registro explícito, Noise, Signal e journal de texto persistente. | Testes locais; nenhum registro/envio real. A integração de produto ainda não está habilitada; `e2ee_ready=false`. |
+| Páginas | Descoberta/paginação, criação com categorias, cinco campos, leitura e solicitação de exclusão. | Contratos públicos e testes locais; formulário de criação observado no perfil pessoal, sem criar Página real. Configurações arbitrárias ausentes. |
 | Timeline, comentários e reações | Bindings de leitura/escrita e projeções reconhecidas. | Fixtures e artefatos públicos; escritas não validadas em conta real. Contextos/providers precisam ser fornecidos. |
-| Inbox comercial | Leitura de threads/mensagens. | Fixtures locais; envio como Página não implementado. |
+| Inbox comercial | Leitura, aquisição de contexto e envio Lightspeed com stream vinculado à Página; Mercury legado separado. | Contrato público e testes; nenhum envio real. ACK exige correlação de OTID, mensagem, thread, autor e texto; entrega/leitura não confirmadas. |
+| Mídia e álbuns | Upload de fotos/vídeo, publicação de fotos e vídeo já carregados e CRUD de álbuns. | Contratos/fixtures; vídeo usa start, offset, bytes e receive sem publicação automática. Publicação básica de vídeo usa timeline `profile`, sem garantir processamento ou reprodução. |
+| Administração e moderação | Pessoas, convites/cargos de Página, tarefas/acesso a assets e bloqueio de usuários/mensagens. | Permissão e confirmação recente protegidas; propriedade, todos os modelos de acesso e denúncias finais ausentes. Nenhuma alteração real nesta revisão. |
+| Métricas e relatórios | Valores, séries, breakdowns, tabela de conteúdo paginada e exportação local CSV/JSON. | Mantém ausências, escopo e completude; renderers pago/liquidez não estabelecidos e export remoto ausente. Não equivale a relatório orgânico completo. |
 | Anúncios | Consultas Web parciais, objetos por IDs conhecidos e métricas agregadas. | Contratos/fixtures; queries comerciais não validadas em conta real. Sem mutations comerciais. |
 | Monitor | SQLite, snapshots, cursores, deduplicação e diferenças. | Testes locais; não coleta rede ou prova eventos reais. |
 
@@ -21,7 +26,7 @@ As observações reais acima foram feitas em 18/10/2026. Não houve envio de men
 
 ## Recursos ainda ausentes
 
-Não há conector Instagram neste pacote, dispositivo E2EE, envio pelo inbox de Página, CRUD geral de Fanpage, cargos/administração geral, upload de mídia, edição/exclusão/moderação de posts/comentários ou insights orgânicos completos. Preparação automática de composer/providers Relay também não está implementada.
+Continuam ausentes: conector Instagram; mensagens pessoais E2EE e histórico seguro; acompanhamento contínuo realtime do inbox da Página; configurações arbitrárias de Fanpage; transferência de propriedade e cobertura de todos os modelos de acesso; fluxos gerais de Página/reels/edição audiovisual; enumeração de banidos e envio final de denúncias; todas as células de métricas e exportação remota Meta; relatórios orgânicos completos. A administração implementa somente operações Web identificadas, não todo o painel Meta. Providers/composer continuam exigindo contexto real. A configuração de foto pode ser lida do bootstrap autenticado, quando disponível.
 
 Anúncios não têm criação/publicação de campanha, conjunto, anúncio ou criativo, nem alterações de status/orçamento. A integração mantém a restrição de usar somente operações Web estabelecidas, sem recorrer à Graph API interna do Ads Manager para preencher lacunas.
 
@@ -84,3 +89,14 @@ Mutations exigem chave de idempotência de até 256 bytes e ledger privado. O SD
 Os doc IDs, formatos e providers Web podem mudar. Fontes e hashes do catálogo permitem revisar o binding; não use IDs aleatórios ou flags de fixtures para contornar indisponibilidade. Consulte o código e testes correspondentes antes de ampliar um recurso. Preserve sessões privadas, o dono único do lock e a separação entre WhatsApp e Facebook.
 
 Referências: [FacebookException](../../packages/facebook/src/FacebookException.php), [WebGraphQL](../../packages/facebook/src/Protocol/WebGraphQL.php), [CommandLedger](../../packages/facebook/src/Storage/CommandLedger.php) e [catálogo público observado](../../packages/facebook/resources/README.md).
+
+## Extensões verificadas localmente
+
+| Área | O que o código implementa | Limite material |
+| --- | --- | --- |
+| Conteúdo | Edição de texto/exclusão de story e comentário, ocultar/desocultar comentário. | Conteúdo existente sem anexos; flags de ocultação do viewer e do dono são distintas. |
+| Fotos | Arquivo local JPEG/PNG/WebP, contexto real e upload multipart pelo mesmo dono. | Até 25 MiB por política do SDK; foto aceita não é publicação. |
+| Administração | Pessoas paginadas, acesso/tarefas e atualização de usuário do portfólio; permissões e saída de acesso limitado. | Pode exigir nova verificação da Meta; não confere permissão que a conta não possui. |
+| Insights | Valores, séries diárias e buckets observados, inclusive `PAID_ORGANIC` quando aceito. | Nem toda métrica/período permite esse breakdown; total sem separação não é orgânico. |
+
+A observação das interfaces Inbox/Insights/Administração foi somente leitura. O operador concluiu a verificação de identidade diretamente na Meta; a biblioteca não a contornou. Foram extraídas apenas URLs de scripts CDN e baixados módulos públicos sem cookies. Não houve envio, upload, edição, exclusão, mudança de tarefas/cargos ou registro de dispositivo em conta real nesta revisão.

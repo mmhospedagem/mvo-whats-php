@@ -6,11 +6,75 @@ namespace MVO\Facebook\Service;
 use MVO\Facebook\Catalog\PageDocuments;
 use MVO\Facebook\FacebookException;
 use MVO\Facebook\Protocol\WebGraphQL;
+use MVO\Facebook\Protocol\PageInboxSender;
+use MVO\Facebook\Protocol\PageMailboxSender;
+use MVO\Facebook\Protocol\PageMailboxBootstrapReader;
+use MVO\Facebook\Storage\CommandLedger;
+use MVO\Messenger\Auth\WebSession;
+use MVO\Messenger\Protocol\{BootstrapParser,TaskBuilder};
+use MVO\Messenger\Transport\PublicBundleLoader;
 
-/** Read-only Page inbox. This service does not route Page messages through personal Messenger. */
+/** Page mailbox reads and an explicit experimental Mercury sender; never personal Messenger fallback. */
 final class InboxService
 {
-    public function __construct(private readonly WebGraphQL $graph) {}
+    public function __construct(private readonly WebGraphQL $graph, private readonly ?WebSession $session = null, private readonly ?CommandLedger $commands = null) {}
+
+    /** Experimental legacy Mercury send. Context must come from the current Page composer.
+     * Preserve it with the idempotency key; no generated message identity changes on retry.
+     * @param array<string,mixed> $context See PageInboxSender; permission booleans are not accepted.
+     * @return array<string,mixed>
+     */
+    public function sendText(string $actorId, string $pageId, string $selectedItemId, string $text, string $idempotencyKey, array $context): array
+    {
+        if ($this->session === null || $this->commands === null) throw new FacebookException('facebook_inbox_sender_unavailable', 'Configure the account WebSession and private command ledger for Page inbox sends');
+        return (new PageInboxSender($this->session, $this->graph, $this->commands))->sendText($actorId, $pageId, $selectedItemId, $text, $idempotencyKey, $context);
+    }
+
+    /** Current asset-bound Lightspeed task-46 path; requires the runtime's PageMailboxWebSession.
+     * @param array<string,mixed> $context Current BizWeb gateway/schema IDs and preserved OTID/epoch.
+     * @return array<string,mixed>
+     */
+    public function sendTextLightspeed(string $actorId, string $pageId, string $selectedItemId, string $text, string $idempotencyKey, array $context): array
+    {
+        if ($this->session === null || $this->commands === null) throw new FacebookException('facebook_inbox_sender_unavailable', 'Configure the account WebSession and private command ledger for Page inbox sends');
+        return (new PageMailboxSender($this->session, $this->graph, $this->commands))->sendText($actorId, $pageId, $selectedItemId, $text, $idempotencyKey, $context);
+    }
+
+    /** Read-only context acquisition; it does not open DGW or send a message.
+     * Persist the returned context with the future idempotency key before sending.
+     * @param callable(list<string>):list<string>|null $bundleLoader Anonymous public-CDN loader/test seam.
+     * @return array<string,string>
+     */
+    public function lightspeedContext(string $actorId, string $pageId, string $selectedItemId, ?callable $bundleLoader = null): array
+    {
+        self::scope($actorId, $pageId, 1, null); ServiceInput::opaque($selectedItemId, 'selected inbox item ID');
+        if ($this->session === null || $this->commands === null) throw new FacebookException('facebook_inbox_sender_unavailable', 'Configure the active account and private command storage before reading Page gateway context');
+        if ($this->session->accountId() !== $this->graph->accountId()) throw new FacebookException('facebook_inbox_session_mismatch', 'The Page bootstrap and queries must share the same account owner');
+        $arguments = PageDocuments::arguments('BizInboxUnifiedThreadsQuery', ['page_id' => $pageId, 'selected_item_id' => $selectedItemId,
+            'msgr_params' => null, 'loadThreads' => false, 'loadThreadItems' => false, 'load_messages' => false]);
+        $data = $this->graph->execute('BizInboxUnifiedThreadsQuery', $arguments, $actorId); $list = $data['xfb_biz_inbox_unified_thread_list'] ?? null;
+        $thread = is_array($list) ? ($list['selected_thread']['selected_message_thread'] ?? null) : null;
+        if (!is_array($list) || ($list['selected_page']['id'] ?? null) !== $pageId || !is_array($thread)) throw new FacebookException('facebook_inbox_context_unconfirmed', 'Facebook did not confirm the requested Page mailbox');
+        $projected = self::thread($thread); $recipient = $projected['thread_key']['other_user_id'];
+        if ($projected['selection_id'] !== $selectedItemId || !is_string($recipient) || ($projected['composer_input_disabled'] ?? null) !== false
+            || !array_key_exists('cannot_reply_reason', $thread) || $thread['cannot_reply_reason'] !== null) throw new FacebookException('facebook_inbox_reply_unavailable', 'The selected Page thread did not provide a usable reply context');
+        ServiceInput::actor($recipient);
+        $origin = 'https://business.facebook.com'; $url = $origin . '/latest/inbox/all?' . http_build_query(['asset_id' => $pageId, 'selected_item_id' => $selectedItemId], '', '&', PHP_QUERY_RFC3986);
+        try { $response = $this->session->request('GET', $url); } catch (\Throwable) { throw new FacebookException('facebook_transport_failed', 'The Page inbox document request did not complete'); }
+        if (in_array($response->status, [301,302,303,307,308,401], true)) throw new FacebookException('facebook_authentication_required', 'The Page inbox requires authentication or verification');
+        if ($response->status !== 200) throw new FacebookException('facebook_http_failed', 'Facebook did not return a successful Page inbox document');
+        $reader = new PageMailboxBootstrapReader(); $deviceId = $this->commands->clientDeviceId($this->session->accountId());
+        try { $config = $reader->read($response->body, $this->session->accountId(), $pageId, $deviceId); }
+        catch (FacebookException $error) {
+            if ($error->reason !== 'facebook_page_schema_unavailable') throw $error;
+            $load = $bundleLoader ?? (new PublicBundleLoader())->loadVersionBundles(...);
+            $scripts = $load(BootstrapParser::scriptUrls($response->body));
+            $config = $reader->read($response->body, $this->session->accountId(), $pageId, $deviceId, $scripts);
+        }
+        return ['dgw_app_id' => $config->dgwAppId, 'dgw_app_version' => $config->dgwAppVersion, 'server_app_id' => $config->serverAppId,
+            'schema_version' => $config->schemaVersion, 'device_id' => $config->deviceId, 'origin' => $config->origin,
+            'recipient_id' => $recipient, 'offline_threading_id' => TaskBuilder::epoch(), 'epoch_id' => TaskBuilder::epoch()];
+    }
 
     /** $actorId and $pageId are distinct where the account uses a delegated Page.
      * @param list<string> $tags Exact observed inbox tags, or an empty filter.

@@ -8,6 +8,8 @@ Este documento consolida instalação, ciclo de vida, exemplos e configuração 
 
 Este documento é autocontido para o SDK WhatsApp `mmhospedagem/mvo-whats-php`, `MVO\WaClient` e seu MCP. Os contratos Facebook estão separados em `docs/facebook/llms-full.txt`, com índice em `docs/facebook/llms.txt` e portal `docs/facebook/index.html`. O namespace Facebook é `MVO\Facebook`; não converter seus IDs em JIDs nem aplicar modalidades de autenticação WhatsApp à outra biblioteca. Facebook tem instalação Composer própria: `composer require "mmhospedagem/mvo-facebook-php:^0.1"`, que resolve o runtime Messenger da série experimental 0.1. Esses pacotes opcionais continuam fora da distribuição Composer WhatsApp.
 
+As extensões Facebook da branch de desenvolvimento para gerenciamento, fotos/vídeo/álbuns, cargos/moderação, relatórios paginados, inbox Lightspeed e componentes de dispositivo E2EE estão descritas no contexto próprio. As releases Facebook 0.1.0/Messenger 0.1.1 ainda não as incluem. Registro do dispositivo não habilita mensagens E2EE. Nenhuma nova ferramenta foi adicionada ao MCP WhatsApp.
+
 ## Escolha a integração WhatsApp
 
 | Objetivo | Integração |

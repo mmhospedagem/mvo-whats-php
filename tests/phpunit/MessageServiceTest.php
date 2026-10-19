@@ -3,11 +3,12 @@ declare(strict_types=1);
 namespace MVO\Tests;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use MVO\Auth\CredentialStore;
 use MVO\Message\{AddonCrypto,ContentBuilder,MessageCodec,MessageService};
 use MVO\Media\MediaTransfer;
 use MVO\Protocol\{BinaryData,BinaryNode,BinaryCodec,Jid};
-use MVO\Signal\{SignalProtocol,SignalStore};
+use MVO\Signal\{SenderKeyProtocol,SignalProtocol,SignalStore};
 
 final class MessageServiceTest extends TestCase
 {
@@ -275,6 +276,155 @@ final class MessageServiceTest extends TestCase
         self::assertSame('5522000000000@s.whatsapp.net', $this->events[0][1]['chat']);
         self::assertTrue($this->signal->hasSession($phoneJid));
         self::assertFalse($this->signal->hasSession('5511000000000@s.whatsapp.net'));
+    }
+
+    /** @return array<string,array{string,?string,string,bool,bool}> */
+    public static function ownEchoReceiptCases():array
+    {
+        return [
+            'phone PN to PN'=>['5511000000000@s.whatsapp.net',null,'5522000000000@s.whatsapp.net',true,false],
+            'phone LID to LID'=>['88880000000@lid',null,'77770000000@lid',true,true],
+            'own PN aliases LID ratchet'=>['5511000000000@s.whatsapp.net',null,'77770000000@lid',true,true],
+            'companion participant keeps device'=>['88880000000@lid','88880000000:7@lid','5522000000000@s.whatsapp.net',true,true],
+            'destination only in encrypted envelope'=>['5511000000000@s.whatsapp.net',null,'5522000000000@s.whatsapp.net',false,false],
+            'encrypted LID destination'=>['88880000000@lid',null,'77770000000@lid',false,true],
+            'hosted PN sender'=>['5511000000000@hosted',null,'5522000000000@s.whatsapp.net',true,false],
+            'hosted LID sender'=>['88880000000@hosted.lid',null,'77770000000@lid',true,true],
+        ];
+    }
+
+    #[DataProvider('ownEchoReceiptCases')]
+    public function testOwnDirectEchoUsesSenderReceiptAndCompletesQueueOnSuccessfulWriteAcrossReplay(string $from,?string $participant,string $destination,bool $stanzaRecipient,bool $lid):void
+    {
+        if($lid)$this->credentials['meLid']='88880000000:5@lid';
+        $node=$this->encryptedEcho($from,$participant,$destination,$stanzaRecipient);
+        $query=static fn():BinaryNode=>throw new \LogicException('No query during own echo');
+        $service=$this->service($query);$service->handleNode($node);
+        $expected=['id'=>'own-receipt','to'=>$participant ?? $from,'type'=>'sender','recipient'=>$destination];
+        self::assertSame($expected,$this->sent[0]->attrs);self::assertSame('receipt',$this->sent[0]->tag);
+        self::assertSame($destination,$this->events[0][1]['chat']);self::assertTrue($this->events[0][1]['fromMe']);
+        self::assertSame('Own receipt fixture',$this->events[0][1]['text']);
+        self::assertCount($stanzaRecipient ? 0 : 1,$this->store->entries('message-inbox-receipt-chat'));
+        self::assertSame([],$this->store->entries('receipt-queue'),'A completed transport write must not wait indefinitely for a receipt ACK');
+        $ack=new BinaryNode('ack',['class'=>'receipt','id'=>'own-receipt','from'=>$expected['to'],'type'=>'sender','recipient'=>$destination]);
+        $service->handleNode($ack);self::assertSame([],$this->store->entries('receipt-queue'));
+        $this->sent=[];$service=$this->service($query);$service->handleNode($node);
+        self::assertSame($expected,$this->sent[0]->attrs,'Replay restores the original chat even without a stanza recipient');
+        self::assertCount(1,$this->events,'Replay must not emit or decrypt the same own message again');
+        self::assertSame([],$this->store->entries('receipt-queue'),'The duplicate receipt also completes when written');
+        $service->handleNode($ack);self::assertSame([],$this->store->entries('receipt-queue'));
+        self::assertSame([],$this->store->entries('message-outbox'),'An Android echo does not become an API outgoing message');
+    }
+
+    public function testUncertainOwnSenderReceiptKeepsDurableNodeAndRequiresExactAckRecipient():void
+    {
+        $this->credentials['meLid']='88880000000:5@lid';$destination='77770000000@lid';$from='88880000000@lid';
+        $node=$this->encryptedEcho($from,null,$destination,true);
+        $service=new MessageService($this->signal,$this->store,fn():array=>$this->credentials,static function():void{},
+            static fn():BinaryNode=>throw new \LogicException('No query during uncertain receipt write'),
+            function(BinaryNode $receipt):void{$this->sent[]=$receipt;throw new \RuntimeException('Synthetic partial write');},
+            function(string $event,array $data):void{$this->events[]=[$event,$data];});
+        $service->handleNode($node);$rows=$this->store->entries('receipt-queue');self::assertCount(1,$rows);
+        self::assertSame(['id'=>'own-receipt','to'=>$from,'type'=>'sender','recipient'=>$destination],BinaryData::decode(reset($rows))['attrs']);
+        $service->handleNode(new BinaryNode('ack',['class'=>'receipt','id'=>'own-receipt','from'=>$from,'type'=>'sender','recipient'=>'99990000000@lid']));
+        self::assertCount(1,$this->store->entries('receipt-queue'));
+        $service->handleNode(new BinaryNode('ack',['class'=>'receipt','id'=>'own-receipt','from'=>$from,'recipient'=>$destination]));
+        self::assertCount(1,$this->store->entries('receipt-queue'));
+        $service->handleNode(new BinaryNode('ack',['class'=>'receipt','id'=>'own-receipt','from'=>$from,'type'=>'sender','recipient'=>$destination]));
+        self::assertSame([],$this->store->entries('receipt-queue'));self::assertCount(1,$this->events);
+        self::assertSame([],$this->store->entries('message-outbox'));
+    }
+
+    public function testPeerCategoryKeepsPeerReceiptInsteadOfOwnSenderReceipt():void
+    {
+        $this->credentials['meLid']='88880000000:5@lid';
+        $node=$this->encryptedEcho('88880000000@lid',null,'5522000000000@s.whatsapp.net',true);
+        $node=new BinaryNode('message',[...$node->attrs,'category'=>'peer'],$node->content);
+        $service=$this->service(static fn():BinaryNode=>throw new \LogicException('No peer query'));$service->handleNode($node);
+        self::assertSame(['id'=>'own-receipt','to'=>'88880000000@lid','type'=>'peer_msg'],$this->sent[0]->attrs);
+        self::assertSame([],$this->store->entries('message-inbox-receipt-chat'));
+        self::assertSame([],$this->store->entries('receipt-queue'));
+        $service->handleNode(new BinaryNode('ack',['class'=>'receipt','id'=>'own-receipt','from'=>'88880000000@lid','type'=>'peer_msg']));
+        self::assertSame([],$this->store->entries('receipt-queue'));
+    }
+
+    public function testOwnEchoWithoutKnownConversationOnlyAcknowledgesTransport():void
+    {
+        $node=$this->encryptedEcho('5511000000000@s.whatsapp.net',null,'5522000000000@s.whatsapp.net',false,false);
+        $service=$this->service(static fn():BinaryNode=>throw new \LogicException('No query without echo route'));
+        $service->handleNode($node);$service->handleNode($node);
+        self::assertCount(1,$this->events);self::assertCount(2,$this->sent);
+        foreach($this->sent as$ack){self::assertSame('ack',$ack->tag);self::assertSame(['class'=>'message','to'=>'5511000000000@s.whatsapp.net','id'=>'own-receipt'],$ack->attrs);}
+        self::assertSame([],$this->store->entries('receipt-queue'));self::assertSame([],$this->store->entries('message-inbox-receipt-chat'));
+    }
+
+    public function testOwnEchoWithMalformedStanzaConversationDoesNotInventSenderReceipt():void
+    {
+        $node=$this->encryptedEcho('5511000000000@s.whatsapp.net',null,'5522000000000@s.whatsapp.net',true);
+        $node=new BinaryNode('message',[...$node->attrs,'recipient'=>'invalid route'],$node->content);
+        $this->service(static fn():BinaryNode=>throw new \LogicException('No query with invalid route'))->handleNode($node);
+        self::assertSame('ack',$this->sent[0]->tag);self::assertSame('message',$this->sent[0]->attrs['class']);
+        self::assertSame([],$this->store->entries('receipt-queue'));
+    }
+
+    public function testOwnDirectStanzaWithEncryptedGroupDestinationUsesGroupSenderRouting():void
+    {
+        $group='100-200@g.us';$author='5511000000000@s.whatsapp.net';
+        $node=$this->encryptedEcho($author,null,$group,false);
+        $service=$this->service(static fn():BinaryNode=>throw new \LogicException('No group echo query'));$service->handleNode($node);
+        self::assertSame(['id'=>'own-receipt','to'=>$group,'type'=>'sender','participant'=>$author],$this->sent[0]->attrs);
+        $service->handleNode(new BinaryNode('ack',['class'=>'receipt','id'=>'own-receipt','from'=>$group,'type'=>'sender','participant'=>$author]));
+        self::assertSame([],$this->store->entries('receipt-queue'));
+    }
+
+    /** @return array<string,array{string,bool,bool}> */
+    public static function groupReceiptCases():array
+    {
+        return [
+            'own phone PN'=>['5511000000000@s.whatsapp.net',false,false],
+            'own phone LID'=>['88880000000@lid',true,false],
+            'remote participant'=>['5522000000000:2@s.whatsapp.net',false,false],
+            'peer priority'=>['5511000000000@s.whatsapp.net',false,true],
+        ];
+    }
+
+    #[DataProvider('groupReceiptCases')]
+    public function testAuthenticatedGroupReceiptPreservesGroupParticipantAndCategory(string $author,bool $lid,bool $peerCategory):void
+    {
+        if($lid)$this->credentials['meLid']='88880000000:5@lid';
+        $group='100-200@g.us';$remote=$this->peers([$author])[$author];$key=$this->store->generatePreKeys(1)[0];
+        $target=$lid ? '88880000000:5@lid' : $this->credentials['meJid'];
+        $remote['signal']->ensureSession($target,self::bundle($this->credentials,$key));
+        $senderKeys=new SenderKeyProtocol($remote['store']);$distribution=$senderKeys->createDistribution($group,$author);
+        $distribution=MessageCodec::bytes(2,MessageCodec::bytes(1,$group).MessageCodec::bytes(2,$distribution));
+        $direct=$remote['signal']->encrypt($target,MessageCodec::pad($distribution));
+        $encrypted=$senderKeys->encrypt($group,$author,MessageCodec::pad(MessageCodec::text('Group receipt fixture')));
+        $attrs=['id'=>'group-receipt','from'=>$group,'participant'=>$author];if($peerCategory)$attrs['category']='peer';
+        $node=new BinaryNode('message',$attrs,[new BinaryNode('enc',['type'=>$direct['type'],'v'=>'2'],$direct['ciphertext']),new BinaryNode('enc',['type'=>'skmsg','v'=>'2'],$encrypted)]);
+        $service=$this->service(static fn():BinaryNode=>throw new \LogicException('No group query'));$service->handleNode($node);
+        self::assertSame('Group receipt fixture',$this->events[0][1]['text']);
+        $expected=['id'=>'group-receipt','to'=>$group,'participant'=>$author];
+        if($peerCategory)$expected['type']='peer_msg';elseif($author!=='5522000000000:2@s.whatsapp.net')$expected['type']='sender';
+        self::assertSame($expected,$this->sent[0]->attrs);self::assertArrayNotHasKey('recipient',$this->sent[0]->attrs);
+        self::assertSame([],$this->store->entries('receipt-queue'),'Group receipts complete on a successful transport write too');
+        $ack=['class'=>'receipt','id'=>'group-receipt','from'=>$group,'participant'=>$author];if(isset($expected['type']))$ack['type']=$expected['type'];
+        $service->handleNode(new BinaryNode('ack',$ack));self::assertSame([],$this->store->entries('receipt-queue'));
+    }
+
+    /** A real Signal envelope from another own device, not a mocked receipt() call. */
+    private function encryptedEcho(string $from,?string $participant,string $destination,bool $stanzaRecipient,bool $wrapped=true):BinaryNode
+    {
+        $author=Jid::parse($participant ?? $from)->canonical();$ratchet=$author;$target=$this->credentials['meJid'];
+        if(is_string($this->credentials['meLid'] ?? null)) {
+            $own=Jid::parse($this->credentials['meLid']);$target=(string)new Jid($own->user,$own->server,5);
+            if($author->server==='s.whatsapp.net')$ratchet=new Jid($own->user,$own->server,$author->device);
+        }
+        $phone=$this->peers([(string)$ratchet])[(string)$ratchet];$key=$this->store->generatePreKeys(1)[0];
+        $phone['signal']->ensureSession($target,self::bundle($this->credentials,$key));
+        $body=MessageCodec::text('Own receipt fixture');if($wrapped)$body=MessageCodec::deviceSent($body,$destination);
+        $encrypted=$phone['signal']->encrypt($target,MessageCodec::pad($body));
+        $attrs=['id'=>'own-receipt','from'=>$from];if($participant!==null)$attrs['participant']=$participant;if($stanzaRecipient)$attrs['recipient']=$destination;
+        return new BinaryNode('message',$attrs,[new BinaryNode('enc',['type'=>$encrypted['type'],'v'=>'2'],$encrypted['ciphertext'])]);
     }
 
     public function testContactLidResolutionRoutesFanoutAndPreservesPhoneCrossReference(): void
@@ -686,7 +836,7 @@ final class MessageServiceTest extends TestCase
         self::assertSame([],$this->store->entries('recipient-retry-pending'));
     }
 
-    public function testReadReceiptQueueSurvivesTransportFailureAndRequiresAckToRemove():void
+    public function testReadReceiptQueueSurvivesRepeatedUncertainWritesAndCanAcceptLateAck():void
     {
         $service=new MessageService($this->signal,$this->store,fn():array=>$this->credentials,static function():void{},
             static fn():BinaryNode=>throw new \LogicException('No query'),static function():void{throw new \RuntimeException('Offline');},static function():void{});
@@ -696,7 +846,10 @@ final class MessageServiceTest extends TestCase
         $record=BinaryData::decode(reset($entries)); $node=(new BinaryCodec())->decode($record['node']);
         self::assertSame('read',$node->attrs['type']); self::assertSame('two',$node->child('list')->content[0]->attrs['id']);
         $record['nextAttempt']=0; $this->store->set('receipt-queue',array_key_first($entries),BinaryData::encode($record));
-        $service=$this->service(static fn():BinaryNode=>throw new \LogicException('No query')); $service->drainPending(); self::assertCount(1,$this->sent);
+        $service=new MessageService($this->signal,$this->store,fn():array=>$this->credentials,static function():void{},
+            static fn():BinaryNode=>throw new \LogicException('No query'),
+            function(BinaryNode $receipt):void{$this->sent[]=$receipt;throw new \RuntimeException('Synthetic partial write');},static function():void{});
+        $service->drainPending(); self::assertCount(1,$this->sent);
         self::assertCount(1,$this->store->entries('receipt-queue'));
         $service->handleNode(new BinaryNode('ack',['class'=>'receipt','id'=>'one','from'=>'100-200@g.us','type'=>'read','participant'=>'5522000000000:2@s.whatsapp.net']));
         self::assertSame([],$this->store->entries('receipt-queue'));

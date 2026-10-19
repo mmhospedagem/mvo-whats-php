@@ -58,7 +58,105 @@ function maisComentarios(
 
 `create($actorId, $feedbackId, $text, $idempotencyKey, $context, $variables = [])` exige `session_id` real e `feedback_source` como nome do enum conhecido, além dos providers atuais. Para responder, passe em `$context['reply_comment_parent_fbid']` o ID exato do comentário pai. O contexto admite também `attribution_id_v2`, `tracking`, `reply_target_clicked`, `formatting_style` e `is_self_disclosed_as_ai_generated`, respeitando os tipos do método.
 
-Não há upload/anexo, edição, exclusão, ocultação ou moderação neste serviço. A preparação automática do contexto e a escrita em conta real ainda não foram validadas. A chave de idempotência e a [consulta de comandos](LIMITES.md) são obrigatórias para tratar resultado incerto.
+Esse helper cria texto ou resposta, sem upload/anexo. Edição, exclusão e ocultação têm os contratos próprios descritos abaixo. A preparação automática do contexto e a escrita em conta real ainda não foram validadas. A chave de idempotência e a [consulta de comandos](LIMITES.md) são obrigatórias para tratar resultado incerto.
+
+## Editar um comentário de texto
+
+`editText($actorId, $commentId, $text, $idempotencyKey, $context, $variables)` recebe o ID GraphQL exato do comentário. Atende comentários existentes somente de texto; não reconstrói anexos, menções ou formatação complexa.
+
+| Campo de `$context` | Obrigação |
+| --- | --- |
+| `formatting_style` | Estilo obtido do comentário/composer atual; não presumir `PLAIN_TEXT`. |
+| `attribution_id_v2` | Cadeia de navegação atual da edição. |
+| `tracking` | Lista atual de strings de tracking. |
+| `is_self_disclosed_as_ai_generated` | Opcional; booleano quando fornecido. |
+
+As variáveis incluem `feedLocation`, `translationType`, `useDefaultActor` booleano e `scale` positivo atuais, além dos providers de `ContentManagementDocuments::providers('useCometUFIEditCommentMutation')`.
+
+```php
+use MVO\Facebook\FacebookConnection;
+
+function editarComentario(
+    FacebookConnection $facebook,
+    string $actorId,
+    string $commentId,
+    string $novoTexto,
+    string $chaveIdempotencia,
+    array $contextoDeEdicao,
+    array $variaveisAtuais,
+): array {
+    return $facebook->comments()->editText(
+        $actorId, $commentId, $novoTexto, $chaveIdempotencia,
+        $contextoDeEdicao, $variaveisAtuais,
+    );
+}
+```
+
+O resultado reconhecido contém `id` e `text`. A biblioteca confere o ID e o texto devolvidos antes de confirmar o comando. Uma resposta de outro comentário ou um corpo diferente mantém o resultado não confirmado.
+
+## Excluir um comentário
+
+`delete($actorId, $commentId, $idempotencyKey, $context, $variables)` executa a ação do menu Comet. `$context` exige `attribution_id_v2` e a lista `tracking` atuais. `$variables` recebe `scale` positivo e os providers de `ContentManagementDocuments::providers('useCometUFIDeleteCommentMutation')`. Campos opcionais de renderização/grupo precisam corresponder ao mesmo menu que originou a operação.
+
+```php
+use MVO\Facebook\FacebookConnection;
+
+function excluirComentario(
+    FacebookConnection $facebook,
+    string $actorId,
+    string $commentId,
+    string $chaveIdempotencia,
+    array $contextoDoMenu,
+    array $variaveisAtuais,
+): array {
+    return $facebook->comments()->delete(
+        $actorId, $commentId, $chaveIdempotencia,
+        $contextoDoMenu, $variaveisAtuais,
+    );
+}
+```
+
+O retorno `['id' => ..., 'deleted' => true]` exige `deleted_comment_id` igual ao comentário solicitado. A exclusão e seus efeitos sobre respostas permanecem sujeitos às regras e permissões do Facebook.
+
+## Ocultar ou voltar a mostrar um comentário
+
+`setHidden($actorId, $commentId, $hidden, $idempotencyKey, $context, $variables)` escolhe as ações Web de ocultar (`true`) ou reexibir (`false`). Ele conserva os dois estados devolvidos pelo servidor:
+
+| Resultado | Significado |
+| --- | --- |
+| `is_hidden_by_viewer` | Estado de ocultação para o viewer atual. |
+| `is_hidden_by_content_owner` | Estado de ocultação pelo dono do conteúdo informado pelo servidor. |
+| `spam_display_mode` | Modo devolvido, ou `null` se desconhecido. |
+
+Uma ocultação para o viewer **não comprova moderação global ou ocultação para todo o público**. Não apresente o método como banimento de pessoas, filtro de spam, denúncia ou aprovação de comentários; esses fluxos não são implementados aqui.
+
+O contexto exige `feedback_source` como **inteiro numérico do menu atual**, diferentemente do nome de enum usado em `create()`. Para ocultar, exige também `attribution_id_v2`; para reexibir, somente `feedback_source`. As variáveis exigem `feedLocation`, `scale` positivo, `commentActionLinksRewriteEnabled` booleano atual e os providers do documento correspondente:
+
+- `CometUFIHideCommentMutation` para ocultar.
+- `CometUFIUnhideCommentMutation` para reexibir.
+
+```php
+use MVO\Facebook\FacebookConnection;
+
+function mudarVisibilidadeComentario(
+    FacebookConnection $facebook,
+    string $actorId,
+    string $commentId,
+    bool $oculto,
+    string $chaveIdempotencia,
+    array $contextoDoMenu,
+    array $variaveisAtuais,
+): array {
+    return $facebook->comments()->setHidden(
+        $actorId, $commentId, $oculto, $chaveIdempotencia,
+        $contextoDoMenu, $variaveisAtuais,
+    );
+}
+```
+
+Os documentos de gerenciamento pertencem ao novo catálogo `ContentManagementDocuments`, separado do catálogo de leitura/criação `PageDocuments`. Providers ausentes e campos desconhecidos são rejeitados antes de I/O. Toda escrita usa idempotência no ledger: confirmação reproduz a projeção sem HTTP, conteúdo diferente na mesma chave gera conflito e resultado incerto não é reenviado automaticamente.
+
+Edição, exclusão e ocultação foram conferidas em código público e exercitadas com transporte sintético. Não houve escrita ou moderação em uma conta real nesta revisão. Isso também não demonstra que uma conta delegada tenha permissões para cada ação.
 
 ## Resumo das reações
 
