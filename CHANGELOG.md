@@ -2,6 +2,14 @@
 
 As versões da biblioteca seguem versionamento semântico. Mudanças no protocolo do WhatsApp podem exigir atualizações de compatibilidade, independentemente da versão da biblioteca.
 
+## 1.0.3 — 2026-10-18
+
+- Documentação separada para WhatsApp e Facebook, com navegação e busca próprias, referência PHP, exemplos e contextos para LLMs. Os links existentes dos 49 guias WhatsApp foram preservados.
+- Código dos pacotes opcionais Facebook/Messenger e contratos multicanal organizado sob `packages/`. As distribuições Composer Facebook e Messenger têm nomes próprios; o pacote WhatsApp não passa a depender delas.
+- Facebook inclui login PHP, sessão confirmada persistente e restauração, recursos Web parciais de Páginas/publicações/interações, leitura de inbox e anúncios, e monitor de snapshots em SQLite. E2EE pessoal, envio pelo inbox comercial e escritas de anúncios dependentes da Graph API permanecem indisponíveis.
+- Testes dos pacotes opcionais e dos dois portais incluídos na CI. O laboratório privado e arquivos de sessão ficam fora das distribuições públicas.
+- Os arquivos do runtime WhatsApp não foram alterados nesta atualização. A validação Facebook desta etapa usa transportes sintéticos; ela não comprova publicação, entrega ou compatibilidade completa em contas reais.
+
 ## 1.0.2 — 2026-10-18
 
 - Formulários portáveis com `kind: input` e `cancel_option` explícita: cada campo usa resposta de texto livre e uma opção visível de cancelamento, preservando o ID original. A adaptação segue o parser distribuído do WhatsApp Web, com limite de três etapas após expansão e rejeição de valores iniciais não suportados. O modo Android com `InputFields` permanece separado.

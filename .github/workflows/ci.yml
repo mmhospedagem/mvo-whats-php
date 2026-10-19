@@ -41,6 +41,14 @@ jobs:
       - run: composer doctor
       - run: composer test
       - run: composer analyse
+      - name: Test optional SDK packages
+        run: php vendor/bin/phpunit --bootstrap tools/bootstrap-packages.php packages --no-progress
+      - name: Analyse optional SDK packages
+        run: >-
+          php vendor/bin/phpstan analyse --configuration=phpstan.neon.dist
+          --autoload-file=tools/bootstrap-packages.php --level=6 --no-progress
+          packages/channels-core/src packages/whatsapp-adapter/src
+          packages/messenger/src packages/messenger-adapter/src packages/facebook/src
       - name: Verify the distributable
         if: matrix.php == '8.4'
         run: composer package
@@ -53,4 +61,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: python -m pip install -r tools/requirements-docs.txt
       - run: python tools/build_docs.py
-      - run: git diff --exit-code -- docs/index.html docs/llms.txt docs/llms-full.txt
+      - run: python -m unittest discover -s tools/tests
+      - run: >-
+          git diff --exit-code -- docs/index.html docs/llms.txt docs/llms-full.txt
+          docs/facebook/index.html docs/facebook/llms.txt docs/facebook/llms-full.txt

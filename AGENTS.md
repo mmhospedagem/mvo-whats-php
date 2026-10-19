@@ -2,7 +2,11 @@
 
 Este repositório contém a biblioteca pública PHP, exemplos e documentação. O pacote Composer é `mmhospedagem/mvo-whats-php`, com namespace `MVO`. O projeto consumidor pode construir sua própria API; rotas REST, credenciais de servidor e infraestrutura privada não fazem parte deste contrato.
 
+O desenvolvimento multicanal usa `packages/channels-core/`, `packages/whatsapp-adapter/`, `packages/messenger/`, `packages/messenger-adapter/` e `packages/facebook/`. O último oferece serviços Facebook Web parciais e monitoramento local, usando o `WebSession` privado do mesmo dono Messenger; não é uma nova API ou painel. Preserve o SDK WhatsApp em `src/` e seu namespace público. Cada pacote tem autoload e dependências próprios. O laboratório loopback privado não faz parte do repositório público nem dos pacotes distribuídos. Leia `docs/MULTICANAL.md`, `docs/FACEBOOK-MESSENGER.md` e `docs/FACEBOOK.md` antes de alterar os conectores. Não trate metadados Messenger como mensagens E2EE: o caminho criptografado não está implementado. A entrega Facebook contém somente biblioteca PHP, exemplos e documentação. A publicação de SDKs, pacotes e docs foi autorizada para este lançamento; essa autorização não inclui sessões privadas, a API consumidora, infraestrutura ou operações em contas reais.
+
 ## Antes de alterar
+
+- A documentação HTML tem portais separados: `docs/index.html` para WhatsApp e `docs/facebook/index.html` para Facebook. Guias Facebook por recurso ficam em `docs/facebook/`; seus contextos LLM também são próprios. Atualize os guias do canal afetado e gere ambos com `tools/build_docs.py`, preservando âncoras e navegação existentes.
 
 - Leia `llms.txt`, `docs/LLMS.md` e o guia do recurso. Confira assinaturas e pré-condições em `src/` antes de propor uma chamada.
 - Use PHP para o protocolo e o runtime. As bibliotecas nativas opcionais de mídia/chamadas têm integração separada; texto e MCP básico não precisam dessas dependências.

@@ -1,4 +1,7 @@
 /vendor/
+/packages/*/vendor/
+/packages/*/composer.lock
+/dev/channels/
 /.auth/
 /.auth-backups/
 /.dev/

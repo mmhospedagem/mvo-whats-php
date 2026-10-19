@@ -1,0 +1,40 @@
+{
+  "name": "mmhospedagem/mvo-facebook-php",
+  "description": "Módulos experimentais PHP para Páginas, conteúdo e negócios no Facebook Web.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "php-64bit": "^8.2",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-pdo_sqlite": "*",
+    "mmhospedagem/mvo-messenger-php": "^0.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5",
+    "phpstan/phpstan": "^2.1"
+  },
+  "autoload": {"psr-4": {"MVO\\Facebook\\": "src/"}},
+  "scripts": {
+    "test": "@php vendor/bin/phpunit --configuration phpunit.xml",
+    "analyse": "@php vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress",
+    "check": ["@test", "@analyse"]
+  },
+  "homepage": "https://github.com/mmhospedagem/mvo-facebook-php",
+  "keywords": ["php", "facebook", "mvo", "persistent-session", "experimental"],
+  "authors": [{"name": "MVO", "homepage": "https://www.mvo.host/"}],
+  "support": {
+    "issues": "https://github.com/mmhospedagem/mvo-facebook-php/issues",
+    "source": "https://github.com/mmhospedagem/mvo-facebook-php",
+    "docs": "https://mmhospedagem.github.io/mvo-whats-php/facebook/"
+  },
+  "archive": {
+    "exclude": [
+      "/vendor", "/composer.lock", "/.cache", "/.phpunit.cache", "/.phpunit.result.cache",
+      "/.auth", "/.auth-backups", "/.env", "/.env.*", "/storage", "/var", "/sessions",
+      "/secrets", "/captures", "/build", "*.sqlite", "*.sqlite-wal", "*.sqlite-shm",
+      "*.log", "*.har", "*.pcap", "*.pcapng", "*.trace"
+    ]
+  }
+}

@@ -77,7 +77,7 @@
   "support": {
     "issues": "https://github.com/mmhospedagem/mvo-whats-php/issues",
     "source": "https://github.com/mmhospedagem/mvo-whats-php",
-    "docs": "https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/INSTALLATION.md"
+    "docs": "https://mmhospedagem.github.io/mvo-whats-php/"
   },
   "archive": {
     "exclude": [
@@ -88,6 +88,8 @@
       "/.dev",
       "/.cache",
       "/build",
+      "/packages",
+      "/dev/channels",
       "/dev.local.json",
       "/PRODUCT.md",
       "/DESIGN.md",

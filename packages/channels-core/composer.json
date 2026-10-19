@@ -1,0 +1,8 @@
+{
+  "name": "mmhospedagem/mvo-channels-core",
+  "description": "Contratos PHP locais para conexões e adaptadores multicanal MVO.",
+  "type": "library",
+  "license": "MIT",
+  "require": { "php": "^8.2" },
+  "autoload": { "psr-4": { "MVO\\Channels\\": "src/" } }
+}

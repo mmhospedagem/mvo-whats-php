@@ -1,0 +1,24 @@
+# Documentos Web de Páginas
+
+Este catálogo contém contratos observados em JavaScript público do Facebook Web em 18/10/2026. São documentos Relay persistidos usados pelo cliente Web, com URL canônica e SHA-256 da fonte. Não utiliza a API Graph oficial. IDs e contratos podem mudar; a presença de um documento no catálogo não comprova permissão de uma conta nem validação real de uma operação.
+
+`MVO\Facebook\Catalog\PageDocuments::documents()` fornece os documentos; `registry()` cria seu `DocumentRegistry`. `providers($documentName)` lista os valores de ambiente que esse documento exige. O SDK não inventa valores para provedores Relay: é necessário fornecer os valores do contexto Web atual em `$variables`. Não há extração automática desses valores nesta versão. A ausência deles lança `facebook_provider_context_required` antes de qualquer requisição. Valores usados em fixtures são sintéticos e não servem como configuração de produção.
+
+Os serviços recebem somente `WebGraphQL` no construtor. A aplicação configura a sessão Web confirmada, o registry e um `CommandLedger` privado nesse transporte. Os métodos de escrita exigem uma chave de idempotência de até 256 bytes. Não repita um comando com outra chave quando o resultado for incerto. O retorno de uma escrita é uma projeção validada da resposta, não o corpo HTTP bruto.
+
+| Serviço | Métodos implementados |
+| --- | --- |
+| `PostsService` | `createText($actorId, $text, $idempotencyKey, $context, $variables = [])`; `list($profileId, $variables = [], $actorId = null)`; `next($profileId, $cursor, $variables = [], $actorId = null)` |
+| `CommentsService` | `create($actorId, $feedbackId, $text, $idempotencyKey, $context, $variables = [])`; `list($feedbackId, $variables = [], $actorId = null)`; `next/previous($feedbackId, $cursor, $intentToken, $count = 20, $variables = [], $actorId = null)` |
+| `ReactionsService` | `set($actorId, $feedbackId, $reactionId, $idempotencyKey, $context, $variables = [])`; `remove($actorId, $feedbackId, $idempotencyKey, $context, $variables = [])`; `summary($feedbackId, $scale = 1.0, $actorId = null)`; `list($feedbackId, $reactionId = null, $scale = 1.0, $actorId = null)`; `next($feedbackId, $cursor, $reactionId = null, $count = 10, $scale = 1.0, $actorId = null)` |
+| `InboxService` | `threads($actorId, $pageId, $limit = 20, $beforeTimePrecise = null, $tags = [])`; `messages($actorId, $pageId, $selectedItemId, $limit = 20, $beforeTimePrecise = null)` |
+
+`createText()` implementa o compositor de timeline de perfil/Página: `composer_type` precisa ser `profile`. Seu `$context` exige `composer_entry_point`, `composer_source_surface`, `logging.composer_session_id`, `audience` e `tracking`, obtidos do compositor atual; não há audiência de publicação presumida. O texto não contém menções, anexos nem publicação cruzada. `$variables` precisa dos provedores atuais do documento de criação. O mesmo se aplica aos provedores das consultas de timeline. O contexto não deve ser exposto em logs nem enviado a uma LLM.
+
+Comentários e reações exigem o `feedbackId` GraphQL exato retornado pelo Facebook, sem construir um ID a partir do número de uma publicação. O contexto de escrita exige `session_id` e `feedback_source` (nome do enum, por exemplo `PROFILE` quando esse é o contexto efetivo). `CommentsService::create()` aceita o ID exato de um comentário em `reply_comment_parent_fbid` para responder. As leituras de comentários exigem os provedores atuais e `feedLocation` correspondente à conversa de comentários; copie o `intent_token` e o cursor devolvidos pela consulta inicial ao paginar. Não invente um token para alterar a ordenação. Os documentos inicial e paginado têm conjuntos diferentes de variáveis.
+
+As reações retornam IDs efetivamente selecionados pelo servidor, contadores e pessoas separadamente. `reaction_types_count` representa o número de tipos de reação; não é o total de curtidas. `important_items` é um subconjunto separado do resultado paginado `items`. Preserve `reaction_filter` ao seguir o cursor. `summary()` não inventa nomes a partir dos contadores e mantém contagens desconhecidas como `null`. Contadores de Facebook, Instagram e agregados são campos distintos.
+
+No inbox, mantenha distintos o ID da conta autenticada, o perfil que atua como Página (`actorId`) e a Página delegada (`pageId`). `selection_id` é a seleção derivada do ID GraphQL retornado pelo próprio inbox; o `id` original e `thread_key` continuam separados. As consultas estabelecidas usam o timestamp observado `before_time_precise` e não retornam um indicador confiável de esgotamento: `has_more` permanece `null`. Não há envio pelo inbox de Página implementado neste serviço.
+
+Este conjunto foi validado com fixtures locais. Não comprova publicação, entrega, estabilidade ou permissões em conta real. Insights orgânicos de Páginas, upload de mídia, edição/exclusão/moderação e envio no inbox ainda precisam de contratos e validações próprios.

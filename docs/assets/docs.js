@@ -3,8 +3,9 @@
 
   const documents = typeof pages !== 'undefined' && Array.isArray(pages) ? pages : [];
   if (!documents.length) return;
+  const config = typeof docConfig === 'object' ? docConfig : { title: 'MVO WHATS PHP', home: 'inicio', reference: 'api', sourcePrefix: '../' };
   const byId = new Map(documents.map(page => [page.id, page]));
-  const home = byId.get('inicio') || documents[0];
+  const home = byId.get(config.home) || documents[0];
   const $ = id => document.getElementById(id);
   const decode = value => {
     try { return decodeURIComponent(value); } catch { return value; }
@@ -24,12 +25,18 @@
     return result.join('/');
   };
   const sources = new Map(documents.filter(page => page.source).map(page => [normalizePath(page.source), page]));
+  const routes = new Map((typeof portalRoutes !== 'undefined' && Array.isArray(portalRoutes) ? portalRoutes : []).map(route => [normalizePath(route.source), route]));
   const sourceHref = path => {
     const normalized = normalizePath(path);
-    if (location.hostname === 'mmhospedagem.github.io') {
-      return 'https://github.com/mmhospedagem/mvo-whats-php/blob/main/' + normalized;
+    if (config.githubBase && location.hostname === 'mmhospedagem.github.io') {
+      return config.githubBase + normalized;
     }
-    return normalized.startsWith('docs/') ? normalized.slice(5) : '../' + normalized;
+    // Documentation sources remain inside the docs tree whether it is opened
+    // from the checkout, hosted as the site root or served beneath /docs/.
+    if (normalized.startsWith('docs/')) {
+      return (config.key === 'facebook' ? '../' : '') + normalized.slice(5);
+    }
+    return (config.sourcePrefix || '../') + normalized;
   };
   const pageText = new Map(documents.map(page => {
     // Template contents are inert: building the search index does not load images or run markup.
@@ -210,7 +217,11 @@
       const relative = normalizePath(decoded.startsWith('/') ? decoded : directory + decoded);
       const root = normalizePath(decoded);
       // README links often explicitly include docs/. Exact source matches avoid basename ambiguity.
-      return { path: relative, page: sources.get(relative) || sources.get(root) || null };
+      return {
+        path: relative,
+        page: sources.get(relative) || sources.get(root) || null,
+        route: routes.get(relative) || routes.get(root) || null,
+      };
     }
 
     function rewriteLinks(container, page, outline = false) {
@@ -230,7 +241,9 @@
         const query = file.indexOf('?');
         const path = query < 0 ? file : file.slice(0, query);
         const resolved = resolvePath(path, page);
-        link.href = resolved.page ? routeHref(resolved.page, anchor) : sourceHref(resolved.path) + (query < 0 ? '' : file.slice(query)) + (anchor ? '#' + encodeURIComponent(anchor) : '');
+        link.href = resolved.page ? routeHref(resolved.page, anchor)
+          : resolved.route ? resolved.route.href + (anchor ? '/' + encodeURIComponent(anchor) : '')
+          : sourceHref(resolved.path) + (query < 0 ? '' : file.slice(query)) + (anchor ? '#' + encodeURIComponent(anchor) : '');
       });
       if (outline) return;
       container.querySelectorAll('img[src]:not([data-mvo-logo])').forEach(image => {
@@ -430,9 +443,9 @@
         }
         const source = $('source');
         if (source) { source.hidden = !page.source; if (page.source) source.href = sourceHref(page.source); else source.removeAttribute('href'); }
-        document.title = page.title + ' · MVO WhatsApp';
+        document.title = page.title + ' · ' + config.title;
         document.querySelectorAll('.header-link').forEach(link => {
-          link.classList.toggle('selected', link.hash === (page.id === 'api' ? '#api' : '#inicio'));
+          link.classList.toggle('selected', link.hash === (page.id === config.reference ? '#' + config.reference : '#' + home.id));
         });
         document.querySelectorAll('[data-page]').forEach(link => {
           const current = link.dataset.page === page.id;
@@ -466,7 +479,7 @@
         const start = Math.max(0, position - 50);
         const snippet = text.slice(start, start + 155);
         return `<a class="results-item" id="search-result-${index}" href="${routeHref(page)}"><span class="result-title">${escape(page.title)}</span><small>${escape(page.group)}</small><p>${start ? '…' : ''}${escape(snippet)}${start + 155 < text.length ? '…' : ''}</p></a>`;
-      }).join('') : '<p class="no-results">Nenhum resultado. Tente “conexão”, “mídia” ou “sendMessage”.</p>';
+      }).join('') : '<p class="no-results">Nenhum resultado. ' + escape(config.searchHint || 'Tente outro método, evento ou assunto.') + '</p>';
       searchLinks = [...results.querySelectorAll('a.results-item')];
       const count = $('search-count');
       if (count) count.textContent = query ? `${matches.length} ${matches.length === 1 ? 'página encontrada' : 'páginas encontradas'}` : 'Explore a documentação';

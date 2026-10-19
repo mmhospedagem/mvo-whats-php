@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Documentação MVO WhatsApp para PHP. Conecte sua sessão, receba eventos e envie mensagens pela sua aplicação.">
+  <meta name="description" content="__DOC_DESCRIPTION__">
   <meta name="theme-color" content="#ffffff">
-  <title>Documentação · MVO WHATS PHP</title>
+  <title>Documentação · __DOC_TITLE__</title>
   <link rel="icon" type="image/png" data-mvo-brand>
   <style>/*MVO_STYLES*/</style>
 </head>
@@ -27,27 +27,28 @@
 <a class="skip-link" href="#content">Ir para o conteúdo</a>
 <header class="site-header" id="site-header"><div class="header-inner">
   <button class="icon-button mobile-menu" id="menu" aria-label="Abrir navegação" aria-expanded="false" aria-controls="sidebar"><svg class="icon"><use href="#i-menu"/></svg></button>
-  <a class="brand" href="#inicio" aria-label="MVO WHATS PHP — início"><img data-mvo-brand width="2107" height="746" alt="MVO"></a>
-  <nav class="header-links" aria-label="Acesso rápido"><a class="header-link selected" href="#inicio">Documentação</a><a class="header-link" href="#api">Referência PHP</a></nav>
-  <button class="search-trigger" id="search-open" aria-label="Buscar na documentação" aria-haspopup="dialog" aria-controls="search-dialog"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span>Buscar na documentação</span><kbd>Ctrl K</kbd></button>
-  <a class="website-link" href="https://github.com/mmhospedagem/mvo-whats-php" target="_blank" rel="noopener noreferrer">GitHub<svg class="icon"><use href="#i-external"/></svg></a>
-  <a class="website-link" href="https://packagist.org/packages/mmhospedagem/mvo-whats-php" target="_blank" rel="noopener noreferrer">Packagist<svg class="icon"><use href="#i-external"/></svg></a>
+  <a class="brand" href="#inicio" aria-label="__DOC_TITLE__ — início"><img data-mvo-brand width="2107" height="746" alt="MVO"></a>
+  <nav class="header-links" aria-label="Acesso rápido"><a class="header-link selected" href="#inicio">Documentação</a><a class="header-link" href="#__DOC_REFERENCE__">Referência PHP</a></nav>
+  <button class="search-trigger" id="search-open" aria-label="Buscar na documentação __DOC_PRODUCT__" aria-haspopup="dialog" aria-controls="search-dialog"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span>Buscar no __DOC_PRODUCT__</span><kbd>Ctrl K</kbd></button>
+  __EXTERNAL_LINKS__
   <button class="icon-button theme-toggle" id="theme" aria-label="Alternar tema"><svg class="icon sun"><use href="#i-sun"/></svg><svg class="icon moon"><use href="#i-moon"/></svg><span class="sr-only" id="theme-label">Tema claro</span></button>
-</div></header>
+</div><div class="product-bar"><span>Bibliotecas PHP</span>__PRODUCT_SWITCH__<small>Documentação __DOC_PRODUCT__</small></div></header>
 <div class="docs-layout">
-  <aside class="sidebar" id="sidebar"><a class="library-mark" href="#inicio"><span>Guia da biblioteca</span><small>PHP 8.2+</small></a><nav id="nav" aria-label="Navegação da documentação"></nav><div class="sidebar-footer"><a href="https://www.mvo.host/" target="_blank" rel="noopener noreferrer">mvo.host ↗</a><a href="#LLMS">LLMs e MCP</a></div></aside>
+  <aside class="sidebar" id="sidebar"><a class="library-mark" href="#inicio"><span>__DOC_PRODUCT__</span><small>PHP 8.2+</small></a><nav id="nav" aria-label="Navegação da documentação __DOC_PRODUCT__"></nav><div class="sidebar-footer"><a href="https://www.mvo.host/" target="_blank" rel="noopener noreferrer">mvo.host ↗</a><a href="#LLMS">__LLMS_LABEL__</a></div></aside>
   <button id="sidebar-overlay" class="sidebar-overlay" aria-label="Fechar navegação" hidden></button>
   <main id="content" tabindex="-1">
-    <div class="page-context" id="context"><div class="breadcrumb"><a href="#inicio">Documentação</a><svg class="icon"><use href="#i-chevron"/></svg><span id="group"></span><span class="sr-only" id="current-page"></span></div><div class="page-tools"><span id="reading-time"></span><a id="source">Ver fonte<svg class="icon"><use href="#i-external"/></svg></a></div></div>
+    <div class="page-context" id="context"><div class="breadcrumb"><a href="#inicio">__DOC_PRODUCT__</a><svg class="icon"><use href="#i-chevron"/></svg><span id="group"></span><span class="sr-only" id="current-page"></span></div><div class="page-tools"><span id="reading-time"></span><a id="source">__SOURCE_LABEL__<svg class="icon"><use href="#i-external"/></svg></a></div></div>
     <article id="article"></article><div class="paging" id="paging"></div>
-    <footer class="docs-footer"><span>MVO WHATS PHP<small>Documentação da biblioteca</small></span><a href="#licenca">Licenças e avisos</a></footer>
+    <footer class="docs-footer"><span>__DOC_TITLE__<small>Documentação da biblioteca</small></span><a href="__DOC_FOOTER_HREF__">__DOC_FOOTER__</a></footer>
   </main>
-  <aside class="page-outline" id="page-outline" aria-label="Nesta página"><span class="outline-title">Nesta página</span><div id="toc"></div><a class="outline-link" href="#CONEXAO/gatilhos-publicos-para-integrar-uma-api">Integre à sua aplicação<svg class="icon"><use href="#i-arrow"/></svg></a></aside>
+  <aside class="page-outline" id="page-outline" aria-label="Nesta página"><span class="outline-title">Nesta página</span><div id="toc"></div><a class="outline-link" href="__DOC_OUTLINE_HREF__">__DOC_OUTLINE__<svg class="icon"><use href="#i-arrow"/></svg></a></aside>
 </div>
-<dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><svg class="icon"><use href="#i-search"/></svg><label class="sr-only" id="search-title" for="search">Buscar na documentação</label><input id="search" type="search" placeholder="O que você quer construir?" autocomplete="off"><button class="icon-button" id="search-close" aria-label="Fechar busca"><svg class="icon"><use href="#i-close"/></svg></button></div><div class="search-results" id="results" aria-live="polite"></div><div class="search-help"><span>Busque por método, evento ou assunto.</span><span><kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>Enter</kbd> abrir <kbd>Esc</kbd> fechar</span></div></dialog>
+<dialog id="search-dialog" class="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><svg class="icon"><use href="#i-search"/></svg><label class="sr-only" id="search-title" for="search">Buscar na documentação __DOC_PRODUCT__</label><input id="search" type="search" placeholder="Buscar no __DOC_PRODUCT__" autocomplete="off"><button class="icon-button" id="search-close" aria-label="Fechar busca"><svg class="icon"><use href="#i-close"/></svg></button></div><div class="search-results" id="results" aria-live="polite"></div><div class="search-help"><span>A busca inclui somente __DOC_PRODUCT__.</span><span><kbd>↑</kbd><kbd>↓</kbd> navegar <kbd>Enter</kbd> abrir <kbd>Esc</kbd> fechar</span></div></dialog>
 <div class="sr-only" id="copy-feedback" role="status" aria-live="polite"></div>
 <script>
 const pages=/*DOC_DATA*/;
+const docConfig=/*DOC_CONFIG*/;
+const portalRoutes=/*PORTAL_ROUTES*/;
 const mvoLogo=/*MVO_LOGO_DATA*/;
 const mvoBrand=/*MVO_BRAND_DATA*/;
 /*MVO_APP*/

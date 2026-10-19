@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "observed_at": "2026-10-18",
+  "scope": "Public shipped Web Relay read contracts. No Marketing Graph API, mutations, fallback documents or real-account execution.",
+  "documents": [
+    {
+      "name": "useFetchAdAccountsForL4ContextQuery",
+      "id": "27589643617296549",
+      "kind": "query",
+      "variables": [
+        "skip",
+        "skipLwiDefaultAdAccount"
+      ],
+      "defaults": {
+        "skip": null,
+        "skipLwiDefaultAdAccount": null
+      },
+      "fixed_variables": {
+        "skipLwiDefaultAdAccount": true
+      },
+      "source_sha256": "95222e9cf4f13e5159aaa6a06ff629488a660034bae2e58a7d1e45b0cb5ac798",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iW6z4/yE/l/pt_BR-j/4NP6uiETbo6.js",
+      "source_module_sha256": "8756516ac39c19f93354c43fcc079171a88583d1abf1eba6ff8dc1c72c79461f",
+      "response_paths": [
+        "data.maiba_ad_accounts.edges[].node.legacy_account_id",
+        "data.maiba_ad_accounts.edges[].node.name",
+        "data.maiba_ad_accounts.edges[].node.currency",
+        "data.maiba_ad_accounts.edges[].node.account_status",
+        "data.maiba_viewer.maiba_thread_linked_account_ids.nodes"
+      ],
+      "limits": [
+        "The document fixes first=2; no pagination args/page_info are present",
+        "Always keep skipLwiDefaultAdAccount=true: false includes default_ad_account(auto_create:true)",
+        "No real-account execution performed"
+      ]
+    },
+    {
+      "name": "useFetchAdAccountsNameByIdQuery",
+      "id": "27797550453214383",
+      "kind": "query",
+      "variables": [
+        "adAccountID",
+        "skip"
+      ],
+      "defaults": {
+        "adAccountID": null,
+        "skip": null
+      },
+      "source_sha256": "95222e9cf4f13e5159aaa6a06ff629488a660034bae2e58a7d1e45b0cb5ac798",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4iW6z4/yE/l/pt_BR-j/4NP6uiETbo6.js",
+      "source_module_sha256": "03a78b96170512bd3a109631824a6bdecf74fcde6ef9ef903890275f1559721f",
+      "response_paths": [
+        "data.maiba_ad_account.name",
+        "data.maiba_ad_account.currency",
+        "data.maiba_ad_account.account_status"
+      ],
+      "limits": []
+    },
+    {
+      "name": "AdsInsightsAdInsightsShadowValidationQuery",
+      "id": "28492576643768953",
+      "kind": "query",
+      "variables": [
+        "datePreset",
+        "from",
+        "ids",
+        "metrics",
+        "to"
+      ],
+      "defaults": {
+        "datePreset": null,
+        "from": null,
+        "ids": null,
+        "metrics": null,
+        "to": null
+      },
+      "source_sha256": "71dc85285411aeaa644fde9253a11f1a3ffb4fa8e7c0b9e3ab0cadd1a77dca33",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4/yA/r/DUuvi7GBvkM.js",
+      "source_module_sha256": "d83beaa1eac931ecf781021a6964cec06a39258158eb7362c4e4d2e799cc44b8",
+      "response_paths": [
+        "data.nodes[].id",
+        "data.nodes[].ad_insights.nodes[].spend",
+        "data.nodes[].ad_insights.nodes[].impressions_as_string",
+        "data.nodes[].ad_insights.nodes[].reach",
+        "data.nodes[].ad_insights.nodes[].results",
+        "data.nodes[].ad_insights.nodes[].cost_per_result",
+        "data.nodes[].ad_insights.nodes[].metrics[].metric_id",
+        "data.nodes[].ad_insights.nodes[].metrics[].metric_value_raw"
+      ],
+      "limits": [
+        "first=1 and filter_zero_delivery=true are document literals",
+        "The observed caller excludes breakdowns and ACCOUNT-level shadow validation; do not promise full reporting",
+        "Spend and cost values are currency offset amounts; preserve raw values until account currency offset is known"
+      ]
+    },
+    {
+      "name": "AdsManagerLiveDataCampaignQuery",
+      "id": "39667030142887804",
+      "kind": "query",
+      "variables": [
+        "ids",
+        "skip_data_transform",
+        "__relay_internal__pv__GraphQLIncludeAdgroupActiveStudiesrelayprovider"
+      ],
+      "defaults": {
+        "ids": null,
+        "skip_data_transform": false,
+        "__relay_internal__pv__GraphQLIncludeAdgroupActiveStudiesrelayprovider": true
+      },
+      "source_sha256": "0ca645f7f1e909611b2677f3bcc1f99040f37eb2c5db9740689f13ee95341772",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4i73O4/yF/l/pt_BR-j/OdJdYGWhOap.js",
+      "source_module_sha256": "2f530a50e93d299a28e9011ccaf230d299900025149bafa393dfc82bd7eadae1",
+      "response_paths": [
+        "data.nodes[]"
+      ],
+      "limits": [
+        "Provided variable true is proven by GraphQLIncludeAdgroupActiveStudies.relayprovider",
+        "Raw server fields back a client Relay resolver; do not expect synthetic ad_object_spec output to be a server field"
+      ]
+    },
+    {
+      "name": "AdsMgmtCampaignGroupDynamicStoreSourceTier2ServerQuery",
+      "id": "26771418132559713",
+      "kind": "query",
+      "variables": [
+        "ids"
+      ],
+      "defaults": {
+        "ids": null
+      },
+      "source_sha256": "8a3b16484c7275e62b9e351b6060a917845e78fd62bd2410ce4f328e66b952bd",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4icL94/yu/l/pt_BR-j/dCsWp_64Qhtwg94J270iuMNgWjRvebj-695tzwaAmOTaOEY_Tdtsgji5_KcBqlB_kjpUGBrp4sfUsppelIBFFfmCMxLB_YJ8PwuaLRRZD5Dj-rCFuMy86-U19HmwWvJYPOYsGeUCIQSLiqbPYvfnKyZsO7IOY1z-tkTFayXCzzm06X5k7uJWhcwZ6JuCHINtz2JcKQnpjnrLkuHLIMzm-_a1TAU0yOZFnN_OcLPfQagRRCzLs3.js",
+      "source_module_sha256": "5f93697cfd1365fbd4efbf16fc70dc13a85a5804a25a251b7304c2067ee5356d",
+      "response_paths": [
+        "data.nodes[]",
+        "data.nodes[].campaign_structure_tree.children[].adset_id",
+        "data.nodes[].campaign_structure_tree.children[].children[].adgroup_id"
+      ],
+      "limits": []
+    },
+    {
+      "name": "AdsMgmtAdgroupDynamicStoreSourceTier1ServerQuery",
+      "id": "28241458518843188",
+      "kind": "query",
+      "variables": [
+        "ids"
+      ],
+      "defaults": {
+        "ids": null
+      },
+      "source_sha256": "8a3b16484c7275e62b9e351b6060a917845e78fd62bd2410ce4f328e66b952bd",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4icL94/yu/l/pt_BR-j/dCsWp_64Qhtwg94J270iuMNgWjRvebj-695tzwaAmOTaOEY_Tdtsgji5_KcBqlB_kjpUGBrp4sfUsppelIBFFfmCMxLB_YJ8PwuaLRRZD5Dj-rCFuMy86-U19HmwWvJYPOYsGeUCIQSLiqbPYvfnKyZsO7IOY1z-tkTFayXCzzm06X5k7uJWhcwZ6JuCHINtz2JcKQnpjnrLkuHLIMzm-_a1TAU0yOZFnN_OcLPfQagRRCzLs3.js",
+      "source_module_sha256": "9646d2e3d6ecaf1876ac3df0e4b739db344c6fecd52df032db5b8b3a91bf0c1a",
+      "response_paths": [
+        "data.nodes[]"
+      ],
+      "limits": [
+        "This is dynamic metadata, not a complete creative editor or ad creation contract"
+      ]
+    },
+    {
+      "name": "AdsMgmtAdgroupDynamicStoreSourceTier3V2ServerQuery",
+      "id": "25292893057043594",
+      "kind": "query",
+      "variables": [
+        "ids"
+      ],
+      "defaults": {
+        "ids": null
+      },
+      "source_sha256": "8a3b16484c7275e62b9e351b6060a917845e78fd62bd2410ce4f328e66b952bd",
+      "source_url": "https://static.xx.fbcdn.net/rsrc.php/v4icL94/yu/l/pt_BR-j/dCsWp_64Qhtwg94J270iuMNgWjRvebj-695tzwaAmOTaOEY_Tdtsgji5_KcBqlB_kjpUGBrp4sfUsppelIBFFfmCMxLB_YJ8PwuaLRRZD5Dj-rCFuMy86-U19HmwWvJYPOYsGeUCIQSLiqbPYvfnKyZsO7IOY1z-tkTFayXCzzm06X5k7uJWhcwZ6JuCHINtz2JcKQnpjnrLkuHLIMzm-_a1TAU0yOZFnN_OcLPfQagRRCzLs3.js",
+      "source_module_sha256": "56bea8fa3d92cba2e8214878ca840730505c7cd3cf7db47ac0637404aa86458d",
+      "response_paths": [
+        "data.nodes[].id",
+        "data.nodes[].preview_link"
+      ],
+      "limits": []
+    }
+  ]
+}

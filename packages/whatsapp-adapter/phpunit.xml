@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="tests/bootstrap.php" failOnWarning="true" failOnRisky="true" failOnDeprecation="true" cacheResult="false">
+    <testsuites><testsuite name="MVO WhatsApp Adapter"><directory>tests</directory></testsuite></testsuites>
+</phpunit>

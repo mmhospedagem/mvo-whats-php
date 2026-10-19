@@ -1,0 +1,503 @@
+# MVO Facebook PHP — contexto completo local
+
+Contexto independente da biblioteca Facebook. Não substitui os contratos do SDK WhatsApp.
+
+# MVO Facebook PHP — contexto para LLMs e agentes
+
+Este documento é autocontido para o pacote `mmhospedagem/mvo-facebook-php`, namespace `MVO\Facebook`. O código está em `packages/facebook/` e depende do runtime `mmhospedagem/mvo-messenger-php`, namespace `MVO\Messenger`. Ambos são distribuídos separadamente na série experimental 0.1; o monorepo mantém suas fontes e os portais de documentação. O SDK WhatsApp `mmhospedagem/mvo-whats-php` / `MVO\WaClient` é separado: não misture suas credenciais, IDs, classes, MCP ou eventos com Facebook.
+
+O entregável Facebook é somente biblioteca PHP, exemplos e documentação. Não existe uma nova API REST, painel obrigatório ou servidor MCP Facebook. O laboratório loopback de validação é privado e não faz parte do repositório ou dos pacotes distribuídos. PHP executa autenticação, bootstrap, WebSocket DGW e sincronização Lightspeed; Node.js e Go não são runtimes do conector. O navegador isolado pode auxiliar uma verificação humana, mas não substitui o protocolo PHP.
+
+## Instalação independente
+
+Requer PHP 8.2+ de 64 bits e extensões `curl`, `json`, `openssl`, `sodium`, `pdo`, `pdo_sqlite`, conforme os `composer.json` dos dois pacotes. Na aplicação consumidora, instale:
+
+```sh
+composer require "mmhospedagem/mvo-facebook-php:^0.1"
+```
+
+O Composer resolve Messenger como dependência, sem instalar WhatsApp. Para usar somente `MessengerClient`, a alternativa é `composer require "mmhospedagem/mvo-messenger-php:^0.1"`. As fontes de distribuição são https://github.com/mmhospedagem/mvo-facebook-php e https://github.com/mmhospedagem/mvo-messenger-php; a documentação é https://mmhospedagem.github.io/mvo-whats-php/facebook/.
+
+Para desenvolver os pacotes de um checkout do monorepo, a alternativa Composer `path` fica na aplicação consumidora, sem alterar o Composer raiz WhatsApp:
+
+```json
+{
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../mvo-whats-php/packages/messenger",
+      "options": {"versions": {"mmhospedagem/mvo-messenger-php": "0.1.x-dev"}}
+    },
+    {
+      "type": "path",
+      "url": "../mvo-whats-php/packages/facebook",
+      "options": {"versions": {"mmhospedagem/mvo-facebook-php": "0.1.x-dev"}}
+    }
+  ],
+  "require": {"mmhospedagem/mvo-facebook-php": "0.1.x-dev"},
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
+```
+
+Execute `composer install` na aplicação e use seu `vendor/autoload.php`. Os caminhos são exemplos portáveis relativos ao projeto consumidor. Não é necessário instalar ou carregar WhatsApp para usar Facebook.
+
+## Entrada principal, login e restauração
+
+```php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/vendor/autoload.php';
+
+use MVO\Facebook\FacebookConnection;
+
+$facebook = new FacebookConnection(
+    sessionId: 'facebook-demo',
+    authDirectory: __DIR__ . '/var/private-auth',
+    privateStorageDirectory: __DIR__ . '/var/private-facebook',
+);
+
+// No primeiro acesso ou renovação explícita:
+// $email e $password devem vir de entrada privada da aplicação.
+// $facebook->login($email, $password);
+
+try {
+    // Com uma sessão já confirmada, restaura sem e-mail/senha ou JSON de cookies.
+    $facebook->connect();
+    $pages = $facebook->listPages();
+
+    while ($facebook->isConnected()) {
+        $facebook->poll(0.5);
+        // Consultas/comandos da aplicação pertencem ao loop externo.
+    }
+} finally {
+    $facebook->stop();
+}
+```
+
+`login()` autentica, verifica a identidade e salva apenas a sessão confirmada; `connect()` é a etapa seguinte. Não chame `login()` a cada reinício. Use o mesmo ID e as mesmas pastas para retomar; outro usuário exige outro ID. Um dono mantém o lock por sessão. Não inicie um `MessengerClient` concorrente para a mesma sessão usada por `FacebookConnection`.
+
+Persistência privada: `<authDirectory>/messenger/<sessionId>/state.sqlite`. A pasta interna `messenger` reflete o runtime compartilhado, sem exigir outro cliente. Os serviços mantêm comandos, escolhas e monitor em `<privateStorageDirectory>/<accountId>/`. `stop()` fecha localmente e libera o lock; preserva sessão confirmada e dados. Não há `logout()`, `run()`, `sendText()` ou `importCookies()` público em `FacebookConnection`: não proponha esses métodos como se existissem. `poll()` mantém o trabalho.
+
+A sessão contém cookies e dados privados. Não guardar em raiz HTTP, Git, exemplos, filas em texto claro ou logs. Senha e código do autenticador não são credenciais persistidas. Não coloque esses valores no contexto de um modelo, argumentos CLI ou código público.
+
+## Verificações de login
+
+Login e ciclo de vida podem lançar `MVO\Messenger\MessengerException`, com `reason` e `retryable`. Se houver desafio, `loginChallenge()` retorna somente `{type, expires_at, ready}`. O contexto real fica em memória por até dez minutos, no processo que iniciou a tentativa e conserva o lock. Reinício, expiração ou `stop()` cancelam a tentativa pendente.
+
+Somente `type=two_factor` com `ready=true` permite receber o código privadamente e chamar `confirmLogin(string $code)`. Preserve zeros iniciais e chame `connect()` depois da confirmação. CAPTCHA/checkpoint exige ação humana; não enviar TOTP como CAPTCHA, resolver automaticamente ou repetir credenciais/códigos. `ready=false` não é um formulário de confirmação implementado. Formatos de login/desafio não reconhecidos permanecem bloqueados.
+
+`exportPrivateLoginChallenge()` é avançado e **secreto**, com `{url, cookies, expires_at}`, apenas para um bridge privado da aplicação. Não o publicar por HTTP, logs, eventos ou ferramentas. Após a verificação humana no mesmo contexto, `completeBrowserLogin(CookieJar $cookies)` verifica a identidade por HTTPS antes de salvar. A biblioteca não abre navegador automaticamente e não lê perfis existentes para extrair sessões.
+
+## Estado, eventos e fronteira de mensagens
+
+- `isConnected()` verifica estado `metadata_connected` e transporte ativo. Isso não comprova dispositivo criptográfico ou permissões comerciais.
+- `accountInfo()` fornece `channel`, `provider`, `session_id`, `account_id`, `display_name`, `state`, `connected`, `transport`, `lightspeed_version`, `e2ee_ready`, `has_saved_session`, `capabilities`, `login_challenge`.
+- `channel=messenger`, `transport=dgw_websocket` identificam o runtime interno. `has_saved_session` indica armazenamento local, não validade no servidor. `e2ee_ready=false`: o caminho pessoal E2EE não está implementado e não há fallback plaintext de uma thread criptografada/migrada.
+- Estados comuns: `stopped`, `session_imported`, `awaiting_two_factor`, `awaiting_captcha`, `login_challenge_expired`, `authenticating`, `connecting_transport`, `metadata_connected`, `disconnected`. Falhas podem usar seu `reason` específico como estado.
+- `on(string $event, callable $handler): static` recebe callbacks; não executar consultas/escritas neles. `events(int $after=0, int $limit=100): array` consulta eventos persistidos do runtime. Eventos de monitor são outra coleção.
+- O runtime Messenger possui seus próprios métodos experimentais de texto sem criptografia em threads reconhecidas. Eles não equivalem a envio em todas as conversas e não foram adicionados como método de `FacebookConnection` ou como envio do inbox de Página.
+
+## Serviços realmente presentes
+
+`FacebookConnection::services()` obtém o `FacebookClient` do mesmo dono conectado. A conexão oferece os atalhos `pages()`, `posts()`, `comments()`, `reactions()`, `inbox()`, `ads()`, `listPages()`, `listAdAccounts()`, `selectPage($id)`, `selectAdAccount($id)`, `selectedContext()`, `monitor()` e `command($id)`.
+
+| Área | Métodos implementados | Limite de uso |
+| --- | --- | --- |
+| Páginas | `pages()->list()` / `listPages()` | Descoberta parcial autenticada; retorna `items`, `page_info`, `exhaustive=false`. Perfil moderno conserva `actor_id` e `delegate_page_id` separados. Sem CRUD de Fanpages. |
+| Contexto | `selectPage(string $id)`, `selectAdAccount(string $id)`, `selectedContext()` | Preferências locais entre recursos descobertos. Nenhuma seleção automática, troca de `c_user`, concessão remota ou injeção automática de argumentos. |
+| Timeline | `posts()->list($profileId, $variables=[], $actorId=null)`, `next($profileId, $cursor, $variables=[], $actorId=null)` | Exige providers atuais; retorna `items` com IDs/texto/feedback/cursor e `page_info`. |
+| Texto de publicação | `posts()->createText($actorId, $text, $idempotencyKey, $context, $variables=[])` | Composer `profile`; exige audiência, tracking, sessão e providers reais. Não prepara contexto, não faz upload, edição/exclusão ou menções. |
+| Comentários | `comments()->list($feedbackId, $variables=[], $actorId=null)`, `next/previous($feedbackId, $cursor, $intentToken, $count=20, $variables=[], $actorId=null)`, `create($actorId, $feedbackId, $text, $idempotencyKey, $context, $variables=[])` | Leituras exigem `feedLocation` e providers. Preservar token de ordenação/cursor. Criação exige `session_id`, enum `feedback_source`; resposta usa `reply_comment_parent_fbid` exato. Sem edição/moderação/exclusão. |
+| Reações | `summary($feedbackId, $scale=1.0, $actorId=null)`, `list($feedbackId, $reactionId=null, $scale=1.0, $actorId=null)`, `next($feedbackId, $cursor, $reactionId=null, $count=10, $scale=1.0, $actorId=null)`, `set(...)`, `remove(...)` | Leitura distingue contadores, coleção paginada e subconjunto importante. Escrita exige actor/feedback/reação observados, chave, contexto e providers. Não inferir pessoas a partir de contador. |
+| Inbox de Página | `threads($actorId, $pageId, $limit=20, $beforeTimePrecise=null, $tags=[])`, `messages($actorId, $pageId, $selectedItemId, $limit=20, $beforeTimePrecise=null)` | Somente leitura; `messages()` recebe `selection_id` retornado. `has_more=null` é desconhecido. Sem envio ou fallback para Messenger pessoal. |
+| Anúncios | `accounts()`, `account($id)`, `campaigns($ids)`, `adsets($ids)`, `ads($ids)`, `previews($ids)`, `insights($ids, $datePreset='today', $metrics=...)`, `insightsRange($ids, $since, $until, $metrics=...)`, `availability()` | Somente leituras Web observadas. Objetos por IDs conhecidos; não enumeram toda a conta. Disponibilidade não testa permissão. |
+| Monitor | `monitor()` obtém `SnapshotMonitor` | Motor SQLite de diferenças de projeções; aplicação consulta a rede e agenda coletas. Sem webhook/polling automático. |
+
+As assinaturas completas, projeções e defaults estão em [REFERENCIA.md](REFERENCIA.md), junto aos métodos das classes reais. Em `reactions()->set()`, os argumentos são `actorId`, `feedbackId`, `reactionId`, `idempotencyKey`, `context`, `variables=[]`; em `remove()`, omite-se `reactionId`.
+
+`createText()` exige em `$context`: `composer_entry_point`, `composer_source_surface`, `composer_type=profile`, `logging.composer_session_id`, objeto `audience`, lista `tracking`. Comentário/reação exigem `session_id` e o enum `feedback_source` efetivo. Esses contextos são privados do fluxo Web, não chaves WhatsApp. `feedbackId` é opaco e não pode ser fabricado de `post_id`.
+
+Alguns documentos exigem providers dinâmicos em `$variables`; defaults da assinatura não os tornam opcionais. `MVO\Facebook\Catalog\PageDocuments::providers($documentName)` lista os exigidos. Não há extração automática de todos os contexts/providers nesta revisão. Ausência reconhecida lança `facebook_provider_context_required` antes do I/O. Fixtures sintéticas e nomes/doc IDs encontrados estaticamente não autorizam fabricar valores.
+
+Anúncios: `accounts()` usa `first=2`, com `partial=true`, `exhaustive=false`, sem inventário completo/paginação estabelecida. A ramificação de criação automática de conta é excluída. Métodos por IDs aceitam de 1 a 100 IDs nativos numéricos como strings. Insights têm agregado `first=1`, `filter_zero_delivery=true`, sem breakdown arbitrário. Métricas padrão: `SPEND`, `IMPRESSIONS`, `REACH`, `COST_PER_RESULT`, `PERFORMANCE_INDICATOR`, `ANCHOR_EVENT_ATTRIBUTION_SETTING`; aceita ainda `RESULTS`, até sete métricas. A constante PHP do default é privada. Valores monetários permanecem no formato do servidor.
+
+Não implementar nem sugerir fallback para Marketing Graph API/`graph.facebook.com`. O usuário autorizou somente contratos Web `/api/graphql/` comprovados. Criação/publicação de campanhas, conjuntos, anúncios/criativos e alterações de orçamento/status não estão implementadas. `availability()` informa `read_only=true`, `validated_in_account=false`, `account_list_exhaustive=false`.
+
+## Escritas e resultados incertos
+
+Mutations dos serviços exigem chave de idempotência de 1 a 256 bytes e ledger privado. O registro é gravado `unknown` antes do I/O. Chave igual com outro conteúdo produz `facebook_idempotency_conflict`. Uma chave já confirmada retorna a projeção persistida sem repetir a requisição; uma chave sem confirmação lança `facebook_command_uncertain`, sem novo envio. Não trocar a chave para contornar incerteza.
+
+`FacebookException` tem `reason`, `outcome`, `retryable` e `commandId`. `command($id)` retorna `id`, `operation`, `state`, `result`, `created_at`, `updated_at`, ou `null`. Estados importantes: `prepared` reserva local; `unknown` resultado incerto; `response_received` resposta parseada, mas projeção não confirmada; `confirmed` projeção validada em `result.projection`. Não persistir resposta HTTP/GraphQL bruta como resultado público. Falha na validação conserva o ID da tentativa para conciliação.
+
+HTTP 200, documento encontrado, contador ou `confirmed` local não comprovam aparência/publicação visível, entrega, aprovação ou leitura. `retryable=true` não autoriza retry automático de escrita incerta. Erros de contexto/identidade devem ser tratados sem copiar segredos de outra conta. Exceções de autenticação são `MessengerException`; argumentos/ciclo inválidos também podem lançar `InvalidArgumentException`/`LogicException`. Não oferecer um retorno de sucesso genérico para uma operação ainda ausente.
+
+## Monitoramento e completude
+
+Classes `MVO\Facebook\Monitoring`:
+
+```php
+ResourceScope($accountId, $identityId, $resourceType, $resourceId);
+SnapshotItem($id, $fields = [], $counters = []);
+SnapshotPage($snapshotId, $items, $cursor = null, $nextCursor = null, $complete = false);
+SnapshotMonitor($sqliteFile);
+```
+
+O monitor expõe `ingest($scope, $page)`, `state($scope)`, `items($scope, $afterId=null, $limit=100)`, `events($scope, $after=0, $limit=100)`, `discardPending($scope, $snapshotId)`. Use IDs novos para novas coletas e o mesmo snapshot/cursor para retomada idêntica. Conta, identidade ativa e recurso são escopos separados. Páginas pendentes e recibos sobrevivem à reabertura.
+
+Primeira coleta **exaustiva** cria baseline silencioso; histórico inicial não vira novidade. Coletas parciais não autorizam inferir remoção. Campos ausentes são desconhecidos; `null` explícito pode limpar campo. Contadores ausentes não viram zero. Eventos locais são `item.created`, `item.updated`, `counters.changed`, e `item.removed` apenas com ausência em coleta posterior exaustiva, sem provar exclusão no servidor. O consumidor entrega suas notificações e guarda o cursor de evento.
+
+Não marque `complete=true` só porque recebeu HTTP 200, esgotou um subconjunto contextual de anúncios ou recebeu `has_more=null`. O monitor não consulta a rede nem garante que o coletor suporte um inventário exaustivo.
+
+## Integração avançada com Messenger existente
+
+`new FacebookClient($messenger->webSession(), $privateStorageDirectory)` usa o dono Messenger já conectado. Não copie cookies, não serialize `WebSession` ou `privateRequestFields()` e não crie outro dono concorrente. `FacebookClient::close()` libera apenas armazenamentos dos serviços; não para o Messenger existente. `FacebookConnection::stop()` fecha seus serviços e seu dono. Monitores guardados pela aplicação têm armazenamento próprio. O inventário `services()->documentInventory()` informa documentos observados, não permissões/sucesso real.
+
+## Exemplos e verificações locais
+
+A partir da raiz do checkout, comandos de ajuda não conectam contas:
+
+```sh
+php packages/facebook/examples/session.php --help
+php packages/facebook/examples/discover.php --help
+php packages/facebook/examples/monitor-local.php /diretorio/privado/monitor.sqlite
+```
+
+`monitor-local.php` usa dados sintéticos, sem conta ou rede; repetir o mesmo SQLite demonstra deduplicação. `session.php` autentica com `--login` usando apenas ambiente privado `MVO_FACEBOOK_EMAIL` e `MVO_FACEBOOK_PASSWORD`, ou restaura sem essa opção; requer `--session`, `--auth-dir`, `--data-dir`, aceita `--seconds` (padrão 30). Ele diagnostica desafios e encerra; para continuar 2FA/bridge, a aplicação deve manter o objeto/processo vivo. `discover.php` restaura uma sessão existente e lista Páginas; `--ads` acrescenta contas parciais e `--ad-ids` consulta anúncios por IDs conhecidos. Não executa escritas.
+
+Testes locais do checkout:
+
+```sh
+php vendor/bin/phpunit --bootstrap tools/bootstrap-packages.php packages/facebook/tests
+```
+
+Se necessário, use `php -c /caminho/php.ini ...`. O bootstrap acima pertence ao monorepo público e é infraestrutura de testes/autoload, não dependência da biblioteca consumidora. Testes simulados não demonstram execução remota.
+
+## Evidência e fronteiras atuais
+
+Em 18/10/2026, foram confirmados em uma conta: autenticação com continuação humana, identidade verificada pelo PHP, cookies salvos e restauração em `metadata_connected`; metadados de 13 conversas, WebSocket observado por 12 segundos. Uma captura autenticada do launchpoint de Páginas foi reconhecida pelo parser, projetando sete Páginas modernas, sem afirmar completude. Isso não comprova todos os desafios/contas, estabilidade prolongada ou permissões comerciais.
+
+Testes locais cobrem conexão/persistência simuladas, parsing, catálogo de documentos, projeções, ledger, escolhas isoladas e monitor SQLite. Os serviços de publicação, comentários, reações, inbox comercial, anúncios e eventos reais ainda não foram validados em conta nesta etapa. Não transformar implementação, fixture ou fonte estática em promessa de sucesso real.
+
+Ausentes: dispositivo Messenger E2EE/histórico seguro, envio pelo inbox de Página, upload/mídia/chamadas, CRUD/administração completa de Fanpages, moderação/edição/exclusão, administração de grupos/Marketplace, conector Instagram e mutations comerciais de anúncios. Nenhuma ferramenta Facebook entrou na allowlist MCP WhatsApp. Não criar stubs com sucesso fictício ou inventar caminhos para recursos ausentes.
+
+Consulte [REFERENCIA.md](REFERENCIA.md), [README do pacote](../../packages/facebook/README.md), `packages/facebook/src/FacebookConnection.php`, `FacebookClient.php`, `Service/`, `Monitoring/`, e o contrato de autenticação `packages/messenger/src/MessengerClient.php` antes de propor chamadas. Preserve o runtime WhatsApp e alterações de outros agentes. A distribuição pública inclui apenas SDKs, exemplos e documentação; sessões, capturas autenticadas, laboratório privado e a API consumidora não pertencem a esse contrato.
+
+# Referência PHP do Facebook
+
+Esta referência descreve o código de `packages/facebook`, namespace `MVO\Facebook`. Facebook e Messenger são distribuídos separadamente na série experimental 0.1. As assinaturas abaixo pertencem à biblioteca PHP; não são rotas REST nem ferramentas MCP. O SDK WhatsApp, `MVO\WaClient`, tem documentação e armazenamento próprios.
+
+Use a [introdução Facebook](INTRODUCAO.md), o [guia do pacote](../../packages/facebook/README.md) e o [contexto para LLMs](LLMS.md). Fontes dos métodos: [FacebookConnection](../../packages/facebook/src/FacebookConnection.php), [FacebookClient](../../packages/facebook/src/FacebookClient.php), [serviços](../../packages/facebook/src/Service/) e [monitor](../../packages/facebook/src/Monitoring/README.md).
+
+## Convenções e pré-condições
+
+- IDs, cursores, tokens de ordenação e timestamps precisos conservam as strings retornadas pelo Facebook. `accountId`, `actorId`, `pageId`, `profileId`, `feedbackId` e `selection_id` têm funções distintas. Um nome, URL ou ID de publicação não substitui um `feedbackId` GraphQL.
+- Um único dono mantém o lock da sessão. Chame `connect()` e mantenha `poll()` no processo da aplicação. Callbacks recebem eventos; consultas e comandos ficam no loop externo, depois dos callbacks.
+- `selectPage()` e `selectAdAccount()` persistem preferências locais. Os serviços continuam recebendo os IDs explícitos de suas assinaturas; a seleção não injeta argumentos nem troca a identidade autenticada.
+- `$variables = []` não garante que um documento possa ser executado sem variáveis. Alguns métodos exigem providers Relay e contexto atuais. `PageDocuments::providers($documentName)` descreve os providers; sua aquisição automática não está implementada. Não copie valores de fixtures para uma conta real.
+- `null` em um campo desconhecido não significa zero, ausência definitiva ou fim da paginação. Uma consulta reconhecida pode ser parcial.
+- Resultados de criação/interação são projeções validadas da resposta. Não comprovam exibição no aplicativo, entrega, aprovação de anúncio ou leitura por uma pessoa.
+
+## Conexão e sessão persistente
+
+```php
+use MVO\Facebook\FacebookConnection;
+
+$facebook = new FacebookConnection(
+    sessionId: 'facebook-demo',
+    authDirectory: __DIR__ . '/var/private-auth',
+    privateStorageDirectory: __DIR__ . '/var/private-facebook',
+);
+```
+
+O construtor recebe `string $sessionId`, `string $authDirectory`, `string $privateStorageDirectory`. As dependências opcionais são `?HttpClient $httpClient = null`, `?callable $socketFactory = null`, `?callable $bundleLoader = null` e `float $timeoutSeconds = 20.0`, usadas também por testes isolados. Timeout deve ser finito, positivo e de até 120 segundos. Diretórios são locais e privados; o ID da sessão tem de 1 a 64 caracteres, começa com letra/número e aceita letras, números, `_` e `-`.
+
+| Método de `FacebookConnection` | Retorno e comportamento |
+| --- | --- |
+| `login(string $email, string $password, ?WebLoginService $service = null): void` | Primeiro login ou renovação explícita. Descobre o formulário atual, cifra a senha e salva somente a sessão confirmada. Pode exigir verificação. Não inicia o transporte; chame `connect()` após confirmar o login. O terceiro argumento é uma dependência opcional para autenticação/testes. |
+| `loginChallenge(): ?array` | `null` ou `{type, expires_at, ready}`. Projeção segura do desafio pendente. Expiração é um timestamp; o contexto privado fica em memória no mesmo processo por até dez minutos. |
+| `confirmLogin(string $code): void` | Continua um desafio de autenticador reconhecido, com `type=two_factor` e `ready=true`. Preserve zeros iniciais do código. Depois da confirmação, chame `connect()`. CAPTCHA não aceita TOTP. |
+| `connect(): void` | Restaura a sessão salva e inicia bootstrap, transporte e sincronização de metadados. Não repete e-mail/senha. Requer verificação pendente resolvida e lock livre. |
+| `poll(float $timeoutSeconds = 0.5): void` | Processa transporte e sincronização. Timeout deve ser finito e não negativo. Sem conexão ativa, não cria outra sessão nem autentica automaticamente. |
+| `on(string $event, callable $handler): static` | Registra callback que recebe um array de payload. Não execute consultas/escritas dentro dele. |
+| `events(int $after = 0, int $limit = 100): array` | Consulta eventos persistidos do runtime da conta. É diferente dos eventos de diferenças de snapshots de `SnapshotMonitor`. |
+| `isConnected(): bool` | Verifica estado `metadata_connected` e transporte ativo. Não comprova E2EE ou permissões comerciais. |
+| `getState(): string` | Estado atual do runtime compartilhado; em falhas pode conter o `reason` específico. |
+| `accountInfo(): array` | Projeção da conta, descrita abaixo. Não contém cookies nem senha. |
+| `stop(): void` | Fecha serviços e transporte, cancela verificação pendente e libera o lock. Preserva a sessão confirmada e os dados persistidos; não faz logout remoto. |
+| `services(): FacebookClient` | Obtém a fachada de serviços sob o mesmo dono conectado. Exige conexão utilizável e chamada fora dos callbacks. |
+
+`accountInfo()` fornece `channel`, `provider`, `session_id`, `account_id`, `display_name`, `state`, `connected`, `transport`, `lightspeed_version`, `e2ee_ready`, `has_saved_session`, `capabilities` e `login_challenge`. `channel=messenger` e `transport=dgw_websocket` identificam o runtime interno compartilhado; não exigem outro cliente da aplicação. `has_saved_session=true` descreve armazenamento local e não validade remota. `e2ee_ready` permanece `false`. As capabilities desse runtime não tornam todos os métodos Messenger disponíveis na fachada Facebook.
+
+| Estado comum | Significado |
+| --- | --- |
+| `stopped` | Dono parado localmente. |
+| `session_imported` | Sessão salva após login confirmado; transporte ainda não conectado. |
+| `awaiting_two_factor` / `awaiting_captcha` | Verificação pendente no processo que iniciou o login. Consulte `loginChallenge()`. |
+| `login_challenge_expired` | Tentativa pendente expirou; não foi convertida em sessão salva. |
+| `authenticating` | Bootstrap/autenticação da sessão em andamento. |
+| `connecting_transport` | Transporte sendo estabelecido. |
+| `metadata_connected` | Sincronização inicial de metadados confirmada; dispositivo E2EE não implementado. |
+| `disconnected` | Transporte caiu durante o processamento; examine a falha antes de reabrir. |
+
+Para retomar, crie outro `FacebookConnection` com o mesmo ID e pastas e chame apenas `connect()`. O SQLite da conta fica em `<authDirectory>/messenger/<sessionId>/state.sqlite`; os serviços usam `<privateStorageDirectory>/<accountId>/`. Senha e código não são credenciais persistidas. Outra conta exige outro ID de sessão.
+
+### Continuação humana avançada
+
+`exportPrivateLoginChallenge(): array` fornece `{url, cookies, expires_at}` para um bridge privado da aplicação. Esse retorno contém segredos: não o envie por HTTP público, logs, eventos ou ferramentas de LLM. `completeBrowserLogin(CookieJar $cookies): void` recebe a continuação humana do mesmo contexto e verifica a identidade por HTTPS antes de salvar. O pacote não abre navegador automaticamente nem resolve CAPTCHA. Reinício e `stop()` descartam a tentativa pendente. Consulte o [contrato Messenger](../FACEBOOK-MESSENGER.md) para pré-condições e formatos ainda não suportados.
+
+## Fachada de serviços e seleção
+
+`FacebookConnection` oferece diretamente `pages()`, `posts()`, `comments()`, `reactions()`, `inbox()`, `ads()`, `listPages()`, `listAdAccounts()`, `selectPage()`, `selectAdAccount()`, `selectedContext()`, `monitor()` e `command()`, delegando ao mesmo `FacebookClient` conectado.
+
+| Método de `FacebookClient` | Retorno e efeito |
+| --- | --- |
+| `__construct(WebSession $session, string $privateStorageDirectory, ?DocumentRegistry $documents = null)` | Integração avançada com `MessengerClient::webSession()` já conectado. Usa o dono existente; não autentica nem copia cookies. O registry padrão combina os documentos Web observados de Páginas e anúncios. |
+| `accountId(): string` | ID nativo da conta autenticada. |
+| `pages(): PagesService`, `posts(): PostsService`, `comments(): CommentsService`, `reactions(): ReactionsService`, `inbox(): InboxService`, `ads(): AdsService` | Obtêm os serviços correspondentes. Não abrem outra conta. |
+| `listPages(): array` | Delega a `pages()->list()` e guarda os recursos descobertos para seleção local. |
+| `listAdAccounts(): array` | Delega a `ads()->accounts()` e guarda os recursos descobertos para seleção local. |
+| `selectPage(string $id): void`, `selectAdAccount(string $id): void` | Persistem um recurso previamente descoberto para a mesma conta. Não escolhem o primeiro item automaticamente e não concedem permissão remota. |
+| `selectedContext(): array` | `{account_id, page, ad_account}`; escolhas podem ser `null`. Recursos conhecidos conservam seus campos normalizados e `observed_at`. |
+| `monitor(): SnapshotMonitor` | Abre o monitor local de `<privateStorageDirectory>/<accountId>/monitor.sqlite`. Não inicia consultas ou processos. |
+| `command(string $id): ?array` | Consulta um comando local por seu ID. Retorna `null` se não existe; veja os estados de escrita abaixo. |
+| `documentInventory(): array` | Lista `{name, kind, source_sha256}` dos documentos observados. Inventário de protocolo, não catálogo de permissões ou operações validadas em conta. Disponível na fachada retornada por `services()`. |
+| `close(): void` | Fecha somente os armazenamentos dessa fachada. O dono Messenger continua separado. Com `FacebookConnection`, use `stop()` para encerrar também o dono. |
+
+Após `close()`, não reutilize os serviços dessa fachada. Um monitor anteriormente guardado pela aplicação tem seu próprio armazenamento; o ciclo de vida dele não é controlado por `FacebookClient::close()`.
+
+## Páginas
+
+`PagesService::list(): array` faz a descoberta autenticada do launchpoint Web, verificando a identidade da conta e lendo somente coleções reconhecidas. Retorna:
+
+```json
+{
+  "items": [
+    {
+      "id": "100000000001001",
+      "name": "Página de exemplo",
+      "type": "profile_plus",
+      "actor_id": "100000000001001",
+      "delegate_page_id": "100000000002001"
+    }
+  ],
+  "page_info": {"end_cursor": null, "has_next_page": null},
+  "exhaustive": false
+}
+```
+
+IDs acima são fictícios. `type` reconhecido é `classic` ou `profile_plus`; `delegate_page_id` pode ser `null`. Preserve actor e Página delegada separadamente. Esta versão não oferece CRUD de Páginas, gerenciamento de administradores, enumeração completa ou paginação automática dessa descoberta.
+
+## Publicações
+
+| Método de `PostsService` | Entrada e retorno |
+| --- | --- |
+| `list(string $profileId, array $variables = [], ?string $actorId = null): array` | Timeline do perfil informado, sob actor opcional. Exige providers atuais do documento inicial. Retorna `{items, page_info}`. |
+| `next(string $profileId, string $cursor, array $variables = [], ?string $actorId = null): array` | Próxima página com `end_cursor` recebido. Exige o conjunto de variáveis/providers do documento paginado. Retorno igual ao inicial. |
+| `createText(string $actorId, string $text, string $idempotencyKey, array $context, array $variables = []): array` | Cria texto pelo composer de timeline `profile`, com contexto real e idempotência. Retorna `{post_id, story_id, url, publishing_flow, scheduled_publish_time}`; campos não informados ficam `null`. |
+
+Itens de leitura contêm `id`, `post_id`, `text`, `url`, `feedback_id`, `cursor`. `page_info` contém `end_cursor` e `has_next_page`; ambos podem ser desconhecidos. `feedback_id` deve vir desse retorno ou de outra resposta nativa reconhecida.
+
+Para `createText()`, `$context` exige `composer_entry_point`, `composer_source_surface`, `composer_type=profile`, `logging.composer_session_id`, objeto `audience` e lista `tracking`. Aceita ainda `navigation_data` e `is_tracking_encrypted`. `$variables` contém os providers atuais do documento de criação. A biblioteca não descobre automaticamente esses valores nem presume audiência. Não há anexos, upload, menções, edição, exclusão ou publicação cruzada neste método.
+
+## Comentários e respostas
+
+| Método de `CommentsService` | Entrada e retorno |
+| --- | --- |
+| `list(string $feedbackId, array $variables = [], ?string $actorId = null): array` | Primeira página na ordenação escolhida pelo servidor. `$variables` exige `feedLocation` real e os providers atuais. |
+| `next(string $feedbackId, string $cursor, string $intentToken, int $count = 20, array $variables = [], ?string $actorId = null): array` | Pagina com `end_cursor`, mesmo `intent_token` e `feedLocation`. `count`: 1 a 100. |
+| `previous(string $feedbackId, string $cursor, string $intentToken, int $count = 20, array $variables = [], ?string $actorId = null): array` | Pagina com `start_cursor` e o mesmo token de ordenação. `count`: 1 a 100. |
+| `create(string $actorId, string $feedbackId, string $text, string $idempotencyKey, array $context, array $variables = []): array` | Comenta ou responde, com IDs exatos e contexto. Retorna a projeção do comentário criado. |
+
+Leituras retornam `feedback_id`, `items`, `intent_token`, `count`, `total_count` e `page_info`. `page_info` contém `end_cursor`, `start_cursor`, `has_next_page`, `has_previous_page`. Contagens e indicadores podem ser `null`. Itens contêm `id`, `legacy_fbid`, `text`, `author: {id, name}`, `created_time`, `feedback_id`, `parent_id` e `cursor`. A criação retorna esses campos de comentário, sem o cursor da coleção.
+
+O contexto de criação exige `session_id` e `feedback_source`, o nome do enum do contexto efetivo. Campos opcionais aceitos: `attribution_id_v2`, `tracking`, `reply_comment_parent_fbid`, `reply_target_clicked`, `formatting_style`, `is_self_disclosed_as_ai_generated`. Para responder, use o ID nativo do pai em `reply_comment_parent_fbid`. O documento também exige providers/renderização atuais em `$variables`. Os documentos de leitura inicial e paginação têm conjuntos próprios de providers. Não invente `intentToken` para mudar ordenação. Edição, exclusão e moderação não estão implementadas.
+
+## Reações e curtidas
+
+| Método de `ReactionsService` | Entrada e retorno |
+| --- | --- |
+| `summary(string $feedbackId, float $scale = 1.0, ?string $actorId = null): array` | Consulta tipos e contadores, sem inferir autores a partir deles. |
+| `list(string $feedbackId, ?string $reactionId = null, float $scale = 1.0, ?string $actorId = null): array` | Coleção de pessoas/perfis que reagiram; `null` consulta todas as reações reconhecidas. |
+| `next(string $feedbackId, string $cursor, ?string $reactionId = null, int $count = 10, float $scale = 1.0, ?string $actorId = null): array` | Próxima página, com mesmo filtro de reação. `count`: 1 a 100. |
+| `set(string $actorId, string $feedbackId, string $reactionId, string $idempotencyKey, array $context, array $variables = []): array` | Define uma reação cujo ID foi observado no contexto atual. Exige contexto e idempotência. |
+| `remove(string $actorId, string $feedbackId, string $idempotencyKey, array $context, array $variables = []): array` | Remove a reação do actor pelo valor de remoção estabelecido pelo próprio documento. |
+
+`scale` deve ser finito, maior que zero e de até 4. Não invente uma tabela de emojis para IDs; use IDs observados, inclusive em `supported_reaction_infos` quando fornecido.
+
+`summary()` retorna `feedback_id`, `reactions: [{reaction_id, name, count, count_label}]`, `reaction_types_count`, `facebook_reaction_count`, `instagram_reaction_count`, `aggregated_reaction_count`, `display_strategy`. Número de tipos não é total de curtidas. As três contagens de plataformas/agrupamento são medidas distintas, possivelmente `null`; sua presença não implementa um conector Instagram.
+
+Leituras paginadas retornam `feedback_id`, `reaction_filter`, `items`, `important_items`, `page_info`. Itens contêm `id`, `type`, `name`, `profile_picture_url`, `url`, `reaction_id`, `cursor`. `important_items` é um subconjunto separado, não uma segunda página. Preserve `reaction_filter` em `next()` e leia `page_info.end_cursor` / `has_next_page` sem transformar `null` em lista esgotada.
+
+Escritas exigem `$context.session_id`, `$context.feedback_source` e os providers atuais em `$variables`. Aceitam também `attribution_id_v2`, `tracking`, `feedback_referrer`. Retornam `feedback_id`, `viewer_reaction_known`, `viewer_reaction_id`, `reaction_count` e `supported_reaction_infos: [{id}]`. `viewer_reaction_known=false` distingue campo ausente de uma reação conhecida removida.
+
+## Inbox de Página
+
+| Método de `InboxService` | Entrada e retorno |
+| --- | --- |
+| `threads(string $actorId, string $pageId, int $limit = 20, ?string $beforeTimePrecise = null, array $tags = []): array` | Consulta conversas do inbox comercial. Limite: 1 a 100. Tags: até 20 strings exatas observadas. Retorna `{items, sync_sequence_id, has_more}`. |
+| `messages(string $actorId, string $pageId, string $selectedItemId, int $limit = 20, ?string $beforeTimePrecise = null): array` | Consulta mensagens da seleção retornada em `threads()`. Retorna `{thread, items, has_more}`. |
+
+O cursor temporal é a string numérica observada de 1 a 24 dígitos; não fabrique uma data ou converta unidades. Conversas projetadas contêm `id`, `selection_id`, `thread_key: {thread_fbid, other_user_id}`, `name`, `folder`, `unread_count`, `messages_count`, `updated_time_precise`, `cannot_reply_reason`, `composer_input_disabled`. Passe `selection_id` reconhecido para `messages()`, preservando o `id` GraphQL original separadamente.
+
+Mensagens projetadas contêm `id`, `message_id`, `offline_threading_id`, `sender_id`, `text`, `snippet`, `timestamp_precise`, `unread`. `has_more` permanece `null`: não há evidência confiável de esgotamento nesse contrato. O serviço é somente leitura, sem envio como Página, mudança de estado, atribuição a atendentes ou garantia de histórico completo. Ele não usa conversas pessoais Messenger como fallback de Página.
+
+## Anúncios
+
+| Método de `AdsService` | Entrada e retorno |
+| --- | --- |
+| `accounts(): array` | Opções do contexto atual, no máximo duas. Retorna `{items, partial: true, exhaustive: false, maximum_items: 2, source}`. Não cria conta automaticamente. |
+| `account(string $id): ?array` | Metadados de uma conta por ID legado exato, ou `null` se a resposta reconhecida não contiver a conta. |
+| `campaigns(array $ids): array` | Metadados de entrega/status/estrutura de campanhas cujos IDs já são conhecidos. |
+| `adsets(array $ids): array` | Metadados brutos reconhecidos de conjuntos de anúncios por IDs conhecidos. |
+| `ads(array $ids): array` | Metadados de anúncios existentes por IDs conhecidos. |
+| `previews(array $ids): array` | Consulta prévia/link existente. Não cria nem publica um criativo. |
+| `insights(array $ids, string $datePreset = 'today', array $metrics = DEFAULT_METRICS): array` | Métricas agregadas pelo preset aceito pelo servidor. |
+| `insightsRange(array $ids, string $since, string $until, array $metrics = DEFAULT_METRICS): array` | Datas `YYYY-MM-DD`, intervalo inclusivo de entrada, com `since <= until`. |
+| `availability(): array` | Descreve contratos e limites implementados; `read_only=true`, `validated_in_account=false`, `account_list_exhaustive=false`. Não testa permissões remotamente. |
+
+Itens de conta contêm `id`, `name`, `currency`, `status`; campos podem ser `null`. Métodos por IDs recebem listas de 1 a 100 IDs numéricos exatos como strings. Retornam listas de nós dos tipos esperados; preservam os campos nativos retornados. Eles não enumeram campanhas/anúncios de toda a conta e não produzem um schema comercial completo normalizado.
+
+`DEFAULT_METRICS` é a descrição do default da assinatura: `SPEND`, `IMPRESSIONS`, `REACH`, `COST_PER_RESULT`, `PERFORMANCE_INDICATOR`, `ANCHOR_EVENT_ATTRIBUTION_SETTING`. O argumento aceita até sete métricas dessa lista ou `RESULTS`. A constante é privada: para definir outro subconjunto, passe strings explícitas. Insights usam o agregado observado `first=1` e `filter_zero_delivery=true`; não oferecem breakdowns arbitrários ou relatório completo da conta. Valores monetários e métricas preservam o formato nativo sem conversão presumida.
+
+Não há enumeração completa de contas, criação de campanhas/conjuntos/anúncios/criativos, alteração de orçamento/status ou publicação. A Graph API interna do Ads Manager não é usada como alternativa. Chamadas Web `/api/graphql/` reconhecidas e Marketing Graph API são caminhos distintos; o segundo foi excluído desta integração.
+
+## Escritas, ledger e erros
+
+`FacebookException` estende `RuntimeException` e expõe `reason`, `outcome`, `retryable`, `commandId`. Uma escrita que alcança o ledger conserva `commandId` também quando falha. O retorno de `command($id)` contém `id`, `operation`, `state`, `result`, `created_at`, `updated_at`.
+
+| Estado do comando | Interpretação |
+| --- | --- |
+| `prepared` | Reserva local criada antes do envio. Não é sucesso remoto. |
+| `unknown` | Incerteza gravada antes do I/O, inclusive quando a resposta não foi confirmada. Não repetir automaticamente. |
+| `response_received` | Resposta recebida e parseada; projeção do serviço ainda não confirmada. Não autoriza reenvio. |
+| `confirmed` | Projeção do resultado validada e salva em `result.projection`. Mesma chave/conteúdo retorna essa projeção sem outra requisição. |
+
+O ledger também admite estados de finalização `not_confirmed` e `rejected` para sua infraestrutura; os métodos atuais não devem ser tratados como produtores de todas essas transições. Uma nova chave não resolve a incerteza do comando anterior. Repetir chave com outro conteúdo é conflito, não atualização.
+
+| Diagnóstico relevante | Ação da aplicação |
+| --- | --- |
+| `facebook_provider_context_required` | Fornecer providers/contexto atual do documento; não preencher com valores arbitrários. |
+| `facebook_resource_not_discovered` | Descobrir o recurso para a mesma conta antes de persistir a seleção. |
+| `facebook_authentication_required`, `facebook_csrf_unavailable`, `facebook_identity_unconfirmed` | Conferir autenticação, verificação e identidade da sessão. Não copiar tokens de outra conta. |
+| `facebook_pages_unavailable`, `facebook_ads_invalid_response`, `facebook_inbox_selection_mismatch` | Resposta não corresponde ao contrato esperado. Preserve IDs/estado e examine o binding; não tratar como lista vazia/sucesso. |
+| `facebook_idempotency_conflict` | A chave pertence a outro conteúdo. Não trocar silenciosamente a chave e reenviar. |
+| `facebook_command_uncertain`, `facebook_command_unconfirmed` | Consultar `commandId` e conciliar com o estado real. Não há retry automático de escrita. |
+| `facebook_transport_failed`, `facebook_rate_limited`, `facebook_http_failed` | Respeitar limitação/falha e o grau de incerteza. `retryable` não autoriza repetir uma mutation incerta. |
+
+Erros de autenticação/ciclo de vida vêm de `MVO\Messenger\MessengerException`, com `reason` e `retryable`, por exemplo `session_required`, `session_expired`, `login_verification_pending`, `login_challenge_expired`, `login_identity_mismatch`. Argumentos inválidos podem lançar `InvalidArgumentException`; uso de fachada fechada, callback indevido e conflito de ciclo de vida podem lançar `LogicException`. A tabela é uma orientação, não uma enumeração fechada de todos os diagnósticos do protocolo.
+
+## Monitoramento local
+
+O namespace é `MVO\Facebook\Monitoring`. A aplicação faz a coleta, projeta dados normalizados, define a completude verdadeira e chama o monitor. Não há consulta de rede, scheduler, webhook ou alteração no Facebook feita por esses objetos.
+
+| Classe/método | Contrato |
+| --- | --- |
+| `ResourceScope(string $accountId, string $identityId, string $resourceType, string $resourceId)` | Escopo exato de conta, identidade ativa e recurso. `key(): string` gera a chave local; `toArray(): array` conserva os quatro descritores. |
+| `SnapshotItem(string $id, array $fields = [], array $counters = [])` | Projeção normalizada. `toArray(): array` devolve `{id, fields, counters}`. Campos ausentes são desconhecidos; `null` explícito limpa um campo conhecido. Contadores são inteiros não negativos. |
+| `SnapshotPage(string $snapshotId, array $items, ?string $cursor = null, ?string $nextCursor = null, bool $complete = false)` | Página ordenada de até 5.000 `SnapshotItem`. `complete=true` só quando toda a coleção foi observada e a paginação terminou. `toArray(): array` projeta a página. |
+| `SnapshotMonitor(string $sqliteFile)` | Armazenamento local privado, ou `:memory:` para execução efêmera. |
+| `ingest(ResourceScope $scope, SnapshotPage $page): array` | Persiste uma página. Retorna `{duplicate, committed, baseline_created, events_created}`. Só uma página terminal confirma seus itens pendentes. |
+| `state(ResourceScope $scope): array` | `{baseline_ready, last_snapshot_id, last_complete, pending_snapshot_id, next_cursor, pending_pages, known_items}`. Permite retomar a coleta. |
+| `items(ResourceScope $scope, ?string $afterId = null, int $limit = 100): array` | Itens confirmados, paginação local estável pelo ID exato. |
+| `events(ResourceScope $scope, int $after = 0, int $limit = 100): array` | Eventos locais após o ID informado, com `{id, type, item_id, payload, created_at}`. O consumidor salva seu próprio cursor/ack. |
+| `discardPending(ResourceScope $scope, string $snapshotId): void` | Descarta explicitamente uma coleta pendente sem apagar itens/eventos confirmados. |
+
+Os limites de paginação local de `items()` e `events()` são de 1 a 500; o cursor de evento deve ser não negativo. Campos normalizados de `SnapshotItem`: `text`, `message`, `name`, `author_id`, `parent_id`, `created_time`, `updated_time`, `reaction_type`, `permalink_url`, `status`, `object_type`; valores são string, inteiro, booleano ou `null`. Campos fora dessa lista, HTML bruto e credenciais não são aceitos. Nomes de contadores seguem o padrão simples do componente. Consulte o [guia do monitor](../../packages/facebook/src/Monitoring/README.md) para invariantes e exemplo completo.
+
+A primeira coleta exaustiva cria baseline silencioso. Antes dela, coletas parciais não notificam histórico como novidade. Coletas posteriores geram `item.created`, `item.updated`, `counters.changed`; somente uma coleta exaustiva posterior pode produzir `item.removed`, significando ausência na coleção observada, sem provar exclusão no Facebook. Cursor incorreto, página repetida com conteúdo diferente ou nova coleta sobre outra pendente são rejeitados.
+
+## Evidência e recursos ainda ausentes
+
+Em 18/10/2026, o runtime compartilhado confirmou autenticação com continuação humana, persistência/restauração e `metadata_connected`, com metadados de 13 conversas e observação do WebSocket por 12 segundos. A leitura autenticada do launchpoint de Páginas também forneceu uma captura reconhecida pelo parser, com sete Páginas modernas e `exhaustive=false`. Esse alcance não comprova escrita, todas as Páginas/permissões, outras contas, todos os desafios ou estabilidade prolongada.
+
+Os serviços usam documentos observados e testes locais de formato, projeção, isolamento e idempotência. Publicação, comentários, reações, consultas comerciais de inbox/anúncios e eventos reais desses serviços não foram validados em conta nesta etapa. E2EE pessoal, envio pelo inbox de Página, upload/mídia, chamadas, moderação, administração completa de Fanpages, grupos, Marketplace e Instagram não estão implementados por este pacote. Não há API REST Facebook nem ferramentas Facebook no MCP WhatsApp.
+
+# Cobertura, erros e validação
+
+A biblioteca Facebook é experimental. Cobertura implementada, teste com transporte simulado e resultado observado numa conta real são evidências distintas. Métodos e documentos persistidos não comprovam compatibilidade total do Facebook.
+
+## Matriz de cobertura
+
+| Recurso | Contrato implementado | Evidência e limite |
+| --- | --- | --- |
+| Login e sessão | E-mail/senha, confirmação de identidade, persistência e restauração. | Login real confirmado com continuação humana e restauração; sem garantia de todos os desafios. |
+| 2FA | Desafio reconhecido em memória e confirmação de autenticador. | Testes locais; conclusão completa desse caminho em conta real não demonstrada. |
+| CAPTCHA | Handoff privado opcional e confirmação independente da identidade. | Exige ação humana; pacote não abre navegador nem resolve desafio automaticamente. |
+| Metadados Messenger | DGW/Lightspeed, cursores e loop PHP. | Conta real chegou a `metadata_connected`, com 13 conversas e observações curtas; não comprova estabilidade prolongada. |
+| Messenger E2EE | Não implementado. | `e2ee_ready=false`; sem fallback plaintext. |
+| Páginas | Descoberta parcial e escolhas locais. | Projeção de sete recursos `profile_plus` num bootstrap autenticado real; não prova inventário completo. |
+| Timeline, comentários e reações | Bindings de leitura/escrita e projeções reconhecidas. | Fixtures e artefatos públicos; escritas não validadas em conta real. Contextos/providers precisam ser fornecidos. |
+| Inbox comercial | Leitura de threads/mensagens. | Fixtures locais; envio como Página não implementado. |
+| Anúncios | Consultas Web parciais, objetos por IDs conhecidos e métricas agregadas. | Contratos/fixtures; queries comerciais não validadas em conta real. Sem mutations comerciais. |
+| Monitor | SQLite, snapshots, cursores, deduplicação e diferenças. | Testes locais; não coleta rede ou prova eventos reais. |
+
+As observações reais acima foram feitas em 18/10/2026. Não houve envio de mensagens, publicação, comentário, reação ou alteração publicitária nesses testes Facebook. A validação de autenticação/metadados não se estende automaticamente aos serviços comerciais.
+
+## Recursos ainda ausentes
+
+Não há conector Instagram neste pacote, dispositivo E2EE, envio pelo inbox de Página, CRUD geral de Fanpage, cargos/administração geral, upload de mídia, edição/exclusão/moderação de posts/comentários ou insights orgânicos completos. Preparação automática de composer/providers Relay também não está implementada.
+
+Anúncios não têm criação/publicação de campanha, conjunto, anúncio ou criativo, nem alterações de status/orçamento. A integração mantém a restrição de usar somente operações Web estabelecidas, sem recorrer à Graph API interna do Ads Manager para preencher lacunas.
+
+## Erros de autenticação e conexão
+
+Erros do runtime usam `MVO\Messenger\MessengerException`, com `reason` e `retryable`. Projete apenas o diagnóstico necessário; não exponha argumentos, objetos, HTML, cookies ou stack traces da autenticação.
+
+| Motivo | Tratamento |
+| --- | --- |
+| `login_two_factor_required` | Consulte `loginChallenge()`; somente `two_factor` com `ready=true` aceita `confirmLogin()`. |
+| `login_code_invalid` | Solicite decisão do operador; não repita o código automaticamente. |
+| `login_captcha_required`, `login_challenge_required` | Verificação humana no mesmo contexto; sem resolução automática. |
+| `login_challenge_expired` | O contexto foi descartado; outra tentativa explícita pode ser necessária. |
+| `login_flow_unavailable`, `login_encryption_unavailable` | Formato/chave necessários indisponíveis; não envie senha sem criptografia. |
+| `login_unconfirmed`, `login_identity_mismatch` | Cookies e identidade não foram confirmados consistentemente. |
+| `login_rate_limited` | Aguarde; não faça um loop de tentativas. |
+| `messenger_e2ee_not_ready` | Conversa criptografada indisponível neste runtime. |
+
+Veja [conexão](CONEXAO.md) para o ciclo de vida e [Messenger](../FACEBOOK-MESSENGER.md) para o contrato compartilhado.
+
+## Erros dos serviços Facebook
+
+`MVO\Facebook\FacebookException` contém `reason`, `outcome`, `retryable` e `commandId` quando há comando registrado. Entrada local inválida pode lançar `InvalidArgumentException` antes da requisição. HTTP 200 pode conter erro GraphQL ou resposta parcial; não o trate como sucesso da ação.
+
+```php
+use MVO\Facebook\FacebookConnection;
+use MVO\Facebook\FacebookException;
+
+function diagnosticarComando(FacebookConnection $facebook, FacebookException $error): array
+{
+    return [
+        'reason' => $error->reason,
+        'outcome' => $error->outcome,
+        'retryable' => $error->retryable,
+        'command_id' => $error->commandId,
+        'command' => $error->commandId === null ? null : $facebook->command($error->commandId),
+    ];
+}
+```
+
+O comando é dado privado local e pode conter conteúdo normalizado da ação; a função é para uso interno, não uma resposta pública pronta.
+
+## Idempotência e resultado incerto
+
+Mutations exigem chave de idempotência de até 256 bytes e ledger privado. O SDK registra a tentativa antes do I/O; uma falha depois disso pode deixar resultado incerto. Mesma chave com conteúdo diferente é conflito.
+
+| Estado | Interpretação |
+| --- | --- |
+| `prepared` | Reserva local do comando. |
+| `unknown` | A tentativa entrou no caminho de I/O; não há resultado confirmado. |
+| `response_received` | Resposta recebida/parseada, sem projeção de resultado validada. |
+| `confirmed` | O serviço reconheceu os IDs/campos esperados e guardou `result.projection`. |
+
+`response_received` não confirma a mutation e não autoriza reenvio. Falha ao reconhecer resultado conserva `commandId`; não invente outra chave para repetir. Consulte `command($id)` e o estado real da ação antes de decidir. Mesma chave já confirmada retorna a projeção persistida sem HTTP.
+
+`confirmed` não prova exibição, alcance, entrega, aprovação de anúncio ou visibilidade de uma publicação. A projeção explícita evita persistir uma árvore GraphQL bruta, mas continua sendo dado privado. O monitor de snapshots e o ledger de comandos têm funções diferentes: evento local não é recibo remoto.
+
+## Manter a integração
+
+Os doc IDs, formatos e providers Web podem mudar. Fontes e hashes do catálogo permitem revisar o binding; não use IDs aleatórios ou flags de fixtures para contornar indisponibilidade. Consulte o código e testes correspondentes antes de ampliar um recurso. Preserve sessões privadas, o dono único do lock e a separação entre WhatsApp e Facebook.
+
+Referências: [FacebookException](../../packages/facebook/src/FacebookException.php), [WebGraphQL](../../packages/facebook/src/Protocol/WebGraphQL.php), [CommandLedger](../../packages/facebook/src/Storage/CommandLedger.php) e [catálogo público observado](../../packages/facebook/resources/README.md).
+

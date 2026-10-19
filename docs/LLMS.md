@@ -2,7 +2,18 @@
 
 Este guia descreve o SDK público PHP e o servidor MCP distribuído neste repositório. Use [llms.txt](../llms.txt) como índice e [llms-full.txt](../llms-full.txt) como contexto consolidado para um modelo que não consiga abrir os demais arquivos.
 
-## Escolha a integração
+## Escolha a biblioteca
+
+Este guia e o servidor MCP abaixo são específicos para **WhatsApp**. A documentação Facebook tem navegação, exemplos, referência PHP e contexto para modelos próprios:
+
+- [Documentação WhatsApp](index.html#inicio): `MVO\WaClient`, QR/código, sessões, mensagens e MCP.
+- [Documentação Facebook](facebook/index.html#inicio): `MVO\Facebook\FacebookConnection`, login, sessão salva, Páginas, interações e serviços disponíveis.
+- [Facebook para LLMs](facebook/LLMS.md): contrato independente, pré-condições e limites do pacote experimental 0.1.
+- [Organização dos pacotes](MULTICANAL.md): fronteiras compartilhadas e isolamento de credenciais/identidades.
+
+Não use QR, JIDs ou ferramentas MCP WhatsApp como se fossem recursos Facebook. Instale Facebook com `composer require "mmhospedagem/mvo-facebook-php:^0.1"`; o Composer resolve Messenger como dependência. O SDK WhatsApp permanece independente.
+
+## Integrações WhatsApp
 
 | Objetivo | Integração |
 | --- | --- |

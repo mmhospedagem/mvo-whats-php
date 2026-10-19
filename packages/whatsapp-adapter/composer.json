@@ -1,0 +1,12 @@
+{
+  "name": "mmhospedagem/mvo-whatsapp-adapter",
+  "description": "Adaptador multicanal opcional para a biblioteca PHP MVO WhatsApp existente.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "mmhospedagem/mvo-channels-core": "dev-main",
+    "mmhospedagem/mvo-whats-php": "^1.0"
+  },
+  "autoload": { "psr-4": { "MVO\\Channels\\WhatsApp\\": "src/" } }
+}

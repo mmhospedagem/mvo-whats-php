@@ -1,0 +1,24 @@
+* text=auto eol=lf
+/vendor export-ignore
+/composer.lock export-ignore
+/.cache export-ignore
+/.phpunit.cache export-ignore
+/.phpunit.result.cache export-ignore
+/.auth export-ignore
+/.auth-backups export-ignore
+/.env export-ignore
+/.env.* export-ignore
+/storage export-ignore
+/var export-ignore
+/sessions export-ignore
+/secrets export-ignore
+/captures export-ignore
+/build export-ignore
+*.sqlite export-ignore
+*.sqlite-wal export-ignore
+*.sqlite-shm export-ignore
+*.log export-ignore
+*.har export-ignore
+*.pcap export-ignore
+*.pcapng export-ignore
+*.trace export-ignore

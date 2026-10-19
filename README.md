@@ -29,6 +29,22 @@
 
 Use uma instalação da biblioteca para atender várias contas, cada uma com seu próprio identificador, credenciais e processo de conexão. O transporte, a criptografia e os serviços da biblioteca executam em PHP, sem exigir Node.js ou uma API intermediária.
 
+## Documentação por biblioteca
+
+| Biblioteca | Documentação | Entrada PHP |
+| --- | --- | --- |
+| WhatsApp | [Guias e exemplos](docs/index.html#inicio) · [Contexto para LLMs](docs/LLMS.md) | `MVO\WaClient` |
+| Facebook | [Guias e exemplos](docs/facebook/index.html#inicio) · [Referência e limites](docs/facebook/REFERENCIA.md) · [Contexto para LLMs](docs/facebook/LLMS.md) | `MVO\Facebook\FacebookConnection` |
+
+O SDK WhatsApp permanece em `src/`, na versão **1.0.3**. Facebook e Messenger têm pacotes independentes na série experimental **0.1**: [mvo-facebook-php](https://packagist.org/packages/mmhospedagem/mvo-facebook-php) e [mvo-messenger-php](https://packagist.org/packages/mmhospedagem/mvo-messenger-php). Instalar WhatsApp não instala Facebook. O suporte e os limites de cada serviço estão na sua própria documentação; a [organização multicanal](docs/MULTICANAL.md) descreve o isolamento.
+
+```sh
+# Aplicação Facebook, sem instalar o SDK WhatsApp:
+composer require "mmhospedagem/mvo-facebook-php:^0.1"
+```
+
+Os repositórios [Facebook](https://github.com/mmhospedagem/mvo-facebook-php) e [Messenger](https://github.com/mmhospedagem/mvo-messenger-php) distribuem os pacotes separadamente. Este repositório mantém o desenvolvimento dos SDKs e os [portais de documentação WhatsApp e Facebook](https://mmhospedagem.github.io/mvo-whats-php/).
+
 ## Comece pelo terminal
 
 Com PHP e as [extensões necessárias](docs/INSTALLATION.md#requisitos) instalados:

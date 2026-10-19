@@ -9,6 +9,7 @@ foreach (['src','resources','examples','tests','tools','dev','docs','native','.v
     foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root.'/'.$directory,FilesystemIterator::SKIP_DOTS)) as $file) {
         if (!$file->isFile() || $file->isLink()) continue;
         $relative=str_replace('\\','/',substr($file->getPathname(),strlen($root)+1));
+        if (str_starts_with($relative,'dev/channels/')) continue;
         if (preg_match('~(?:^|/)(?:\.auth(?:-backups)?|\.cache|\.dev|vendor|node_modules|__pycache__)(?:/|$)|\.(?:sqlite(?:-wal|-shm)?|log|pyc|zip|apk|dll|so|dylib|pem|key|p12|pfx)$~i',$relative)) continue;
         if (in_array($relative,['docs/FLOW-PROTOCOL-EVIDENCE.json','.vscode/settings.json'],true)) continue;
         $files[$relative]=$file->getPathname();

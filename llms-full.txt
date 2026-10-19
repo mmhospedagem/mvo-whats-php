@@ -4,7 +4,11 @@
 
 Este documento consolida instalação, ciclo de vida, exemplos e configuração MCP. Pode ser carregado diretamente como contexto de um modelo; não exige acesso a uma API privada. As fontes PHP da revisão instalada prevalecem sobre exemplos de versões diferentes. O texto acompanha `docs/LLMS.md` e `llms.txt`; mantenha os três coerentes quando alterar o contrato.
 
-## Escolha a integração
+## Escopo deste contexto
+
+Este documento é autocontido para o SDK WhatsApp `mmhospedagem/mvo-whats-php`, `MVO\WaClient` e seu MCP. Os contratos Facebook estão separados em `docs/facebook/llms-full.txt`, com índice em `docs/facebook/llms.txt` e portal `docs/facebook/index.html`. O namespace Facebook é `MVO\Facebook`; não converter seus IDs em JIDs nem aplicar modalidades de autenticação WhatsApp à outra biblioteca. Facebook tem instalação Composer própria: `composer require "mmhospedagem/mvo-facebook-php:^0.1"`, que resolve o runtime Messenger da série experimental 0.1. Esses pacotes opcionais continuam fora da distribuição Composer WhatsApp.
+
+## Escolha a integração WhatsApp
 
 | Objetivo | Integração |
 | --- | --- |

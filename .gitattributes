@@ -12,6 +12,8 @@
 /.auth-backups export-ignore
 /.cache export-ignore
 /.dev export-ignore
+/packages export-ignore
+/dev/channels export-ignore
 /build export-ignore
 /dev.local.json export-ignore
 /storage export-ignore

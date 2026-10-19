@@ -3,7 +3,7 @@
 @font-face{font-family:"MVO Manrope";font-weight:800;font-display:swap;src:url("fonts/manrope-800.ttf") format("truetype")}
 
 :root {
- color-scheme:dark;--header-height:76px;
+ color-scheme:dark;--header-height:121px;
  --bg:#10151e;--surface:#171e29;--surface-hover:#202b3a;--ink:#edf2fa;
  --muted:#b6c2d3;--subtle:#91a2b9;--line:#2a3545;--blue:#74b8ff;
  --blue-tint:#1b2b41;--focus:#64a8ff;--code:#151d29;--code-ink:#dce7f5;
@@ -18,7 +18,7 @@ body.light {
  --selection:#cce5ff;--selection-ink:#162b43;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:108px;scrollbar-color:var(--line) var(--bg)}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--header-height) + 32px);scrollbar-color:var(--line) var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.8 var(--font);-webkit-font-smoothing:antialiased}
 ::selection{background:var(--selection);color:var(--selection-ink)}
 a{color:var(--blue);text-underline-offset:4px;text-decoration-thickness:1px}
@@ -39,6 +39,10 @@ img[data-mvo-brand]{background:transparent;padding:0;border-radius:0}
 
 .site-header{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line)}
 .header-inner{height:76px;max-width:1440px;margin:auto;padding:0 28px;display:flex;align-items:center;gap:28px}
+.product-bar{max-width:1440px;min-height:44px;margin:auto;padding:0 28px;display:flex;align-items:center;gap:24px;border-top:1px solid var(--line);font-size:12px;line-height:1.5}
+.product-bar>span,.product-bar>small{color:var(--subtle);font-size:12px}.product-bar>small{margin-left:auto}
+.product-switch{display:flex;align-self:stretch;gap:22px}.product-switch a{display:flex;align-items:center;min-height:44px;text-decoration:none;color:var(--muted);font-size:13px;font-weight:600;border-bottom:2px solid transparent;padding:0 2px}
+.product-switch a:hover{color:var(--blue)}.product-switch a.current{color:var(--blue);border-bottom-color:var(--blue)}
 .brand{display:flex;align-items:center;text-decoration:none;flex-shrink:0}
 .brand img{width:132px;height:auto;display:block}
 .header-links{display:flex;gap:22px;align-items:center}
@@ -80,9 +84,9 @@ main{min-width:0;padding:44px 56px 0}
 .page-tools>a:hover{color:var(--blue)}.page-tools .icon{width:12px;height:12px}
 article{min-width:0;max-width:76ch;overflow-wrap:break-word}
 article h1{font-size:36px;font-weight:800;line-height:1.25;letter-spacing:-.035em;margin:0 0 20px;overflow-wrap:anywhere;text-wrap:balance}
-article h2{font-size:24px;font-weight:800;line-height:1.4;letter-spacing:-.025em;margin:48px 0 16px;scroll-margin-top:108px;overflow-wrap:anywhere}
-article h3{font-size:19px;font-weight:800;line-height:1.5;letter-spacing:-.015em;margin:32px 0 12px;scroll-margin-top:108px;overflow-wrap:anywhere}
-article h4{font-size:16px;line-height:1.6;margin:28px 0 12px;scroll-margin-top:108px}
+article h2{font-size:24px;font-weight:800;line-height:1.4;letter-spacing:-.025em;margin:48px 0 16px;scroll-margin-top:calc(var(--header-height) + 32px);overflow-wrap:anywhere}
+article h3{font-size:19px;font-weight:800;line-height:1.5;letter-spacing:-.015em;margin:32px 0 12px;scroll-margin-top:calc(var(--header-height) + 32px);overflow-wrap:anywhere}
+article h4{font-size:16px;line-height:1.6;margin:28px 0 12px;scroll-margin-top:calc(var(--header-height) + 32px)}
 article p{margin:18px 0;color:var(--muted)}article strong{color:var(--ink);font-weight:600}
 article .doc-lead,article>p:first-of-type{font-size:18px;line-height:1.8;color:var(--muted);margin-bottom:26px}
 article img{max-width:100%;height:auto}article>p>img[data-mvo-logo]{width:320px;margin:4px 0 14px}
@@ -165,7 +169,7 @@ body.sidebar-open,body.search-open{overflow:hidden}
  main{padding-left:36px;padding-right:36px}.page-tools #reading-time{display:none}
 }
 @media(max-width:900px){
- :root{--header-height:68px}.header-inner{height:68px;padding:0 20px;gap:18px}
+ :root{--header-height:113px}.header-inner{height:68px;padding:0 20px;gap:18px}.product-bar{padding-left:20px;padding-right:20px}
  .brand img{width:116px}.mobile-menu{display:inline-grid}.header-links{display:none}
  .docs-layout{display:block}
  .sidebar{position:fixed;left:0;top:var(--header-height);width:300px;max-width:calc(100vw - 40px);height:calc(100dvh - var(--header-height));background:var(--bg);border-right:1px solid var(--line);padding:24px 20px;z-index:40;transform:translateX(-100%);visibility:hidden;transition:transform .18s ease,visibility .18s}
@@ -176,6 +180,7 @@ body.sidebar-open,body.search-open{overflow:hidden}
 }
 @media(max-width:600px){
  .header-inner{padding:0 14px;gap:10px}.brand img{width:112px}.mobile-menu{width:36px}
+ .product-bar{padding-left:22px;padding-right:22px;gap:20px}.product-bar>span{display:none}.product-bar>small{font-size:11px}.product-switch{gap:22px}
  .search-trigger{margin-left:auto;width:40px;height:40px;padding:0;justify-content:center;border:0;background:transparent}
  .search-trigger>span,.search-trigger kbd{display:none}.search-trigger .icon{width:21px;height:21px}.theme-toggle{width:36px}
  main{padding:28px 22px 0}.page-context{font-size:11px;gap:8px;margin-bottom:22px}

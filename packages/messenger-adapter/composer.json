@@ -1,0 +1,8 @@
+{
+  "name": "mmhospedagem/mvo-messenger-adapter",
+  "description": "Adaptador local do cliente Messenger para os contratos multicanal MVO.",
+  "type": "library",
+  "license": "MIT",
+  "require": {"php": "^8.2", "mmhospedagem/mvo-channels-core": "dev-main", "mmhospedagem/mvo-messenger-php": "dev-main"},
+  "autoload": {"psr-4": {"MVO\\Channels\\Messenger\\": "src/"}}
+}

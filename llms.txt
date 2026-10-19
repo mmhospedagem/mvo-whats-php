@@ -22,7 +22,14 @@ Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protoc
 - [Formulários nativos](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FORMULARIOS.md): tipo form, texto livre portável com cancel_option explícito, InputFields Android e limites de validação.
 - [WhatsApp Flows](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FLOWS.md): navigate/data_exchange, registro e limitações do formato inline.
 
-## Serviços
+## Documentação por biblioteca
+
+- [WhatsApp](docs/index.html#inicio): este índice, `docs/LLMS.md` e `llms-full.txt` descrevem `MVO\WaClient` e seu MCP.
+- [Facebook](docs/facebook/index.html#inicio): portal separado para o pacote experimental `mmhospedagem/mvo-facebook-php:^0.1`, com `MVO\Facebook\FacebookConnection`.
+- [Índice Facebook para LLMs](docs/facebook/llms.txt) e [contexto completo Facebook](docs/facebook/llms-full.txt): autenticação própria, sessão salva, serviços implementados e limites, sem misturar o contrato WhatsApp.
+- [Organização dos pacotes](docs/MULTICANAL.md): isolamento entre canal/provedor/conta. Facebook e Messenger são distribuições Composer independentes na série experimental 0.1; não são dependências do SDK WhatsApp.
+
+## Serviços WhatsApp
 
 - [Serviços de conta](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/SERVICOS.md): grupos, perfil e privacidade.
 - [Business](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/BUSINESS.md): recursos comerciais e pré-condições.

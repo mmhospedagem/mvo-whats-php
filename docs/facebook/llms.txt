@@ -1,0 +1,44 @@
+# MVO Facebook PHP
+
+> Biblioteca PHP experimental `mmhospedagem/mvo-facebook-php`, série 0.1, namespace `MVO\Facebook`. A entrada é `FacebookConnection`: login, sessão persistente e restauração. Instale com `composer require "mmhospedagem/mvo-facebook-php:^0.1"`. Este índice não descreve a biblioteca WhatsApp.
+
+## Contexto para modelos
+
+- [Orientações para LLMs](LLMS.md): autenticação, estado, chamadas reais, permissões, privacidade e limites.
+- [Contexto completo](llms-full.txt): guia autocontido com contrato, referência PHP e disponibilidade.
+- [Portal Facebook](index.html#inicio): navegação e busca somente desta biblioteca.
+- [Referência PHP](REFERENCIA.md): métodos realmente implementados, parâmetros, retornos e pré-condições.
+
+## Começar
+
+- [Introdução](INTRODUCAO.md): estrutura da biblioteca e caminhos de integração.
+- [Instalação](INSTALACAO.md): PHP/extensões, dependências e Composer local.
+- [Login e sessão](CONEXAO.md): e-mail/senha, armazenamento confirmado, restauração, 2FA, verificação humana e loop.
+- [Exemplos PHP](EXEMPLOS.md): conexão, retomada e scripts disponíveis no checkout.
+
+## Serviços
+
+- [Páginas e contexto](PAGINAS.md): descoberta parcial, identidade e seleção explícita.
+- [Publicações](PUBLICACOES.md): leitura, cursores e criação de texto com contexto real do composer.
+- [Comentários e reações](COMENTARIOS-REACOES.md): feedback IDs, ordenação, providers, contadores e pessoas.
+- [Inbox comercial](INBOX.md): consultas de conversas/mensagens, IDs e completude desconhecida.
+- [Anúncios](ANUNCIOS.md): consultas Web limitadas, objetos por IDs conhecidos, métricas e operações indisponíveis.
+- [Monitoramento local](MONITORAMENTO.md): snapshots normalizados, baseline, persistência, diferenças e eventos.
+- [Limites e evidências](LIMITES.md): contrato implementado, testes locais e alcance da validação real.
+
+## Regras do contrato
+
+- Leia as assinaturas em `packages/facebook/src/` antes de gerar código. Caminhos de implementação são relativos à raiz do checkout, e não ao diretório deste índice.
+- `login()` salva somente uma sessão confirmada e não inicia o transporte. `connect()` restaura/inicia; `poll()` mantém; `stop()` preserva os dados e libera o único dono do lock.
+- Login, autenticação em duas etapas e sessão salva não significam dispositivo Messenger E2EE pronto. Conversas criptografadas não têm fallback para plaintext.
+- Consultas e comandos pertencem ao loop externo, depois dos callbacks. Credenciais, cookies, desafios privados e respostas brutas não pertencem ao contexto de um modelo.
+- Preserve os IDs Facebook exatos. Não use QR, JIDs ou schemas MCP WhatsApp nesta biblioteca. Os contextos de cada canal são separados.
+- Páginas/contas de anúncios são preferências locais entre recursos descobertos; não mudam a identidade autenticada nem concedem permissões.
+- Providers e contextos do composer/feedback precisam vir da sessão atual. Não fabricar valores para tornar uma operação executável.
+- O inbox comercial implementado é somente leitura. Gerenciamento completo de anúncios e seu fluxo Graph API interno não estão disponíveis.
+- HTTP 200, `metadata_connected` e fixtures não comprovam publicação, entrega ou aprovação real. Preserve resultados parciais e comandos incertos; não repita uma escrita com outra chave.
+- A instalação da biblioteca não autoriza publicação de conteúdo no Facebook nem uso de contas reais. A autorização de uma tarefa também não se estende automaticamente a outras contas, destinos ou operações.
+
+## Outra biblioteca
+
+- [Documentação WhatsApp](../index.html#inicio) e [contexto WhatsApp](../llms-full.txt): contrato independente de `MVO\WaClient` e seu MCP.
