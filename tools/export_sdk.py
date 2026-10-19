@@ -29,23 +29,28 @@ PUBLIC_FILES = {
 PUBLIC_SUFFIXES = {'.php', '.json', '.md', '.txt', '.xml', '.neon', '.dist', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif'}
 PRIVATE_NAMES = {
     'vendor', 'node_modules', '.git', '.cache', '__pycache__', '.phpunit.cache',
-    '.phpunit.result.cache', '.auth', '.auth-backups', '.env', 'storage', 'var',
-    'sessions', 'secrets', 'captures', 'build', 'private', 'composer.lock',
+    '.phpunit.result.cache', '.auth', '.auth-backups', '.env', 'composer.lock',
 }
+RUNTIME_DIRECTORIES = {'storage', 'var', 'sessions', 'secrets', 'captures', 'build', 'private'}
 PRIVATE_SUFFIXES = {'.sqlite', '.sqlite-wal', '.sqlite-shm', '.db', '.db-wal', '.db-shm', '.log', '.har', '.pcap', '.pcapng', '.trace', '.pem', '.key', '.zip'}
 MARKDOWN_LINK = re.compile(r'(?P<open>!?\[[^\]\r\n]*\]\()(?P<url><[^>\r\n]+>|[^\s)]+)(?P<title>\s+["\'][^\r\n]*?["\'])?\)')
 
 
-def _private(name: str) -> bool:
+def _private(name: str, source_storage_namespace: bool = False) -> bool:
     lowered = name.lower()
-    return lowered in PRIVATE_NAMES or lowered.startswith('.env.') or any(lowered.endswith(suffix) for suffix in PRIVATE_SUFFIXES)
+    return (lowered in PRIVATE_NAMES
+            or (lowered in RUNTIME_DIRECTORIES and not (source_storage_namespace and name == 'Storage'))
+            or lowered.startswith('.env.')
+            or any(lowered.endswith(suffix) for suffix in PRIVATE_SUFFIXES))
 
 
 def _walk_public(directory: Path, relative: PurePosixPath):
     if directory.is_symlink():
         raise ValueError('Symlinks are not allowed in public SDK inputs.')
     for entry in sorted(directory.iterdir(), key=lambda item: item.name):
-        if _private(entry.name) or entry.name.startswith('.'):
+        # src/Storage is the public PHP namespace, not a runtime state directory.
+        # Keep private/session/artifact exclusions active, even inside src/Storage.
+        if _private(entry.name, source_storage_namespace=relative == PurePosixPath('src')) or entry.name.startswith('.'):
             continue
         if entry.is_symlink():
             raise ValueError('Symlinks are not allowed in public SDK inputs.')

@@ -39,7 +39,8 @@ class ExportSdkTest(unittest.TestCase):
 
     def test_public_allowlist_excludes_runtime_data_even_under_allowed_directories(self):
         for relative in ['vendor/secret.php', '.cache/secret.json', '.phpunit.cache/secret.php', 'composer.lock',
-                         'private.json', 'examples/.env', 'src/private/secret.php', 'tests/sessions/cookies.json',
+                         'private.json', 'examples/.env', 'resources/private/secret.php', 'tests/sessions/cookies.json',
+                         'src/vendor/secret.php', 'src/.cache/secret.json',
                          'resources/account.sqlite', 'resources/account.sqlite-wal', 'resources/account.db',
                          'resources/debug.har', 'resources/session.log', 'resources/server.key', 'tests/.auth/state.json']:
             self.write(relative, 'PRIVATE-MUST-NOT-EXPORT')
@@ -54,6 +55,28 @@ class ExportSdkTest(unittest.TestCase):
         self.assertEqual(set(manifest['files']), {'composer.json', 'README.md', 'LICENSE', 'src/Client.php',
                          'resources/documents.json', 'tests/ClientTest.php', 'phpunit.xml', 'phpstan.neon.dist',
                          'THIRD_PARTY_NOTICES.md', '.gitattributes', '.gitignore'})
+        for path in (self.root / 'distribution').rglob('*'):
+            if path.is_file():
+                self.assertNotIn(b'PRIVATE-MUST-NOT-EXPORT', path.read_bytes())
+
+    def test_source_storage_namespace_is_exported_without_relaxing_private_exclusions(self):
+        public = {
+            'src/Storage/CommandLedger.php': '<?php namespace MVO\\Facebook\\Storage; class CommandLedger {}\n',
+            'src/Storage/SelectionStore.php': '<?php namespace MVO\\Facebook\\Storage; class SelectionStore {}\n',
+        }
+        for relative, content in public.items():
+            self.write(relative, content)
+        for relative in ['src/Storage/account.sqlite', 'src/Storage/account.sqlite-wal',
+                         'src/Storage/account.db', 'src/Storage/private.key',
+                         'src/Storage/.env', 'src/Storage/vendor/secret.php',
+                         'src/private/secret.php', 'src/sessions/cookies.json',
+                         'src/secrets/credentials.json', 'src/Storage/private/cookies.json',
+                         'tests/Storage/account.json', 'resources/Sessions/cookies.json']:
+            self.write(relative, 'PRIVATE-MUST-NOT-EXPORT')
+        manifest = self.export()
+        for relative, content in public.items():
+            self.assertIn(relative, manifest['files'])
+            self.assertEqual((self.root / 'distribution' / relative).read_text(encoding='utf-8'), content)
         for path in (self.root / 'distribution').rglob('*'):
             if path.is_file():
                 self.assertNotIn(b'PRIVATE-MUST-NOT-EXPORT', path.read_bytes())
