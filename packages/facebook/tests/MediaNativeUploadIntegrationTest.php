@@ -9,13 +9,14 @@ use MVO\Messenger\Auth\{BoundWebSession,CookieJar};
 use MVO\Messenger\Transport\{CurlHttpClient,CurlTransportCapture,HttpResponse,UploadFile};
 use PHPUnit\Framework\TestCase;
 
-require_once dirname(__DIR__,2).'/messenger/tests/fixtures/curl-capture.php';
-
 /** Uses native PHP cURL configuration/stream callbacks, intercepted before network I/O. */
 final class MediaNativeUploadIntegrationTest extends TestCase
 {
     public function testTheVideoServiceKeepsTheSameCookiesAndStreamsOnlyTheProbedSuffix():void
     {
+        // Load after suite discovery so a combined monorepo run can reuse the
+        // equivalent Messenger seam without depending on its test files.
+        require_once __DIR__.'/fixtures/curl-capture.php';
         $directory=sys_get_temp_dir().'/mvo-video-native-'.bin2hex(random_bytes(6));mkdir($directory,0700);$path=$directory.'/video.mp4';file_put_contents($path,'abcdefgh');
         $ledger=null;$service=null;CurlTransportCapture::$active=true;CurlTransportCapture::$headers=[];CurlTransportCapture::$status=200;
         try{
