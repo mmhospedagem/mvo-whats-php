@@ -104,7 +104,7 @@ final class LoginChallengeLifecycleTest extends TestCase
     public function testMissingOrMismatchedBrowserIdentityKeepsChallengeAndNeverSavesCookies():void
     {
         $http=new BrowserCompletionHttp(null);[$client,,$transport]=$this->pending($http);
-        foreach([null=>'login_unconfirmed','456'=>'login_identity_mismatch'] as $id=>$reason){
+        foreach([''=>'login_unconfirmed','456'=>'login_identity_mismatch'] as $id=>$reason){
             $http->identity=$id===''?null:(string)$id;
             try{$client->completeBrowserLogin(CookieJar::fromJson('{"c_user":"123","xs":"SYNTHETIC_BROWSER_XS"}'));self::fail('Unverified identity cannot become durable');}
             catch(MessengerException $error){self::assertSame($reason,$error->reason);}

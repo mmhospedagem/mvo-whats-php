@@ -281,8 +281,8 @@ final class LightspeedDecoder
         if ($value instanceof LightspeedIntegerValue) return $value->decimal;
         if($value instanceof LightspeedUndefinedValue)return $forResolver?$value:null;
         if($value instanceof LightspeedVector||$value instanceof LightspeedDictionary){
-            if($active->contains($value))throw new MessengerException('invalid_lightspeed_expression','Lightspeed container cycle cannot cross the procedure boundary');
-            $active->attach($value);
+            if($active->offsetExists($value))throw new MessengerException('invalid_lightspeed_expression','Lightspeed container cycle cannot cross the procedure boundary');
+            $active->offsetSet($value,null);
             try{
                 if($value instanceof LightspeedVector)return array_map(fn(mixed $entry):mixed=>$this->boundaryValue($entry,$forResolver,$depth+1,$active),$value->values);
                 $object=new \stdClass();
@@ -291,7 +291,7 @@ final class LightspeedDecoder
                     $object->{$key}=$this->boundaryValue($entry,$forResolver,$depth+1,$active);
                 }
                 return $object;
-            }finally{$active->detach($value);}
+            }finally{$active->offsetUnset($value);}
         }
         if (is_array($value)) return array_map(fn(mixed $entry):mixed=>$this->boundaryValue($entry,$forResolver,$depth+1,$active),$value);
         return $value;

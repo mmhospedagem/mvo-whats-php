@@ -55,6 +55,6 @@ final class CurlHttpClient implements HttpClient
         try {
             if (curl_exec($handle)===false) throw new MessengerException($tooLarge?'response_too_large':'http_transport_failed',$tooLarge?'Messenger bootstrap exceeds the configured size limit':'Facebook HTTPS request failed',!$tooLarge);
             return new HttpResponse((int)curl_getinfo($handle,CURLINFO_RESPONSE_CODE),$body,$headers);
-        } finally { curl_close($handle); }
+        } finally { unset($handle); }
     }
 }

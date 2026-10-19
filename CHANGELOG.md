@@ -7,6 +7,7 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 - Documentação separada para WhatsApp e Facebook, com navegação e busca próprias, referência PHP, exemplos e contextos para LLMs. Os links existentes dos 49 guias WhatsApp foram preservados.
 - Código dos pacotes opcionais Facebook/Messenger e contratos multicanal organizado sob `packages/`. As distribuições Composer Facebook e Messenger têm nomes próprios; o pacote WhatsApp não passa a depender delas.
 - Facebook inclui login PHP, sessão confirmada persistente e restauração, recursos Web parciais de Páginas/publicações/interações, leitura de inbox e anúncios, e monitor de snapshots em SQLite. E2EE pessoal, envio pelo inbox comercial e escritas de anúncios dependentes da Graph API permanecem indisponíveis.
+- Compatibilidade do runtime Messenger com PHP 8.5: chamadas obsoletas de SplObjectStorage/cURL e uma chave de fixture ajustadas, mantendo as verificações estritas.
 - Testes dos pacotes opcionais e dos dois portais incluídos na CI. O laboratório privado e arquivos de sessão ficam fora das distribuições públicas.
 - Os arquivos do runtime WhatsApp não foram alterados nesta atualização. A validação Facebook desta etapa usa transportes sintéticos; ela não comprova publicação, entrega ou compatibilidade completa em contas reais.
 

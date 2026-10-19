@@ -41,7 +41,7 @@ final class PublicBundleLoader
                     if(strlen($body)+strlen($chunk)>8388608||$total+strlen($chunk)>33554432)return 0;
                     $body.=$chunk;$total+=strlen($chunk);return strlen($chunk);
                 }]);
-            try{$ok=curl_exec($curl)!==false&&(int)curl_getinfo($curl,CURLINFO_RESPONSE_CODE)===200;}finally{curl_close($curl);}
+            try{$ok=curl_exec($curl)!==false&&(int)curl_getinfo($curl,CURLINFO_RESPONSE_CODE)===200;}finally{unset($curl);}
             if($ok){$scripts[]=$body;if($containsTarget($body))break;}
             if($total>=33554432)break;
         }
