@@ -114,12 +114,73 @@ final class WaClientFormsTest extends TestCase
         self::assertSame(600,$current->authenticationStatus()['retryAfterSeconds']);
         $nativeBefore=count(array_filter($peer->sent,static fn(BinaryNode $node):bool=>($node->attrs['xmlns']??null)==='fb:thrift_iq'));
         try{$current->generate('Novo pedido durante o bloqueio');self::fail('Cooldown bypassed');}catch(ServiceException $error){self::assertSame('429',$error->serverCode);}
-        try{$old->generate('Fachada anterior à reconexão');self::fail('Old facade authorized');}catch(\RuntimeException){}
+        try{$old->generate('Fachada anterior à reconexão');self::fail('Old facade authorized');}catch(\RuntimeException|\LogicException){}
         self::assertSame($nativeBefore,count(array_filter($peer->sent,static fn(BinaryNode $node):bool=>($node->attrs['xmlns']??null)==='fb:thrift_iq')));
     }
 
     public static function nonceTiming():iterable
     {yield 'nonce before IQ result'=>[true];yield 'nonce after IQ result'=>[false];}
+
+    public function testWithdrawalOnNoncePreventsTokenExchangeAndDoesNotSeizeOtherServices():void
+    {
+        $peer=$this->connected();$peer->smbSuccess=true;$active=true;
+        $this->client->setBusinessFormsGuard(static function()use(&$active):void{if(!$active)throw new \LogicException('Access withdrawn');});
+        $forms=$this->client->forms();
+        $this->client->on('node',static function(array $event)use(&$active):void{if(($event['node']->attrs['id']??null)==='NATIVE-NONCE')$active=false;});
+        try{$forms->generate('Cadastro de teste');self::fail('Withdrawn operation continued');}catch(\LogicException $error){self::assertSame('Access withdrawn',$error->getMessage());}
+        $native=array_values(array_filter($peer->sent,static fn(BinaryNode $node):bool=>($node->attrs['xmlns']??null)==='fb:thrift_iq'));
+        self::assertCount(1,$native);self::assertSame('118',$native[0]->attrs['smax_id']);self::assertFalse($forms->authenticationStatus()['authenticated']);
+        // The guard is limited to forms; a separate ordinary query remains usable.
+        self::assertSame('result',$this->client->query(new BinaryNode('iq',['type'=>'get','xmlns'=>'fixture:unrelated']))->attrs['type']);
+        $this->client->setBusinessFormsGuard(null);self::assertTrue($this->client->isConnected());
+    }
+
+    public function testWithdrawalAfterPublicationPersistsSnapshotAndBlocksMessageWithoutReplay():void
+    {
+        $peer=$this->connected();$active=true;$publications=0;
+        $this->client->setBusinessFormsGuard(static function()use(&$active):void{if(!$active)throw new \LogicException('Access withdrawn');});
+        $real=$this->client->forms();$sender=(new \ReflectionProperty($real,'sender'))->getValue($real);
+        $store=new \MVO\Signal\SignalStore(':memory:');$catalog=new \MVO\Service\BusinessFormStore($store);
+        $forms=new \MVO\Service\BusinessFormsService($catalog,$store,function()use(&$active,&$publications):array{$publications++;$active=false;return ['flowId'=>'987654321','wellVersion'=>'42'];},$sender);
+        $form=$forms->create(['form_title'=>'Cadastro','form_type'=>'CUSTOMER_INFO','message_text'=>'Preencha','selected_field_list'=>['NAME']]);$before=count($peer->sent);
+        try{$forms->send($form['id'],'5511999999999','BR',[],'withdrawn-publication');self::fail('Message sent after withdrawal');}catch(\LogicException $error){self::assertSame('Access withdrawn',$error->getMessage());}
+        self::assertSame('published',$forms->publicationStatus('withdrawn-publication')['state']);self::assertSame('987654321',$forms->publicationStatus('withdrawn-publication')['publication']['flowId']);
+        self::assertSame('unknown',$forms->sendStatus('withdrawn-publication')['state']);self::assertSame($before,count($peer->sent));
+        $active=true;
+        try{$forms->send($form['id'],'5511999999999','BR',[],'withdrawn-publication');self::fail('Interrupted operation replayed');}catch(\LogicException){}
+        self::assertSame(1,$publications);self::assertSame($before,count($peer->sent));$store->close();
+    }
+
+    public function testExactMessageBoundaryRechecksAfterDiscoveryAndAlwaysReleasesItsScope():void
+    {
+        $peer=$this->connected();$active=true;$client=$this->client;
+        $client->setBusinessFormsGuard(static function()use(&$active):void{if(!$active)throw new \LogicException('Access withdrawn');});
+        $client->on('node',static function(array $event)use(&$active):void{if(($event['node']->attrs['id']??null)==='DISCOVERY-FIXTURE')$active=false;});
+        $scope=new \ReflectionMethod($client,'guardBusinessFormsMessage');
+        try{$scope->invoke($client,'GUARDED-MESSAGE',static function()use($client):array{
+            $client->query(new BinaryNode('iq',['id'=>'DISCOVERY-FIXTURE','type'=>'get','xmlns'=>'fixture:discovery']));
+            $client->sendNode(new BinaryNode('message',['id'=>'GUARDED-MESSAGE']));return [];
+        });self::fail('Stanza escaped after withdrawal');}catch(\LogicException $error){self::assertSame('Access withdrawn',$error->getMessage());}
+        self::assertSame([],array_values(array_filter($peer->sent,static fn(BinaryNode $node):bool=>$node->tag==='message')));
+        self::assertSame([],(new \ReflectionProperty($client,'businessFormsMessageGuards'))->getValue($client));
+        $client->sendNode(new BinaryNode('message',['id'=>'UNRELATED-MESSAGE']));self::assertSame('UNRELATED-MESSAGE',$peer->sent[array_key_last($peer->sent)]->attrs['id']);
+    }
+
+    public function testCsvDownloadChecksBeforeAndAfterHttpWithoutPublishingAFileOnWithdrawal():void
+    {
+        $this->connected();$active=true;$calls=0;
+        $this->client->setBusinessFormsGuard(static function()use(&$active):void{if(!$active)throw new \LogicException('Access withdrawn');});
+        $forms=$this->client->forms();$exports=(new \ReflectionProperty($forms,'exports'))->getValue($forms);$store=(new \ReflectionProperty($exports,'store'))->getValue($exports);
+        $compressed=gzencode("name,answer\nMVO,yes\n");$encrypted=\MVO\Media\MediaCrypto::encrypt($compressed,'document',str_repeat('k',32));
+        $transfer=new \MVO\Media\MediaTransfer(static fn():BinaryNode=>throw new \LogicException('Unexpected IQ'),static function()use(&$active,&$calls,$encrypted):array{$calls++;$active=false;return ['status'=>200,'body'=>$encrypted['body']];});
+        (new \ReflectionProperty($this->client,'mediaTransfer'))->setValue($this->client,$transfer);
+        $record=['requestId'=>'download-guard','flowId'=>'987654321','stanzaId'=>'EXPORT-FIXTURE','state'=>'ready','expiresAt'=>time()+86400,'bundle'=>$encrypted+['mediaType'=>'document','directPath'=>'/v/t62/form-response-fixture']];
+        $store->set('galaxy-response-requests',hash('sha256','download-guard'),\MVO\Protocol\BinaryData::encode($record));$destination=$this->directory.'/responses.csv';$active=false;
+        try{$forms->downloadResponses('download-guard',$destination);self::fail('Download started without authorization');}catch(\LogicException){}self::assertSame(0,$calls);
+        $active=true;
+        try{$forms->downloadResponses('download-guard',$destination);self::fail('Downloaded data escaped after withdrawal');}catch(\LogicException){}
+        self::assertSame(1,$calls);self::assertFileDoesNotExist($destination);self::assertSame('download_failed',$forms->responseStatus('download-guard')['state']);
+    }
 
     #[DataProvider('nonceTiming')]
     public function testNativeTokenExchangeUsesPrivateStanzasThroughRealClientRouting(bool $beforeResult):void

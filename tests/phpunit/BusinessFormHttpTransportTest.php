@@ -89,4 +89,19 @@ final class BusinessFormHttpTransportTest extends TestCase
     {
         foreach([['status'=>200,'body'=>str_repeat('x',BusinessFormHttpTransport::MAX_BYTES+1)],['status'=>'200','body'=>'{}'],['status'=>200,'body'=>[]]]as$reply){$transport=new BusinessFormHttpTransport(static fn():string=>self::TOKEN,exchange:static fn():array=>$reply);try{$transport->request(BusinessFormGraphqlService::GENERATE_DOC_ID,[]);self::fail();}catch(\RuntimeException $error){self::assertStringContainsString('response',$error->getMessage());self::assertNotInstanceOf(ServiceException::class,$error);}}
     }
+    public function testWithdrawnAuthorizationBeforeAuthenticationDoesNotFetchTokenOrSendHttp():void
+    {
+        $tokens=0;$calls=0;$failure=new \LogicException('Access withdrawn');
+        $transport=new BusinessFormHttpTransport(static function()use(&$tokens):string{$tokens++;return self::TOKEN;},exchange:static function()use(&$calls):array{$calls++;return [];},authorizationGuard:static fn()=>throw $failure);
+        try{$transport->request(BusinessFormGraphqlService::GENERATE_DOC_ID,[]);self::fail('Unauthorized request accepted');}catch(\LogicException $error){self::assertSame($failure,$error);}
+        self::assertSame(0,$tokens);self::assertSame(0,$calls);
+    }
+    public function testWithdrawalDuringAuthenticationPreventsHttpAndPreservesApplicationDenial():void
+    {
+        foreach([false,true]as$authFails){$active=true;$calls=0;$failure=new \LogicException('Access withdrawn');
+            $transport=new BusinessFormHttpTransport(static function()use(&$active,$authFails):string{$active=false;if($authFails)throw new ServiceException('native',null,'safe');return self::TOKEN;},exchange:static function()use(&$calls):array{$calls++;return [];},authorizationGuard:static function()use(&$active,$failure):void{if(!$active)throw $failure;});
+            try{$transport->request(BusinessFormGraphqlService::GENERATE_DOC_ID,[]);self::fail('HTTP escaped after withdrawal');}catch(\LogicException $error){self::assertSame($failure,$error);}
+            self::assertSame(0,$calls);
+        }
+    }
 }

@@ -55,6 +55,7 @@ Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protoc
 
 ## Regras de interpretação
 
+- APIs podem usar setBusinessFormsGuard(callback) para revalidar acesso/geração/parada em cada fronteira I/O de forms. O callback lança ao retirar acesso; não torna resultados incertos repetíveis nem altera outros serviços ou o catálogo local.
 - Espere connected antes de enviar; connect() não significa login concluído. Continue poll()/run().
 - stop()/disconnect() preservam a sessão; logout() desvincula. Não use logout para reiniciar.
 - server_ack não significa entrega/leitura. Timeout não prova que nada foi enviado.

@@ -49,6 +49,14 @@ try {
 
 Obtenha `$forms = $client->forms()` depois de cada conexão utilizável. A fachada pertence à conexão que a criou: depois de desconectar ou reconectar, descarte a referência anterior e obtenha outra. O catálogo e os registros persistidos continuam na pasta da sessão; a autenticação Business tem outro ciclo de vida.
 
+### Autorização da aplicação entre etapas
+
+Uma API consumidora pode instalar `$client->setBusinessFormsGuard($guard)`, com um callback `function(): void` que consulta a autorização atual e lança uma exceção quando a instância estiver suspensa, com outra geração ou em parada. Use uma leitura atual do armazenamento da aplicação e do sinal de parada a cada execução; um booleano capturado na criação do worker não detecta mudanças externas. `setBusinessFormsGuard(null)` remove esse callback.
+
+O guard é específico do I/O de formulários: é consultado antes/depois das fases de autenticação, antes do HTTP, das consultas de metadados, da solicitação de respostas e no envio da mensagem ao transporte, além de antes/depois do download CSV. Não altera o guard de outros serviços nem bloqueia a autoria do catálogo local. Uma fachada já obtida vê atualizações do callback; uma fachada de conexão antiga não inicia novas operações remotas.
+
+A retirada de autorização impede a próxima etapa de rede, sem desfazer um HTTP ou mensagem já transmitidos. Uma publicação confirmada continua persistida se o envio seguinte for bloqueado. Consulte `publicationStatus()` e `sendStatus()`; uma tentativa interrompida não será repetida implicitamente ao restaurar o acesso. Uma recusa ou resultado incerto mantém seu tratamento próprio. Se o acesso mudar durante o download, os bytes não são devolvidos nem gravados no destino pelo serviço de exportação.
+
 ## Autenticação Business automática
 
 `publish()` e `generate()` usam a autenticação nativa da própria sessão e o transporte HTTPS implementado no SDK. Não exigem fornecer app key, access token ou cookies manualmente. Consultar e editar o catálogo local não inicia essa autenticação.

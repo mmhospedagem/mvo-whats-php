@@ -83,6 +83,10 @@ final class WaClient
     private ?\MVO\Service\BusinessFormAuthenticationService $businessFormsAuthentication=null;
     private int $businessFormsGeneration=0;
     /** @var \Closure():void|null */
+    private ?\Closure $businessFormsGuard=null;
+    /** @var array<string,int> Only exact outgoing Business form message IDs are guarded. */
+    private array $businessFormsMessageGuards=[];
+    /** @var \Closure():void|null */
     private ?\Closure $channelScheduleGuard=null;
     private bool $scheduledPublishing=false;
     private ?string $scheduledMessageId=null;
@@ -333,18 +337,24 @@ final class WaClient
         $store=$this->stateStore??throw new \LogicException('Wait for authenticated login before managing Business forms');
         $auth=$this->businessFormsAuthentication??=new \MVO\Service\BusinessFormAuthenticationService(
             new \MVO\Service\ServiceTransport(
-                fn(BinaryNode $node,float $timeout):BinaryNode=>$this->query($node,$timeout,true,false),
+                function(BinaryNode $node,float $timeout):BinaryNode{
+                    $this->assertBusinessFormsAuthorized();
+                    $reply=$this->query($node,$timeout,true,false);
+                    $this->assertBusinessFormsAuthorized();return $reply;
+                },
                 function(BinaryNode $node):void{$this->sendNode($node);},
                 fn():array=>$this->credentials,
             ),
-            function(float $timeout):void{$this->poll($timeout);},
+            function(float $timeout):void{$this->assertBusinessFormsAuthorized();$this->poll($timeout);$this->assertBusinessFormsAuthorized();},
             fn():bool=>$this->isConnected(),
             fn():float=>$this->now(),
         );
         $generation=$this->businessFormsGeneration;
+        $guard=function()use($generation):void{$this->assertBusinessFormsAuthorized($generation);};
         $http=new \MVO\Service\BusinessFormHttpTransport(
             fn():string=>$generation===$this->businessFormsGeneration&&$this->businessFormsAuthentication===$auth?$auth->token():throw new \LogicException('Business forms facade expired; obtain forms() after reconnecting'),
             proxy:$this->proxy,
+            authorizationGuard:$guard,
         );
         $remote=new \MVO\Service\BusinessFormGraphqlService(static function(string $document,array $variables)use($http,$auth):array{
             try{return $http->request($document,$variables);}
@@ -357,13 +367,26 @@ final class WaClient
             new \MVO\Service\BusinessFormStore($store,fn():int=>(int)floor(($this->wallClock)()*1000)),
             $store,
             fn(array $form,string $country):array=>$remote->publish($form,$country),
-            fn(string $to,array $content):array=>$this->sendMessage($to,$content),
+            function(string $to,array $content)use($guard):array{$guard();return $this->sendMessage($to,$content);},
             fn(string $prompt):array=>$remote->generate($prompt),
             $this->galaxyResponseExports(),
-            new \MVO\Service\GalaxyMetadataService($services->mex()),
+            new \MVO\Service\GalaxyMetadataService(new \MVO\Service\MexService(new \MVO\Service\ServiceTransport(
+                function(BinaryNode $node,float $timeout)use($guard):BinaryNode{$guard();$reply=$this->query($node,$timeout);$guard();return $reply;},
+                function(BinaryNode $node)use($guard):void{$guard();$this->sendNode($node);},
+                fn():array=>$this->credentials,
+            ))),
             fn():int=>(int)floor(($this->wallClock)()*1000),
             fn():array=>$auth->status(),
         );
+    }
+    /** Fresh application authorization for Business form I/O only; local catalog reads/writes remain local.
+     * The callback must throw when access, generation or lifecycle authorization is withdrawn.
+     * @param callable():void|null $guard */
+    public function setBusinessFormsGuard(?callable $guard):void{$this->businessFormsGuard=$guard===null?null:\Closure::fromCallable($guard);}
+    private function assertBusinessFormsAuthorized(?int $generation=null):void
+    {
+        if(($generation!==null&&$generation!==$this->businessFormsGeneration)||!$this->isConnected())throw new \LogicException('Business forms facade expired or disconnected; obtain forms() after connecting');
+        ($this->businessFormsGuard)?->__invoke();
     }
     public function catalog():\MVO\Service\CatalogService { return $this->services()->catalog(); }
     public function businessTools():\MVO\Service\BusinessToolsService { return new \MVO\Service\BusinessToolsService($this->chat(),$this->appStateData(),$this->history()); }
@@ -638,6 +661,7 @@ final class WaClient
     private function save(array $credentials): void { $this->store->save($credentials); $this->credentials = $credentials; }
     public function sendNode(BinaryNode $node): void {
         if ($this->session === null) throw new \LogicException('No active transport');
+        if($node->tag==='message'&&isset($this->businessFormsMessageGuards[$node->attrs['id']??'']))$this->assertBusinessFormsAuthorized($this->businessFormsMessageGuards[$node->attrs['id']]);
         if($this->scheduledPublishing){
             $this->assertScheduledAuthorization();
             // Mark before transport I/O: a failed write can still have reached the server.
@@ -731,6 +755,11 @@ final class WaClient
      * @return array<string,mixed> */
     public function sendMessage(string $to,string|array $content): array {
         if (!$this->isConnected() || $this->messages === null) throw new \LogicException('WhatsApp is not connected');
+        if(is_array($content)&&($content['type']??null)==='business-form'){
+            $this->assertBusinessFormsAuthorized();$content['messageId']??='3EB0'.strtoupper(bin2hex(random_bytes(9)));
+            $id=$content['messageId'];if(!is_string($id))throw new \InvalidArgumentException('Invalid Business form message ID');
+            return $this->guardBusinessFormsMessage($id,fn():array=>$this->messages->sendMessage($this->resolveRecipient($to),$content));
+        }
         $to=$this->resolveRecipient($to);
         if (Jid::recipient($to)->server==='newsletter') return $this->newsletter()->send($to,$content);
         return $this->messages->sendMessage($to,$content);
@@ -918,13 +947,30 @@ final class WaClient
     }
     /** Uses the same account store and authenticated peer transport; callbacks only persist descriptors. */
     private function galaxyResponseExports():\MVO\Service\GalaxyResponseService {
+        $generation=$this->businessFormsGeneration;
         return $this->galaxyResponseService??=new \MVO\Service\GalaxyResponseService(
             $this->stateStore??throw new \LogicException('Wait for authenticated login before querying Galaxy responses'),
             fn():array=>$this->credentials,
-            fn(string $to,array $protocol,array $options):array=>$this->message()->publishProtocolMessage($to,$protocol,$options),
-            fn(array $descriptor):string=>($this->mediaTransfer??throw new \LogicException('WhatsApp media transport is not initialized'))->download($descriptor),
+            function(string $to,array $protocol,array $options)use($generation):array{
+                $this->assertBusinessFormsAuthorized($generation);
+                return $this->guardBusinessFormsMessage($options['id'],fn():array=>$this->message()->publishProtocolMessage($to,$protocol,$options));
+            },
+            function(array $descriptor)use($generation):string{
+                $this->assertBusinessFormsAuthorized($generation);
+                $bytes=($this->mediaTransfer??throw new \LogicException('WhatsApp media transport is not initialized'))->download($descriptor);
+                $this->assertBusinessFormsAuthorized($generation);return $bytes;
+            },
             fn():int=>(int)floor(($this->wallClock)()*1000),
         );
+    }
+    /** @param callable():array<string,mixed> $action
+     * @return array<string,mixed> */
+    private function guardBusinessFormsMessage(string $id,callable $action):array
+    {
+        $this->assertBusinessFormsAuthorized();
+        if(isset($this->businessFormsMessageGuards[$id]))throw new \LogicException('Business form message is already pending');
+        $this->businessFormsMessageGuards[$id]=$this->businessFormsGeneration;
+        try{return $action();}finally{unset($this->businessFormsMessageGuards[$id]);}
     }
     /** @param array<string,mixed> $payload */
     private function appStateEvent(string $event,array $payload):void {

@@ -8,15 +8,18 @@ final class BusinessFormHttpTransport
     public const ENDPOINT='https://graph.facebook.com/graphql';
     public const MAX_BYTES=2097152;
     private \Closure $tokenProvider;
+    private ?\Closure $authorizationGuard;
     /** @param callable():string $accessTokenProvider
-     * @param (\Closure(string,list<string>,string,float):array{status:int,body:string})|null $exchange */
-    public function __construct(callable $accessTokenProvider,private readonly string $language='pt_BR',private readonly ?string $proxy=null,private readonly ?\Closure $exchange=null,private readonly float $timeout=30.0)
+     * @param (\Closure(string,list<string>,string,float):array{status:int,body:string})|null $exchange
+     * @param callable():void|null $authorizationGuard Fresh local authorization before auth and HTTP; throws on withdrawal. */
+    public function __construct(callable $accessTokenProvider,private readonly string $language='pt_BR',private readonly ?string $proxy=null,private readonly ?\Closure $exchange=null,private readonly float $timeout=30.0,?callable $authorizationGuard=null)
     {
         if(PHP_INT_SIZE<8)throw new \LogicException('Business GraphQL requires 64-bit PHP');
         if(preg_match('/^[a-z]{2,3}(?:_[A-Z]{2})?$/D',$language)!==1)throw new \InvalidArgumentException('Invalid Business GraphQL language');
         if(!is_finite($timeout)||$timeout<=0||$timeout>300)throw new \InvalidArgumentException('Business GraphQL timeout must be greater than zero and at most 300 seconds');
         if($proxy!==null){$parts=parse_url($proxy);if($proxy===''||preg_match('/[\x00-\x20\x7f]/',$proxy)||!is_array($parts)||!in_array(strtolower($parts['scheme']??''),['http','https','socks5','socks5h'],true)||!is_string($parts['host']??null)||$parts['host']===''||isset($parts['query'])||isset($parts['fragment']))throw new \InvalidArgumentException('Invalid explicit Business GraphQL proxy');}
         $this->tokenProvider=\Closure::fromCallable($accessTokenProvider);
+        $this->authorizationGuard=$authorizationGuard===null?null:\Closure::fromCallable($authorizationGuard);
     }
 
     /** Returns GraphQL data; errors, partial outcomes and HTTP refusals never become success.
@@ -29,13 +32,16 @@ final class BusinessFormHttpTransport
         foreach(array_keys($variables)as$key)if(!is_string($key)||preg_match('/^[_A-Za-z][_0-9A-Za-z]*$/D',$key)!==1)throw new \InvalidArgumentException('Invalid GraphQL variable name');
         try{$encodedVariables=json_encode($variables===[]?new \stdClass():$variables,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES,128);}catch(\JsonException $error){throw new \InvalidArgumentException('Invalid Business GraphQL variables',0,$error);}
         if(strlen($encodedVariables)>self::MAX_BYTES)throw new \LengthException('Business GraphQL request exceeds the SDK 2 MiB limit');
+        ($this->authorizationGuard)?->__invoke();
         try{$token=($this->tokenProvider)();}
-        catch(ServiceException $error){throw new ServiceException('business.forms.authentication',self::safeCode($error->serverCode),'Business form authentication was refused');}
-        catch(\Throwable){throw new \RuntimeException('Business GraphQL access token is unavailable');}
+        catch(ServiceException $error){($this->authorizationGuard)?->__invoke();throw new ServiceException('business.forms.authentication',self::safeCode($error->serverCode),'Business form authentication was refused');}
+        catch(\Throwable){($this->authorizationGuard)?->__invoke();throw new \RuntimeException('Business GraphQL access token is unavailable');}
+        ($this->authorizationGuard)?->__invoke();
         if(!is_string($token)||$token===''||strlen($token)>65536||preg_match('/[\x00-\x20\x7f]/',$token)||preg_match('//u',$token)!==1)throw new \LogicException('A real Business GraphQL access token must be supplied explicitly');
         $body=json_encode(['variables'=>$variables===[]?new \stdClass():$variables,'access_token'=>$token,'doc_id'=>(int)$docId,'lang'=>$this->language,'Content-Type'=>'application/json'],JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES,128);unset($token);
         if(strlen($body)>self::MAX_BYTES)throw new \LengthException('Business GraphQL request exceeds the SDK 2 MiB limit');
         $headers=['Content-Type: application/json','Accept: application/json','Accept-Encoding: gzip'];
+        ($this->authorizationGuard)?->__invoke();
         try{$reply=$this->exchange===null?$this->curl($headers,$body):($this->exchange)(self::ENDPOINT,$headers,$body,$this->timeout);}catch(\Throwable){throw new \RuntimeException('Business GraphQL transfer has an unconfirmed outcome');}finally{unset($body);}
         if(!is_int($reply['status']??null)||$reply['status']<100||$reply['status']>599||!is_string($reply['body']??null)||strlen($reply['body'])>self::MAX_BYTES)throw new \RuntimeException('Invalid or oversized Business GraphQL response');
         $status=$reply['status'];
