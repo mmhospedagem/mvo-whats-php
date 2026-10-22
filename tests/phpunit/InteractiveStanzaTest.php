@@ -4,7 +4,7 @@ namespace MVO\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use MVO\Message\InteractiveStanza;
+use MVO\Message\{BusinessFormBuilder,InteractiveStanza};
 use MVO\Protocol\BinaryNode;
 
 final class InteractiveStanzaTest extends TestCase
@@ -34,6 +34,15 @@ final class InteractiveStanzaTest extends TestCase
             ['interactiveMessage'=>['nativeFlowMessage'=>['buttons'=>[['name'=>'galaxy_message']]]]],
             ['device_fanout'=>'false'], [$biz],
         ];
+        foreach(['registered Business template'=>false,'registered Business AI'=>true]as$name=>$isAi){
+            yield $name=>[self::businessForm($isAi),['device_fanout'=>'false'],[['tag'=>'biz','attrs'=>[],'content'=>[
+                ['tag'=>'interactive','attrs'=>['type'=>'native_flow','v'=>'1'],'content'=>[
+                    ['tag'=>'native_flow','attrs'=>['name'=>'galaxy_message'],'content'=>[
+                        ['tag'=>'extensions_metadata','attrs'=>['well_version'=>'700','flow_message_version'=>'4']],
+                    ]],
+                ]],
+            ]]]];
+        }
         yield 'local form selects the Android form parser'=>[
             ['interactiveMessage'=>['nativeFlowMessage'=>['buttons'=>[['name'=>'form_message']]]]],
             ['device_fanout'=>'false'], [['tag'=>'biz','attrs'=>[],'content'=>[
@@ -139,6 +148,38 @@ final class InteractiveStanzaTest extends TestCase
             ['reactionMessage'=>['text'=>'👍']],['viewOnceMessage'=>['message'=>['imageMessage'=>[]]]]] as $message) {
             self::assertSame(['attrs'=>[], 'nodes'=>[]],InteractiveStanza::build($message,self::NOW));
         }
+    }
+
+    private static function businessForm(bool $isAi=false,string $version='V700'):array
+    {
+        return BusinessFormBuilder::build(['type'=>'business-form','form'=>['form_title'=>'Cadastro fictício','form_type'=>'CUSTOMER_INFO','message_text'=>'Preencha seus dados.','selected_field_list'=>['NAME'],'is_ai_form'=>$isAi],
+            'publication'=>['flowId'=>'9007199254740993','wellVersion'=>$version]]);
+    }
+
+    public static function invalidBusinessParams():iterable
+    {
+        $message=self::businessForm();$params=json_decode($message['interactiveMessage']['nativeFlowMessage']['buttons'][0]['buttonParamsJson']);
+        foreach(['invalid JSON'=>'{','list'=>'[]','null'=>'null','invalid UTF8'=>"\xff"]as$name=>$json)yield $name=>[$json];
+        foreach(['flow_message_version'=>3,'form_type'=>'other','flow_id'=>'local-id','well_version'=>null,'flow_action'=>'data_exchange','flow_cta'=>false,'flow_token'=>'unrecognized','flow_action_payload'=>null]as$key=>$value){
+            $copy=clone$params;$copy->$key=$value;yield $key=>[json_encode($copy,JSON_THROW_ON_ERROR)];
+        }
+        $copy=clone$params;$copy->well_version='V';yield 'empty normalized version'=>[json_encode($copy,JSON_THROW_ON_ERROR)];
+        $copy=clone$params;unset($copy->well_version);yield 'missing version'=>[json_encode($copy,JSON_THROW_ON_ERROR)];
+    }
+    #[DataProvider('invalidBusinessParams')]
+    public function testMalformedOrOtherGalaxyParamsKeepLegacyEnvelopeWithoutExceptions(string $json):void
+    {
+        $message=self::businessForm();$message['interactiveMessage']['nativeFlowMessage']['buttons'][0]['buttonParamsJson']=$json;
+        $before=$message;$built=InteractiveStanza::build($message,self::NOW);self::assertSame($before,$message);
+        $flow=$built['nodes'][0]->child('interactive')->child('native_flow');self::assertSame(['v'=>'9','name'=>'mixed'],$flow->attrs);self::assertNull($flow->child('extensions_metadata'));
+    }
+
+    public function testNativeMetadataRemovesAllCaseInsensitiveVsWithoutChangingButtonJson():void
+    {
+        $message=self::businessForm(version:'v7V00');$before=$message;$built=InteractiveStanza::build($message,self::NOW);
+        self::assertSame('700',$built['nodes'][0]->child('interactive')->child('native_flow')->child('extensions_metadata')->attrs['well_version']);self::assertSame($before,$message);
+        $message['interactiveMessage']['nativeFlowMessage']['buttons'][]=['name'=>'quick_reply'];
+        self::assertSame('mixed',InteractiveStanza::build($message,self::NOW)['nodes'][0]->child('interactive')->child('native_flow')->attrs['name']);
     }
 
     /** @return array<string,mixed> */

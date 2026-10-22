@@ -47,18 +47,20 @@ final class BusinessFormTransportTest extends TestCase
         $query=function(BinaryNode $node)use($jid,$own,$peers,$requestId,$definition,$screen,$wireFormType,&$wire,&$messageId,&$attempts,&$decodedByDevice,&$forms,&$secret):BinaryNode{
             if($node->tag==='iq')return ($node->attrs['xmlns']??'')==='usync'?self::devices([$jid=>[0],$own=>[0,5]]):self::bundles($peers);
             self::assertSame('message',$node->tag);self::assertSame('false',$node->attrs['device_fanout']);self::assertSame('text',$node->attrs['type']);self::assertSame('high',$node->attrs['push_priority']);
-            $biz=$node->child('biz');self::assertNotNull($biz);self::assertSame('2',$biz->attrs['actual_actors']);self::assertSame('2',$biz->attrs['host_storage']);
-            self::assertSame(['v'=>'9','name'=>'mixed'],$biz->child('interactive')->child('native_flow')->attrs);
+            $biz=$node->child('biz');self::assertNotNull($biz);self::assertSame([],$biz->attrs);
+            $interactive=$biz->child('interactive');self::assertSame(['type'=>'native_flow','v'=>'1'],$interactive->attrs);
+            $nativeFlow=$interactive->child('native_flow');self::assertSame(['name'=>'galaxy_message'],$nativeFlow->attrs);
+            self::assertCount(1,$nativeFlow->content);self::assertSame(['well_version'=>'700','flow_message_version'=>'4'],$nativeFlow->child('extensions_metadata')->attrs);
             $encoded=(new BinaryCodec())->encode($node);$persisted=$this->store->get('message-outbox',$node->attrs['id']);self::assertNotNull($persisted);
             self::assertSame($encoded,base64_decode(json_decode($persisted,true,512,JSON_THROW_ON_ERROR)['node'],true),'Complete encrypted message must be durable before transport');
             if($attempts++>0){self::assertSame($wire,$encoded,'Retry must preserve exact ciphertext, business envelope, ID and metadata');return new BinaryNode('ack',['class'=>'message','id'=>$node->attrs['id']]);}
             $wire=$encoded;$messageId=$node->attrs['id'];$reserved=$forms->sendStatus($requestId);self::assertSame($messageId,$reserved['messageId']);self::assertSame('prepared',$reserved['state']);
             foreach($node->child('participants')->content as$recipient){
-                $device=$recipient->attrs['jid'];$enc=$recipient->child('enc');self::assertArrayNotHasKey('mediatype',$enc->attrs);
+                $device=$recipient->attrs['jid'];$enc=$recipient->child('enc');self::assertArrayNotHasKey('mediatype',$enc->attrs);self::assertArrayNotHasKey('native_flow_name',$enc->attrs);
                 $plain=$peers[$device]['signal']->decrypt($this->credentials['meJid'],$enc->attrs['type'],$enc->content);$decoded=MessageCodec::decode(MessageCodec::unpad($plain));$decodedByDevice[$device]=$decoded;
                 self::assertSame('interactive',$decoded['kind']);self::assertSame($definition['message_text'],$decoded['data']['body']['text']);self::assertSame('MVO PHP',$decoded['data']['header']['title']);self::assertSame('Formulário de teste',$decoded['data']['footer']['text']);
                 $native=$decoded['data']['nativeFlowMessage'];self::assertSame(1,$native['messageVersion']);self::assertCount(1,$native['buttons']);self::assertSame('galaxy_message',$native['buttons'][0]['name']);
-                $params=json_decode($native['buttons'][0]['buttonParamsJson'],false,512,JSON_THROW_ON_ERROR);self::assertSame('4',$params->flow_message_version);self::assertSame('9007199254740993',$params->flow_id);self::assertSame('42',$params->well_version);
+                $params=json_decode($native['buttons'][0]['buttonParamsJson'],false,512,JSON_THROW_ON_ERROR);self::assertSame('4',$params->flow_message_version);self::assertSame('9007199254740993',$params->flow_id);self::assertSame('V700',$params->well_version);
                 self::assertSame('__localize:FLOWS_COMPLETE_FORM_BUTTON_TITLE',$params->flow_cta);self::assertSame(base64_encode($definition['form_type']),$params->flow_token);self::assertSame('navigate',$params->flow_action);self::assertSame($wireFormType,$params->form_type);self::assertSame($screen,$params->flow_action_payload->screen);self::assertObjectNotHasProperty('flow_json',$params);
                 if($definition['form_type']==='OFFER_SIGNUP'){self::assertSame('Oferta especial',$params->flow_action_payload->data->offer_name);self::assertSame('Inscreva-se na oferta',$params->flow_action_payload->data->offer_description);self::assertSame('Empresa',$params->flow_action_payload->data->custom_fields[0]->label);}
                 elseif($screen==='delivery_address'){self::assertFalse($params->flow_action_payload->data->delivery_address_visible);self::assertSame('Endereço de entrega',$params->flow_action_payload->data->custom_fields[0]->label);}
@@ -70,7 +72,7 @@ final class BusinessFormTransportTest extends TestCase
             self::assertSame($secret,BinaryData::decode($this->store->get('message-secrets',hash('sha256',$jid."\0".$messageId)))['secret']);throw new \RuntimeException('Synthetic ACK timeout');
         };
         $messages=$this->messages($query);$catalog=new BusinessFormStore($this->store);$form=$catalog->create($definition);
-        $forms=new BusinessFormsService($catalog,$this->store,function(array $snapshot,string $country)use(&$publications,$form):array{$publications++;self::assertSame($form,$snapshot);self::assertSame('BR',$country);return ['flowId'=>'9007199254740993','wellVersion'=>'42'];},$messages->sendMessage(...));
+        $forms=new BusinessFormsService($catalog,$this->store,function(array $snapshot,string $country)use(&$publications,$form):array{$publications++;self::assertSame($form,$snapshot);self::assertSame('BR',$country);return ['flowId'=>'9007199254740993','wellVersion'=>'V700'];},$messages->sendMessage(...));
         $options=['title'=>'MVO PHP','footer'=>'Formulário de teste','pushPriority'=>'high','mentions'=>[$jid],'quote'=>['id'=>'QUOTED-ORIGINAL','remoteJid'=>$jid,'message'=>['conversation'=>'Conversa original']]];
         try{$forms->send($form['id'],$jid,'BR',$options,$requestId);self::fail('Timeout should remain uncertain');}catch(\RuntimeException $error){self::assertSame('Synthetic ACK timeout',$error->getMessage());}
         self::assertSame(1,$publications);self::assertEqualsCanonicalizing([$jid,$own],array_keys($decodedByDevice));self::assertSame('unknown',$messages->getMessageStatus($messageId)['status']);self::assertSame('unknown',$forms->sendStatus($requestId)['state']);

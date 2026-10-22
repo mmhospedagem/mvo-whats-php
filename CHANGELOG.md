@@ -4,6 +4,8 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Envelope nativo para Business Galaxy v4 com nome real e metadados de extensões, preservando o JSON cifrado e o caminho dos Flows legados.
+
 - Publicação de formulários aplica o padrão nativo `V700` somente quando a versão estiver ausente, preservando versões explícitas e a incerteza das tentativas anteriores.
 
 - Recusas GraphQL de formulários conservam um identificador de diagnóstico somente quando reconhecido exatamente, sem expor a mensagem remota nem inferir causa por código numérico.
