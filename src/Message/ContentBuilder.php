@@ -101,6 +101,7 @@ final class ContentBuilder
         $modern = ModernContent::build($c, $to, $context, $now);
         if ($modern !== null) return $modern;
         if ($type === 'form') return NativeFormBuilder::build($c);
+        if ($type === 'business-form') return BusinessFormBuilder::build($c);
         if ($type === 'carousel') return CarouselContent::build($c);
         if (in_array($type, ['flow','flow-navigate','flow-exchange','flow.navigate','flow.exchange'], true)) return FlowBuilder::build($c);
         if ($type === 'buttons' || $type === 'legacy-buttons') {

@@ -44,6 +44,7 @@ GROUPS = {
 }
 
 GROUPS['Mensagens'].insert(1, ('MESSAGE-EXTENSIONS','Carrossel e novos formatos','docs/MESSAGE_EXTENSIONS.md'))
+GROUPS['Mensagens'].insert(next(index for index, entry in enumerate(GROUPS['Mensagens']) if entry[0] == 'FORMULARIOS') + 1, ('FORMULARIOS-GERENCIAMENTO','Gerenciar formulários Business','docs/FORMULARIOS-GERENCIAMENTO.md'))
 GROUPS['Mensagens'].append(('HISTORY-EXTENSIONS','Histórico e interações','docs/HISTORY_EXTENSIONS.md'))
 GROUPS['Mensagens'].append(('MESSAGE-OBSERVATIONS','Reações, revisões e observações','docs/MESSAGE_OBSERVATIONS.md'))
 GROUPS['Conta e estado'].append(('ACCOUNT-EXTENSIONS','Preferências e novos recursos da conta','docs/ACCOUNT_EXTENSIONS.md'))

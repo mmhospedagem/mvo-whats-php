@@ -20,6 +20,7 @@
 | `list`, `buttons`, `interactive` | Listas, botões e fluxos interativos com `data` no formato WAProto |
 | `flow`, `flow-navigate`, `flow-exchange` | WhatsApp Flows por ID, navegação ou troca de dados; veja [FLOWS.md](FLOWS.md) |
 | `form` | Formulários nativos sem registro na Meta: opções, texto livre portável com `cancel_option` explícito e componente `InputFields` no modo Android. Casos reais da adaptação: texto livre no Web e cancelamento no Android; alcance em [FORMULARIOS.md](FORMULARIOS.md) |
+| `business-form` | Contrato desta revisão para Galaxy Business versão 4, exigindo snapshot do formulário e `flowId`/`wellVersion` de publicação remota. Não é `form` nem o builder Galaxy versão 3; veja [gerenciamento de formulários](FORMULARIOS-GERENCIAMENTO.md) e seus limites de validação. |
 | `legacy-buttons` | Envelope antigo `buttonsMessage`, disponível explicitamente |
 | `list-response`, `buttons-response`, `interactive-response` | Respostas estruturadas |
 | `product`, `order`, `template`, `group-invite` e demais campos WAProto | Corpo estruturado em `data` ou envelope `raw` |

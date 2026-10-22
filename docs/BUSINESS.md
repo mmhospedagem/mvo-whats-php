@@ -2,6 +2,8 @@
 
 Use a mesma instância autenticada de `WaClient` para administrar o perfil, catálogo e ferramentas comerciais. `business()` cuida do perfil e da capa; `catalog()` administra produtos, coleções e checkout; `businessTools()` sincroniza etiquetas, respostas rápidas e listas de transmissão. Os exemplos pressupõem `$client` conectado, conforme [Conectar WhatsApp](CONEXAO.md).
 
+O contrato de formulários Business desta revisão usa o serviço separado `forms()`: catálogo local, snapshots de publicação, envio tipado `business-form`, metadados e acompanhamento de exportação de respostas. A fachada já integra autenticação Business automática e HTTPS para geração/publicação, sem token manual; `authenticationStatus()` oferece uma projeção segura. Consulte [Gerenciar formulários Business](FORMULARIOS-GERENCIAMENTO.md) para as assinaturas, os prazos e as pré-condições. O catálogo não sincroniza a tela do aplicativo; autorização remota, entrega de nonce no modo companion e compatibilidade visual ainda não estão homologadas em conta real por este guia.
+
 As alterações remotas aguardam a resposta do servidor. Uma conta sem autorização recebe erro; a biblioteca não converte uma recusa em sucesso. Etiquetas, respostas rápidas e listas dependem das chaves de [app-state](APPSTATE.md) compartilhadas pelo aparelho principal.
 
 ## Perfil, horários e capa

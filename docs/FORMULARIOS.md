@@ -2,6 +2,8 @@
 
 Use `type => 'form'` para enviar a definição junto com a mensagem, sem `flow_id`, conta de desenvolvedor ou publicação na Meta. O envio usa a conexão PHP, Signal, fila persistente e eventos da sessão.
 
+Para manter um catálogo de modelos e preparar uma publicação Galaxy Business, consulte [Gerenciar formulários Business](FORMULARIOS-GERENCIAMENTO.md). O serviço `forms()` e o tipo `business-form` desta revisão são separados de `form`: usam snapshot e identificador remoto, não sincronizam “Meus formulários” do celular e ainda exigem validação das operações remotas e dos clientes destinatários.
+
 Um teste anterior entre duas sessões confirmou opções no WhatsApp Web e Android e o componente `InputFields` no Android 2.26.39.79. A adaptação portável de texto livre com cancelamento explícito descrita abaixo também foi verificada em duas mensagens reais: texto livre no Web e “Cancelar consulta” no Android, com respostas recebidas pela sessão remetente. A evidência e seu alcance estão detalhados ao final deste guia. As limitações do formato Galaxy estão descritas em [FLOWS.md](FLOWS.md).
 
 ## Opções e etapas no Web e Android

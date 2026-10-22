@@ -45,7 +45,7 @@ final class IncomingEvents
                     if(empty($j['errors'])&&is_string($operation)&&is_array($j['data']??null))$events=[...$events,...self::channelNotification($node,$operation,$j['data'])];
                 } catch(\JsonException|\UnexpectedValueException|\LengthException $e) { $events[]=['event'=>'service_error','data'=>$base+['operation'=>'mex_notification','message'=>'Invalid MEX notification payload']]; }
             }
-        } elseif(in_array($type,['business','w:biz'],true)) foreach(ServiceTransport::children($node) as $a) $events[]=['event'=>'business','data'=>$base+['action'=>$a->tag,'attrs'=>$a->attrs,'text'=>ServiceTransport::text($a),'node'=>$a]];
+        } elseif(in_array($type,['business','w:biz'],true)) foreach(ServiceTransport::children($node) as $a) {if($a->tag==='wa_ad_account_nonce')continue;$events[]=['event'=>'business','data'=>$base+['action'=>$a->tag,'attrs'=>$a->attrs,'text'=>ServiceTransport::text($a),'node'=>$a]];}
         $live=$node->child('live_updates')?->child('messages');if($live!==null) foreach(ServiceTransport::children($live,'message') as $inner) {
             $attrs=$inner->attrs+['from'=>$node->attrs['from'] ?? '','id'=>$node->attrs['id'] ?? '','t'=>$live->attrs['t'] ?? $node->attrs['t'] ?? ''];$events=[...$events,...self::newsletter(new BinaryNode('message',$attrs,$inner->content))];
         }

@@ -4,6 +4,10 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Gerenciamento de modelos Business por `WaClient::forms()`: catálogo local persistente, edição, duplicação, modelos iniciais e importação/exportação do schema Android. Não sincroniza o catálogo privado do aplicativo.
+- Autenticação SMB por nonce, publicação HTTP explícita e mensagem `business-form` Galaxy v4 com ID remoto e `wellVersion` retornados pelo servidor. Geração assistida devolve a saída ou recusa para revisão, sem publicar automaticamente.
+- Publicações e tentativas de envio conservam snapshots, IDs e resultados incertos; uma repetição da mesma requisição não republica nem reenvia implicitamente. Respostas CSV são solicitadas ao primário e verificadas como documento gzip.
+- Novos contratos derivados do Web e APK Business, cobertos por testes locais de autenticação, HTTP, Signal, persistência e falhas. A aceitação pelo servidor e a interface em clientes reais ainda precisam de validação; não há garantia de compatibilidade Web/Android por análise estática.
 - ACK de protocolo para nós `<status>` de contatos e canais, preservando os atributos de roteamento. A confirmação não decodifica conteúdo nem marca visualização.
 - Reconexão automática para o erro de stream sem código explícito nem conflito que contém `<ack class="status">`, usando a sessão existente e sem repetir comandos interrompidos. Revogação e os demais códigos conservam suas regras.
 - Fila de recibos com índices reconstruídos por páginas, retries limitados por ciclo e remoção após escrita concluída. Falhas preservam o nó exato para nova tentativa, sem exigir um ACK que pode não chegar nem autorizar reenvio de mensagens de usuário.

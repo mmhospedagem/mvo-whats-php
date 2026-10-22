@@ -78,6 +78,10 @@ final class WaClient
     private ?\MVO\Service\MessagePublicationScheduler $messageScheduler=null;
     private ?\MVO\Service\DurablePublicationBatchService $publicationBatchService=null;
     private ?\MVO\Service\HistoryFeaturesService $historyFeaturesService=null;
+    private ?\MVO\Service\GalaxyResponseService $galaxyResponseService=null;
+    private ?\MVO\Service\BusinessFormsService $businessFormsService=null;
+    private ?\MVO\Service\BusinessFormAuthenticationService $businessFormsAuthentication=null;
+    private int $businessFormsGeneration=0;
     /** @var \Closure():void|null */
     private ?\Closure $channelScheduleGuard=null;
     private bool $scheduledPublishing=false;
@@ -321,6 +325,46 @@ final class WaClient
     public function privacy():\MVO\Service\PrivacyService { return $this->services()->privacy(); }
     /** Optional per-query timeout for a separate facade; reaching this deadline alone preserves the connection. */
     public function business(?float $queryTimeoutSeconds=null):\MVO\Service\BusinessService { return $this->services($queryTimeoutSeconds)->business(); }
+    /** Saved local Business forms, explicit Galaxy publication and primary-device CSV exports. */
+    public function forms():\MVO\Service\BusinessFormsService
+    {
+        $services=$this->services();
+        if($this->businessFormsService!==null)return $this->businessFormsService;
+        $store=$this->stateStore??throw new \LogicException('Wait for authenticated login before managing Business forms');
+        $auth=$this->businessFormsAuthentication??=new \MVO\Service\BusinessFormAuthenticationService(
+            new \MVO\Service\ServiceTransport(
+                fn(BinaryNode $node,float $timeout):BinaryNode=>$this->query($node,$timeout,true,false),
+                function(BinaryNode $node):void{$this->sendNode($node);},
+                fn():array=>$this->credentials,
+            ),
+            function(float $timeout):void{$this->poll($timeout);},
+            fn():bool=>$this->isConnected(),
+            fn():float=>$this->now(),
+        );
+        $generation=$this->businessFormsGeneration;
+        $http=new \MVO\Service\BusinessFormHttpTransport(
+            fn():string=>$generation===$this->businessFormsGeneration&&$this->businessFormsAuthentication===$auth?$auth->token():throw new \LogicException('Business forms facade expired; obtain forms() after reconnecting'),
+            proxy:$this->proxy,
+        );
+        $remote=new \MVO\Service\BusinessFormGraphqlService(static function(string $document,array $variables)use($http,$auth):array{
+            try{return $http->request($document,$variables);}
+            catch(\MVO\Service\ServiceException $error){
+                if(in_array($error->serverCode,['190','401'],true))$auth->invalidate();
+                throw $error;
+            }
+        });
+        return $this->businessFormsService=new \MVO\Service\BusinessFormsService(
+            new \MVO\Service\BusinessFormStore($store,fn():int=>(int)floor(($this->wallClock)()*1000)),
+            $store,
+            fn(array $form,string $country):array=>$remote->publish($form,$country),
+            fn(string $to,array $content):array=>$this->sendMessage($to,$content),
+            fn(string $prompt):array=>$remote->generate($prompt),
+            $this->galaxyResponseExports(),
+            new \MVO\Service\GalaxyMetadataService($services->mex()),
+            fn():int=>(int)floor(($this->wallClock)()*1000),
+            fn():array=>$auth->status(),
+        );
+    }
     public function catalog():\MVO\Service\CatalogService { return $this->services()->catalog(); }
     public function businessTools():\MVO\Service\BusinessToolsService { return new \MVO\Service\BusinessToolsService($this->chat(),$this->appStateData(),$this->history()); }
     public function accountTools():\MVO\Service\AccountToolsService { return new \MVO\Service\AccountToolsService($this->chat(),$this->appStateData(),$this->history()); }
@@ -859,6 +903,9 @@ final class WaClient
     }
     /** @param array<string,mixed> $payload */
     private function messageEvent(string $event,array $payload):void {
+        if($event==='message_protocol' && $this->stateStore!==null && ($payload['authenticatedOwnDevice']??false)===true){
+            $this->galaxyResponseExports()->ingestAuthenticatedEvent($payload);
+        }
         if(in_array($event,['message','message_protocol'],true)&&$this->modernState!==null){
             foreach($this->modernState->ingestAuthenticatedEvent($payload)as$projection)$this->emit($projection['name'],$projection['payload']);
         }
@@ -868,6 +915,16 @@ final class WaClient
             catch (\Throwable $e) { $this->emit('appstate_error',['error'=>$e->getMessage()]); }
         }
         $this->emit($event,$payload);
+    }
+    /** Uses the same account store and authenticated peer transport; callbacks only persist descriptors. */
+    private function galaxyResponseExports():\MVO\Service\GalaxyResponseService {
+        return $this->galaxyResponseService??=new \MVO\Service\GalaxyResponseService(
+            $this->stateStore??throw new \LogicException('Wait for authenticated login before querying Galaxy responses'),
+            fn():array=>$this->credentials,
+            fn(string $to,array $protocol,array $options):array=>$this->message()->publishProtocolMessage($to,$protocol,$options),
+            fn(array $descriptor):string=>($this->mediaTransfer??throw new \LogicException('WhatsApp media transport is not initialized'))->download($descriptor),
+            fn():int=>(int)floor(($this->wallClock)()*1000),
+        );
     }
     /** @param array<string,mixed> $payload */
     private function appStateEvent(string $event,array $payload):void {
@@ -1009,13 +1066,18 @@ final class WaClient
         $this->shortcake?->tick();
         $node = $this->session?->receiveNode($timeout);
         if ($node === null) return;
-        $this->emit('node',['node'=>$node]);
+        // Authentication material stays on the internal query path. Public node
+        // listeners, filters and business events receive a redacted projection.
+        if($node->tag==='notification')$this->businessFormsAuthentication?->ingestServerNotification($node);
+        $publicNode=self::publicBusinessAuthenticationNode($node);
+        $this->emit('node',['node'=>$publicNode,...($publicNode!==$node?['redacted'=>true]:[])]);
         if (!$this->running) return;
         $id = $node->attrs['id'] ?? '';
         if (array_key_exists($id,$this->pending) && (
             ($node->tag === 'iq' && $this->pendingTags[$id] === 'iq' && in_array($node->attrs['type'] ?? '',['result','error'],true)) ||
             ($node->tag === 'ack' && in_array($this->pendingTags[$id],['message','call'],true) && ($node->attrs['class'] ?? '') === $this->pendingTags[$id])
         )) { $this->pending[$id] = $node; return; }
+        $node=$publicNode;
         if ($this->isRegistered() && $node->tag === 'iq' && $node->child('pair-device') !== null) throw new ConnectionFailure('WhatsApp refused the saved linked identity','401',false,true);
         if ($this->shortcake?->handleNode($node)) return;
         if ($this->mobile?->handleNode($node)) return;
@@ -1073,6 +1135,15 @@ final class WaClient
         if ($node->tag === 'iq' && ($node->attrs['type'] ?? '') === 'get' && $node->child('ping') !== null) {
             $this->sendNode(new BinaryNode('iq',['type'=>'result','id'=>$node->attrs['id'] ?? '', 'to'=>$node->attrs['from'] ?? 's.whatsapp.net']));
         }
+    }
+    /** Remove only the concrete native Business authentication children, without altering query results. */
+    private static function publicBusinessAuthenticationNode(BinaryNode $node):BinaryNode
+    {
+        $private=$node->tag==='iq'?['access_token','session_cookies']:
+            ($node->tag==='notification'&&($node->attrs['type']??null)==='business'?['wa_ad_account_nonce']:[]);
+        if($private===[]||!is_array($node->content))return $node;
+        $children=array_values(array_filter($node->content,static fn(BinaryNode $child):bool=>!in_array($child->tag,$private,true)));
+        return count($children)===count($node->content)?$node:new BinaryNode($node->tag,$node->attrs,$children);
     }
     /** Parse service events before the generic message handler consumes their stanzas. */
     private function dispatchServiceEvents(BinaryNode $node):bool {
@@ -1186,7 +1257,10 @@ final class WaClient
         try { $voip?->close(); } catch (\Throwable) { }
         $this->pairing?->clear(); $this->pairing = null; $this->messages?->close(); $this->messages = null;
         $this->shortcake?->clear(); $this->shortcake=null; $this->offline?->reset(); $this->offline=null;
-        $this->stateStore=null; $this->appState=null; $this->appStateData=null; $this->modernState=null; $this->channelScheduler=null; $this->messageScheduler=null; $this->historyFeaturesService=null; $this->publicationBatchService=null; $this->services=null; $this->mediaTransfer=null;
+        // Secrets expire with the connection; account lockout memory survives an
+        // automatic reconnect in this client. Old facades cannot start new work.
+        $this->businessFormsAuthentication?->invalidate();++$this->businessFormsGeneration;$this->businessFormsService=null;
+        $this->stateStore=null; $this->appState=null; $this->appStateData=null; $this->modernState=null; $this->channelScheduler=null; $this->messageScheduler=null; $this->historyFeaturesService=null; $this->galaxyResponseService=null; $this->publicationBatchService=null; $this->services=null; $this->mediaTransfer=null;
         $this->mobile=null; $this->mobileInitialized=false;
         $this->newsletterInbox=null;
         $this->abprops=null;$this->maintenancePending=false;

@@ -61,11 +61,11 @@ class DocsPortalTest(unittest.TestCase):
 
     def test_whatsapp_corpus_keeps_legacy_page_ids(self):
         pages = self.whatsapp[1]
-        self.assertEqual(len(pages), 49)
-        self.assertEqual(len({page['id'] for page in pages}), 49)
+        self.assertEqual(len(pages), 50)
+        self.assertEqual(len({page['id'] for page in pages}), 50)
         expected = {page_id for entries in build_docs.GROUPS.values() for page_id, _, _ in entries}
         self.assertEqual({page['id'] for page in pages}, expected)
-        self.assertTrue({'inicio', 'api', 'CONEXAO', 'MENSAGENS', 'FORMULARIOS', 'LLMS', 'licenca'} <= expected)
+        self.assertTrue({'inicio', 'api', 'CONEXAO', 'MENSAGENS', 'FORMULARIOS', 'FORMULARIOS-GERENCIAMENTO', 'LLMS', 'licenca'} <= expected)
         self.assertFalse(any(page['source'] and page['source'].startswith('docs/facebook/') for page in pages))
         self.assertFalse(any('new FacebookConnection(' in page['body'] for page in pages), 'Facebook login examples must live in the Facebook portal')
 

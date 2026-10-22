@@ -1,5 +1,7 @@
 # WhatsApp Flows em PHP
 
+Este guia descreve o builder existente de Galaxy com parâmetros versão 3. O novo caminho de formulários Business do anexo Android usa `forms()` e `business-form`, com parâmetros versão 4 e publicação remota separada: veja [Gerenciamento de formulários](FORMULARIOS-GERENCIAMENTO.md). O catálogo desse serviço é local à sessão SDK; não é CRUD remoto nem sincronização do catálogo privado do celular. O estudo do novo caminho não transforma `flow_json` inline em um Flow remoto e não comprova compatibilidade universal Web/Android.
+
 Para formulários sem registro na Meta, use o tipo nativo `form`, descrito em [FORMULARIOS.md](FORMULARIOS.md). Opções foram confirmadas no Web e Android; o componente `InputFields` foi confirmado no Android. O modo padrão `portable` adapta campos de texto para opções com resposta personalizada e `cancel_option` explícito, preservando o ID de cada campo. Duas mensagens reais confirmaram texto livre no Web e cancelamento no Android, com interface confirmada pelo usuário e respostas recebidas pela sessão remetente; o guia detalha o alcance dessa evidência. Os tipos Galaxy abaixo continuam tendo requisitos e compatibilidade próprios.
 
 Use `sendMessage()` com `flow`, `flow-navigate` ou `flow-exchange`. Os três tipos usam a conexão e a fila persistente da sessão. `navigate` aceita a definição inline abaixo, sem informar um `flow_id`; também aceita o ID de um Flow registrado. `data_exchange` usa um Flow registrado com endpoint configurado.
