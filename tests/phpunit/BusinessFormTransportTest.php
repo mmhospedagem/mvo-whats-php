@@ -107,6 +107,23 @@ final class BusinessFormTransportTest extends TestCase
         $parsed=ContentDecoder::decode(SchemaCodec::encode('Message',$saved['proto']))['parsedFlowResponse'];self::assertSame(4,$parsed['version']);self::assertSame('FLEXIBLE_CHECKOUT',$parsed['response']->flow_creation_source);$messages->handleNode($node);self::assertCount(1,$this->events,'Restart replay must not duplicate application delivery');
     }
 
+    public function testNativeVersionThreeBusinessSchemaSurvivesSignalReceiveAndHistoryRestart():void
+    {
+        $peerJid='5511999999999:2@s.whatsapp.net';$peer=$this->peers([$peerJid])[$peerJid];$localKey=$this->store->generatePreKeys(1)[0];$peer['signal']->ensureSession($this->credentials['meJid'],self::bundle($this->credentials,$localKey));
+        $screens=[['id'=>'contact_details','title'=>'Cadastro fictício','components'=>[['type'=>'TextInput','name'=>'reference','label'=>'Referência','value'=>'000123','isSensitive'=>true]]]];
+        $schema=json_encode(['screens'=>$screens,'version'=>2],JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE);
+        $params=json_encode(['wa_flow_response_params'=>['flow_creation_source'=>'FLEXIBLE_CHECKOUT','flow_id'=>'9007199254740993','flow_name'=>'Modelo fictício','response_message'=>$schema]],JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE);
+        $proto=['interactiveResponseMessage'=>['nativeFlowResponseMessage'=>['name'=>'galaxy_message','version'=>3,'paramsJson'=>$params],'contextInfo'=>['stanzaId'=>'FICTITIOUS-BUSINESS-FORM','participant'=>$this->credentials['meJid']]]];
+        $encrypted=$peer['signal']->encrypt($this->credentials['meJid'],MessageCodec::pad(SchemaCodec::encode('Message',$proto)));
+        $node=new BinaryNode('message',['id'=>'INCOMING-NATIVE-BUSINESS-FORM','from'=>$peerJid,'type'=>'text','t'=>'1792666800'],[new BinaryNode('enc',['type'=>$encrypted['type'],'v'=>'2'],$encrypted['ciphertext'])]);
+        $query=static fn():BinaryNode=>throw new \LogicException('Receive must not query or publish');$messages=$this->messages($query);self::assertTrue($messages->handleNode($node));self::assertCount(1,$this->events);
+        $event=$this->events[0][1];$parsed=$event['parsedFlowResponse'];self::assertSame(3,$parsed['version']);self::assertSame(2,$parsed['businessForm']['version']);self::assertSame($screens,$parsed['businessForm']['screens']);self::assertSame($schema,$parsed['response']->response_message);self::assertSame($params,$event['data']['nativeFlowResponseMessage']['paramsJson']);
+        unset($messages,$this->signal,$this->store);gc_collect_cycles();$this->store=new SignalStore($this->paths[0]);$this->signal=new SignalProtocol($this->store,$this->credentials);$messages=$this->messages($query);
+        $saved=$messages->history()->store->getMessage(Jid::parse($peerJid)->bare(),'INCOMING-NATIVE-BUSINESS-FORM');self::assertNotNull($saved);
+        self::assertEquals($parsed,ContentDecoder::decode(SchemaCodec::encode('Message',$saved['proto']))['parsedFlowResponse']);self::assertSame('FICTITIOUS-BUSINESS-FORM',$saved['context']['stanzaId']);
+        $messages->handleNode($node);self::assertCount(1,$this->events,'History replay must not duplicate native form response delivery');
+    }
+
     private function path():string{$path=tempnam(sys_get_temp_dir(),'mvo-business-form-transport-');if($path===false)throw new \RuntimeException('Cannot create test store');$this->paths[]=$path;return $path;}
     private static function credentials(string $jid):array
     {

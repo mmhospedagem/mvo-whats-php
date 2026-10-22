@@ -113,7 +113,67 @@ final class ContentDecoder
         $parsed = ['name'=>$response['name'],'version'=>$response['version'] ?? null,'params'=>$params];
         if (property_exists($params, 'flow_token')) $parsed['flowToken'] = $params->flow_token;
         if (property_exists($params, 'wa_flow_response_params')) $parsed['response'] = $params->wa_flow_response_params;
+        if ($response['name'] === 'galaxy_message' && ($businessForm = self::businessFormResponse($params, $response['paramsJson'])) !== null) $parsed['businessForm'] = $businessForm;
         return $parsed;
+    }
+
+    /** Native Business schema version is independent of nativeFlowResponseMessage.version.
+     * Keep screens/components as lists: repeated names or screen IDs must not overwrite answers.
+     * @return array<string,mixed>|null */
+    private static function businessFormResponse(\stdClass $params, string $rawParams): ?array
+    {
+        if (strlen($rawParams) > 262144) return null;
+        $response = $params->wa_flow_response_params ?? null;
+        if (!$response instanceof \stdClass || ($response->flow_creation_source ?? null) !== 'FLEXIBLE_CHECKOUT' ||
+            !self::responseText($response->flow_id ?? null, 64) || preg_match('/^[1-9][0-9]{0,63}$/D', $response->flow_id) !== 1 ||
+            !self::responseText($response->flow_name ?? null, 4096, true) || !is_string($response->response_message ?? null) || strlen($response->response_message) > 262144) return null;
+        try { $schema = json_decode($response->response_message, false, 32, JSON_THROW_ON_ERROR); }
+        catch (\JsonException) { return null; }
+        if (!$schema instanceof \stdClass || ($schema->version ?? null) !== 2 || !is_array($schema->screens ?? null) || !array_is_list($schema->screens) || count($schema->screens) < 1 || count($schema->screens) > 20) return null;
+        if (!self::uniqueResponseObjectKeys($rawParams) || !self::uniqueResponseObjectKeys($response->response_message)) return null;
+        $screens = []; $count = 0;
+        foreach ($schema->screens as $screen) {
+            if (!$screen instanceof \stdClass || !self::responseText($screen->id ?? null, 4096) || !self::responseText($screen->title ?? null, 4096, true) ||
+                !is_array($screen->components ?? null) || !array_is_list($screen->components) || count($screen->components) > 100) return null;
+            $components = [];
+            foreach ($screen->components as $component) {
+                if (++$count > 100 || !$component instanceof \stdClass || !self::responseText($component->type ?? null, 64) ||
+                    !self::responseText($component->name ?? null, 4096) || !self::responseText($component->label ?? null, 4096, true) ||
+                    !self::responseText($component->value ?? null, 65536, true) || !is_bool($component->isSensitive ?? null)) return null;
+                $components[] = ['type'=>$component->type,'name'=>$component->name,'label'=>$component->label,'value'=>$component->value,'isSensitive'=>$component->isSensitive];
+            }
+            $screens[] = ['id'=>$screen->id,'title'=>$screen->title,'components'=>$components];
+        }
+        return $count === 0 ? null : ['flowId'=>$response->flow_id,'flowName'=>$response->flow_name,'creationSource'=>'FLEXIBLE_CHECKOUT','version'=>2,'screens'=>$screens];
+    }
+
+    private static function responseText(mixed $value, int $maxBytes, bool $allowEmpty = false): bool
+    {
+        return is_string($value) && ($allowEmpty || $value !== '') && strlen($value) <= $maxBytes && preg_match('//u', $value) === 1;
+    }
+
+    /** Already-valid, bounded JSON only. Reject ambiguous duplicate keys, including escaped aliases.
+     * JSON object keys are distinct from repeated component names in separate objects. */
+    private static function uniqueResponseObjectKeys(string $json): bool
+    {
+        $stack = []; $length = strlen($json);
+        for ($i = 0; $i < $length; ++$i) {
+            $char = $json[$i];
+            if ($char === '{') { $stack[] = []; continue; }
+            if ($char === '[') { $stack[] = null; continue; }
+            if ($char === '}' || $char === ']') { array_pop($stack); continue; }
+            if ($char !== '"') continue;
+            $start = $i++;
+            while ($i < $length && $json[$i] !== '"') { if ($json[$i] === '\\') ++$i; ++$i; }
+            $next = $i + 1;
+            while ($next < $length && str_contains(" \t\r\n", $json[$next])) ++$next;
+            if ($next >= $length || $json[$next] !== ':') continue;
+            $key = json_decode(substr($json, $start, $i - $start + 1), true, 2, JSON_THROW_ON_ERROR);
+            $last = count($stack) - 1;
+            if (!is_string($key) || $last < 0 || !is_array($stack[$last]) || isset($stack[$last]['key:'.$key])) return false;
+            $stack[$last]['key:'.$key] = true;
+        }
+        return true;
     }
 
     /** Native form replies retain caller-owned field IDs and the client's wire version.

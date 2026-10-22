@@ -252,14 +252,39 @@ $client->on('message', static function (array $event): void {
     $quotedMessageId = $event['context']['stanzaId'] ?? null;
     $version = $flow['version'] ?? null;
     $params = $flow['params']; // stdClass; preserve as chaves e os valores recebidos.
+    $businessForm = $flow['businessForm'] ?? null; // Projeção validada do schema interno versão 2.
     // Encaminhe a resposta ao loop externo para validação e processamento.
     // Não publique, envie ou consulte serviços dentro deste callback.
 });
 ```
 
+Respostas Business observadas no Android usam `nativeFlowResponseMessage.version=3` e, dentro de `wa_flow_response_params.response_message`, uma **string JSON com schema `version=2`**. Essas versões são independentes de `flow_message_version=4` do envio. Não filtre o evento somente por versão externa 4. O parser acrescenta `parsedFlowResponse.businessForm` quando reconhece esse schema e `flow_creation_source=FLEXIBLE_CHECKOUT`:
+
+```php
+$businessForm = $event['parsedFlowResponse']['businessForm'] ?? null;
+if ($businessForm !== null) {
+    $remoteId = $businessForm['flowId'];
+    $modelName = $businessForm['flowName'];
+    foreach ($businessForm['screens'] as $screen) {
+        foreach ($screen['components'] as $component) {
+            $fieldName = $component['name'];
+            $label = $component['label'];
+            $type = $component['type'];
+            $value = $component['value']; // String original; preserva zeros, espaços e quebras.
+            $isSensitive = $component['isSensitive']; // Booleano recebido, sem coerção.
+            // Valide e processe fora do listener; não registre os valores indiscriminadamente.
+        }
+    }
+}
+```
+
+O contrato da projeção é `{flowId:string, flowName:string, creationSource:"FLEXIBLE_CHECKOUT", version:2, screens:[{id:string, title:string, components:[{type:string, name:string, label:string, value:string, isSensitive:bool}]}]}`. Telas e campos permanecem em listas ordenadas. IDs de tela ou nomes de campo repetidos são conservados, sem mapa `answers` que sobrescreva valores, IDs inventados ou dedução do tipo de dado. `type` e `isSensitive` são informações recebidas; o parser não atribui significado de interface nem autorização a esses valores. O `flow_token` pode estar ausente.
+
+A projeção limita os parâmetros/JSON interno a 256 KiB cada, profundidade interna 32, até 20 telas e 100 campos no total. Strings de valor aceitam até 64 KiB, nomes/rótulos/títulos até 4 KiB e tipo até 64 bytes. Requer ID remoto decimal positivo em string, campos estruturais presentes, valores string e `isSensitive` booleano. Objetos/listas em `value`, versões desconhecidas, estruturas inválidas, limites excedidos ou chaves JSON duplicadas (inclusive aliases escapados) deixam `businessForm` ausente; não são convertidos silenciosamente. `params`, `response`, versões e os JSONs originais continuam intactos para aplicações que tratem outros formatos. A validação desse schema não depende da versão externa ser 4, não comprova autoria da publicação e não homologa a abertura/envio de mensagens.
+
 Quando houver contexto citado, correlacione seu `stanzaId` com o ID real da mensagem enviada, dentro da mesma conversa/identidades. Sem esse contexto, não invente uma associação. O `flow_token` Business é o nome do template em Base64, reutilizado entre formulários do mesmo tipo: **não é um identificador único de publicação, envio ou resposta**. Valide os campos esperados e torne os efeitos da aplicação idempotentes pela chave da mensagem recebida. Preserve também `flow_creation_source`, quando presente. Veja o tratamento geral em [WhatsApp Flows](FLOWS.md#campos-e-respostas).
 
-O teste local `BusinessFormTransportTest` usa uma resposta versão 4 **sintética**, criptografada por Signal e recebida pelo pipeline, com reinício do histórico e preservação de versão, parâmetros e contexto citado. Essa fixture não é uma captura de Android/Web nem homologa o formato que um cliente real emitirá nesta integração. A exportação CSV abaixo é um caminho separado do evento individual.
+O formato externo versão 3/schema interno versão 2 foi observado em uma resposta nativa de preenchimento. Os testes locais `BusinessFormResponseTest` e `BusinessFormTransportTest` usam somente dados fictícios, incluindo esse formato e a resposta versão 4 sintética anterior. Exercitam parsing, Signal, histórico e replay; essas fixtures não são cópias de dados de conta nem homologam o envio/abertura das mensagens pelo SDK. A exportação CSV abaixo é um caminho separado do evento individual.
 
 ## Consultar metadados e exportar respostas
 
