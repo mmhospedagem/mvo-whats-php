@@ -46,7 +46,7 @@ final class BusinessFormCatalogHttpTransport
         if (!is_string($token) || $token === '' || strlen($token) > 65536 || preg_match('/[\x00-\x20\x7f]/', $token) || preg_match('//u', $token) !== 1) throw new \LogicException('A valid application catalog access token must be supplied explicitly');
         $body = json_encode([
             'access_token' => $token,
-            'doc_id' => (int) self::DOCUMENT_ID,
+            'doc_id' => self::DOCUMENT_ID,
             'variables' => ['request' => ['extensions' => ['biz_jid' => $businessJid, 'flow_id' => $flowId]]],
             'lang' => $this->language,
         ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, 128);

@@ -31,7 +31,7 @@ final class BusinessFormCatalogHttpTransportTest extends TestCase
         self::assertSame('https://graph.whatsapp.com/graphql/catalog', $calls[0][0]);
         self::assertSame(['Content-Type: application/json', 'Accept: application/json', 'Accept-Encoding: gzip'], $calls[0][1]);
         self::assertSame([
-            'access_token' => 'FIXTURE-CATALOG-CONFIGURATION', 'doc_id' => 24989855014035777,
+            'access_token' => 'FIXTURE-CATALOG-CONFIGURATION', 'doc_id' => '24989855014035777',
             'variables' => ['request' => ['extensions' => ['biz_jid' => '123456789@lid', 'flow_id' => '12345678901234567890']]], 'lang' => 'en_US',
         ], $calls[0][2]);
         self::assertSame(4.5, $calls[0][3]);
