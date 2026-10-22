@@ -41,6 +41,11 @@ final class BusinessFormGraphqlServiceTest extends TestCase
     {
         self::assertSame(['flowId'=>'123','wellVersion'=>'V710'],$this->service(['xwa_flexible_checkout_create_flow'=>['id'=>123,'version'=>'V710']])->publish(self::form(),'BR'));
     }
+    public function testAbsentPublicationVersionUsesObservedNativeV700BaselineOnly():void
+    {
+        self::assertSame(['flowId'=>'123','wellVersion'=>'V700'],$this->service(['xwa_flexible_checkout_create_flow'=>['id'=>'123']])->publish(self::form(),'BR'));
+        self::assertCount(1,$this->requests,'A parser default cannot retry publication');
+    }
     #[DataProvider('invalidPublicationResponses')]
     public function testMissingOrMalformedPublicationFieldsCannotBecomeSuccess(array $data):void
     {
@@ -48,7 +53,7 @@ final class BusinessFormGraphqlServiceTest extends TestCase
     }
     public static function invalidPublicationResponses():iterable
     {
-        yield 'missing root'=>[[]];yield 'null root'=>[['xwa_flexible_checkout_create_flow'=>null]];yield 'list root'=>[['xwa_flexible_checkout_create_flow'=>[['id'=>'123']]]];yield 'missing version'=>[['xwa_flexible_checkout_create_flow'=>['id'=>'123']]];
+        yield 'missing root'=>[[]];yield 'null root'=>[['xwa_flexible_checkout_create_flow'=>null]];yield 'list root'=>[['xwa_flexible_checkout_create_flow'=>[['id'=>'123']]]];
         foreach([['id'=>'local-form'],['id'=>1.2],['id'=>'0'],['version'=>''],['version'=>null],['version'=>700],['name'=>['not text']],['category'=>"\xff"]]as$index=>$changes)yield 'bad field '.$index=>[self::published($changes)];
     }
     public function testPureValidationRunsBeforeInjectedRequest():void

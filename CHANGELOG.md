@@ -4,6 +4,10 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Publicação de formulários aplica o padrão nativo `V700` somente quando a versão estiver ausente, preservando versões explícitas e a incerteza das tentativas anteriores.
+
+- Recusas GraphQL de formulários conservam um identificador de diagnóstico somente quando reconhecido exatamente, sem expor a mensagem remota nem inferir causa por código numérico.
+
 - Parser do IQ 118 corrigido para o atributo `result.status` documentado no cliente Web, sem aceitar nós de texto legados ou status conflitantes. Diagnóstico seguro da autenticação de formulários: fase nativa, falha de formato/transporte/timeout distinta de recusa IQ e presença estrutural dos campos esperados, sem payloads privados ou mudança de protocolo.
 
 - Guard opcional `setBusinessFormsGuard()` para revalidar autorização entre fases remotas e antes do transporte de mensagens de formulários, preservando snapshots e impedindo replay implícito após retirada de acesso.

@@ -104,4 +104,42 @@ final class BusinessFormHttpTransportTest extends TestCase
             self::assertSame(0,$calls);
         }
     }
+
+    public static function safeGraphqlErrorKinds():iterable
+    {
+        yield 'exact object'=>[['error'=>['code'=>1675012,'message'=>'missing_required_variable_value']],'missing_required_variable_value'];
+        yield 'exact known fixed sentence'=>[['error'=>['code'=>1675012,'message'=>'A server error missing_required_variable_value occured. Check server logs for details.']],'missing_required_variable_value'];
+        yield 'fixed sentence with private prefix'=>[['error'=>['code'=>1675012,'message'=>self::TOKEN.' A server error missing_required_variable_value occured. Check server logs for details.']],null];
+        yield 'fixed sentence with private suffix'=>[['error'=>['code'=>1675012,'message'=>'A server error missing_required_variable_value occured. Check server logs for details. '.self::TOKEN]],null];
+        yield 'unobserved corrected spelling'=>[['error'=>['code'=>1675012,'message'=>'A server error missing_required_variable_value occurred. Check server logs for details.']],null];
+        yield 'exact errors list'=>[['errors'=>[['message'=>'missing_required_variable_value','extensions'=>['error_code'=>1675012]]]],'missing_required_variable_value'];
+        yield 'numeric code alone'=>[['error'=>['code'=>1675012]],null];
+        yield 'private prefix'=>[['error'=>['code'=>1675012,'message'=>self::TOKEN.' missing_required_variable_value']],null];
+        yield 'private suffix'=>[['error'=>['code'=>1675012,'message'=>'missing_required_variable_value '.self::TOKEN]],null];
+        yield 'newline'=>[['error'=>['code'=>1675012,'message'=>"missing_required_variable_value\n"]],null];
+        yield 'case mismatch'=>[['error'=>['code'=>1675012,'message'=>'MISSING_REQUIRED_VARIABLE_VALUE']],null];
+        yield 'non string message'=>[['error'=>['code'=>1675012,'message'=>['missing_required_variable_value']]],null];
+        yield 'extension cannot supply arbitrary message'=>[['error'=>['code'=>1675012,'extensions'=>['message'=>'missing_required_variable_value']]],null];
+        yield 'unselected second error'=>[['errors'=>[['code'=>1675012,'message'=>self::TOKEN],['message'=>'missing_required_variable_value']]],null];
+    }
+    #[DataProvider('safeGraphqlErrorKinds')]
+    public function testOnlyExactKnownErrorSignatureProducesFixedDiagnostic(array $envelope,?string $kind):void
+    {
+        $transport=$this->transport(400,json_encode($envelope,JSON_THROW_ON_ERROR));
+        try{$transport->request(BusinessFormGraphqlService::PUBLISH_DOC_ID,[]);self::fail('Explicit refusal accepted');}
+        catch(ServiceException $error){
+            self::assertSame('business.forms.graphql',$error->operation);self::assertSame('1675012',$error->serverCode);
+            self::assertSame($kind,$error->errorKind);self::assertSame('Business GraphQL request was refused',$error->reason);
+            self::assertStringNotContainsString(self::TOKEN,$error->getMessage());self::assertNull($error->getPrevious());
+        }
+        self::assertCount(1,$this->calls,'Diagnostic cannot retry or change the request');
+    }
+
+    public function testServiceExceptionKeepsThreeArgumentCompatibilityAndRejectsArbitraryKind():void
+    {
+        $legacy=new ServiceException('fixture','403','safe fixture');self::assertNull($legacy->errorKind);self::assertSame(403,$legacy->getCode());
+        self::assertSame('fixture: safe fixture (403)',$legacy->getMessage());
+        $diagnostic=new ServiceException('fixture','403','safe fixture',self::TOKEN);self::assertNull($diagnostic->errorKind);
+        self::assertStringNotContainsString(self::TOKEN,$diagnostic->getMessage());
+    }
 }

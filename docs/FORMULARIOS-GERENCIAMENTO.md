@@ -155,7 +155,7 @@ $status = $forms->publicationStatus($requestId);
 $last = $forms->lastPublication($id);
 ```
 
-O código do país tem duas letras maiúsculas, como `BR`. A definição é validada antes da tentativa remota. Não substitua o ID remoto por `id`, `date_time`, hash local ou um número inventado.
+A publicação preserva a versão explícita; somente quando a chave `version` está ausente aplica `V700`, padrão observado no parser nativo Android. Versão nula ou malformada permanece inválida. Isso não reconcilia publicações antigas com estado unknown nem autoriza republicá-las. O código do país tem duas letras maiúsculas, como `BR`. A definição é validada antes da tentativa remota. Não substitua o ID remoto por `id`, `date_time`, hash local ou um número inventado.
 
 `requestId` identifica a mesma definição e país. Reutilizá-lo para outro conteúdo produz conflito; reutilizá-lo com o mesmo conteúdo consulta o resultado persistido, sem nova publicação implícita. Edite o modelo e escolha uma nova identidade de requisição para uma publicação nova.
 
@@ -166,6 +166,8 @@ O código do país tem duas letras maiúsculas, como `BR`. A definição é vali
 | `rejected` | Recusa explícita preservada, com código quando disponível. |
 | `unknown` | Resultado não confirmado. Uma exceção ou timeout não prova que o servidor não criou o recurso. |
 | `abandoned` | A aplicação reconheceu localmente uma tentativa incerta; isso não cancela nem exclui o recurso remoto. |
+
+Recusas explícitas de publicação/geração continuam usando `ServiceException`. O campo opcional `errorKind` é `missing_required_variable_value` somente quando o primeiro erro GraphQL contém exatamente esse identificador ou a sentença fixa reconhecida pelo transporte no campo `message`; em todos os demais casos é `null`. O código numérico sozinho não identifica uma variável ausente. O SDK não repassa a mensagem original nem inventa um nome de parâmetro. Resultados parciais e erros de transporte continuam incertos, sem retry automático.
 
 Não repita automaticamente `unknown` com um novo `requestId`. Consulte os estados e reconcilie o resultado. Se decidir assumir explicitamente a incerteza, use `$forms->abandonPublication($requestId)`. Essa ação é somente local e não significa que o servidor cancelou a publicação.
 

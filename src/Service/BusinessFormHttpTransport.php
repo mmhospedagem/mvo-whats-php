@@ -54,7 +54,7 @@ final class BusinessFormHttpTransport
         $hasData=property_exists($envelope,'data')&&$envelope->data!==null;
         $hasError=(property_exists($envelope,'error')&&$envelope->error!==null)||(property_exists($envelope,'errors')&&$envelope->errors!==null&&$envelope->errors!==[]);
         if($hasData&&$hasError)throw new \RuntimeException('Business GraphQL returned a partial result; operation outcome requires reconciliation');
-        if($hasError||$status>=400)throw new ServiceException('business.forms.graphql',self::errorCode($envelope,$status),'Business GraphQL request was refused');
+        if($hasError||$status>=400)throw new ServiceException('business.forms.graphql',self::errorCode($envelope,$status),'Business GraphQL request was refused',self::errorKind($envelope));
         if($status!==200||!$hasData||!$envelope->data instanceof \stdClass)throw new \RuntimeException('Business GraphQL did not return confirmed data');
         return self::object($envelope->data);
     }
@@ -79,6 +79,15 @@ final class BusinessFormHttpTransport
         if((is_int($code)||is_string($code))&&preg_match('/^-?[0-9]{1,10}$/D',(string)$code)===1)return (string)$code;return $status>=400&&$status<500?(string)$status:null;
     }
     private static function safeCode(?string $code):?string{return $code!==null&&preg_match('/^-?[0-9]{1,10}$/D',$code)===1?$code:null;}
+    /** Recognize only an exact fixed slug. Numeric codes or arbitrary surrounding text prove no variable name. */
+    private static function errorKind(\stdClass $envelope):?string
+    {
+        $error=$envelope->error??(is_array($envelope->errors??null)?($envelope->errors[0]??null):null);
+        return $error instanceof \stdClass&&in_array($error->message??null,[
+            'missing_required_variable_value',
+            'A server error missing_required_variable_value occured. Check server logs for details.',
+        ],true)?'missing_required_variable_value':null;
+    }
     /** @return array<string,mixed> */
     private static function object(\stdClass $object):array
     {

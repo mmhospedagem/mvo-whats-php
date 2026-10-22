@@ -29,7 +29,9 @@ final class BusinessFormGraphqlService
         if(!is_array($response)||array_is_list($response))throw new \UnexpectedValueException('Business form publication response is missing xwa_flexible_checkout_create_flow');
         $id=$response['id']??null;if(is_int($id))$id=(string)$id;
         if(!is_string($id)||preg_match('/^[1-9][0-9]{0,63}$/D',$id)!==1)throw new \UnexpectedValueException('Business form publication response is missing a remote Flow ID');
-        $version=self::responseText($response['version']??null,'version',128,false);
+        // GTw.A02 / PublishFlexibleCheckoutFlowGraphqlResponse: the native baseline is V700.
+        // Apply it only when absent; explicit null/malformed values still require reconciliation.
+        $version=self::responseText(array_key_exists('version',$response)?$response['version']:'V700','version',128,false);
         $publication=['flowId'=>$id,'wellVersion'=>$version];
         foreach(['name'=>'flowName','category'=>'category']as$field=>$alias)if(array_key_exists($field,$response))$publication[$alias]=self::responseText($response[$field],$field,4096);
         return $publication;
