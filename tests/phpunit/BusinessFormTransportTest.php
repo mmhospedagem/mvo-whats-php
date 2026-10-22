@@ -40,17 +40,26 @@ final class BusinessFormTransportTest extends TestCase
             'delivery_address','template'];
     }
 
-    #[DataProvider('forms')]
-    public function testPublishedFormSurvivesSignalFanoutTimeoutTemplateDeletionAndExactRestartRetry(string $jid,array $definition,string $screen,string $wireFormType):void
+    public static function senderRoles():iterable
     {
-        $own=Jid::parse($this->credentials['meJid'])->bare();$peers=$this->peers([$jid,$own]);$requestId='PUBLISH-TRANSPORT';$wire=null;$messageId=null;$attempts=0;$decodedByDevice=[];$forms=null;$publications=0;$secret=null;
-        $query=function(BinaryNode $node)use($jid,$own,$peers,$requestId,$definition,$screen,$wireFormType,&$wire,&$messageId,&$attempts,&$decodedByDevice,&$forms,&$secret):BinaryNode{
+        foreach(self::forms()as$name=>$form){yield 'companion '.$name=>[...$form,false];yield 'primary '.$name=>[...$form,true];}
+    }
+
+    #[DataProvider('senderRoles')]
+    public function testPublishedFormSurvivesSignalFanoutTimeoutTemplateDeletionAndExactRestartRetry(string $jid,array $definition,string $screen,string $wireFormType,bool $isPrimary):void
+    {
+        $own=Jid::parse($this->credentials['meJid'])->bare();$ownCopy=$own;
+        if($isPrimary){$this->credentials['role']='primary';$this->credentials['meJid']=$own;$this->signal=new SignalProtocol($this->store,$this->credentials);$address=Jid::parse($own);$ownCopy=(string)new Jid($address->user,$address->server,5);}
+        $peers=$this->peers([$jid,$ownCopy]);$requestId='PUBLISH-TRANSPORT';$wire=null;$messageId=null;$attempts=0;$decodedByDevice=[];$forms=null;$publications=0;$secret=null;
+        $query=function(BinaryNode $node)use($jid,$own,$ownCopy,$isPrimary,$peers,$requestId,$definition,$screen,$wireFormType,&$wire,&$messageId,&$attempts,&$decodedByDevice,&$forms,&$secret):BinaryNode{
             if($node->tag==='iq')return ($node->attrs['xmlns']??'')==='usync'?self::devices([$jid=>[0],$own=>[0,5]]):self::bundles($peers);
             self::assertSame('message',$node->tag);self::assertArrayNotHasKey('device_fanout',$node->attrs);self::assertSame('text',$node->attrs['type']);self::assertSame('high',$node->attrs['push_priority']);
-            $biz=$node->child('biz');self::assertNotNull($biz);self::assertSame([],$biz->attrs);
-            $interactive=$biz->child('interactive');self::assertSame(['type'=>'native_flow','v'=>'1'],$interactive->attrs);
-            $nativeFlow=$interactive->child('native_flow');self::assertSame(['name'=>'galaxy_message'],$nativeFlow->attrs);
-            self::assertCount(1,$nativeFlow->content);self::assertSame(['well_version'=>'700','flow_message_version'=>'4'],$nativeFlow->child('extensions_metadata')->attrs);
+            $biz=$node->child('biz');self::assertNotNull($biz);
+            if($isPrimary){
+                self::assertSame([],$biz->attrs);$interactive=$biz->child('interactive');self::assertSame(['type'=>'native_flow','v'=>'1'],$interactive->attrs);
+                $nativeFlow=$interactive->child('native_flow');self::assertSame(['name'=>'galaxy_message'],$nativeFlow->attrs);
+                self::assertCount(1,$nativeFlow->content);self::assertSame(['well_version'=>'700','flow_message_version'=>'4'],$nativeFlow->child('extensions_metadata')->attrs);
+            }else{self::assertSame(['native_flow_name'=>'galaxy_message'],$biz->attrs);self::assertNull($biz->content);}
             $encoded=(new BinaryCodec())->encode($node);$persisted=$this->store->get('message-outbox',$node->attrs['id']);self::assertNotNull($persisted);
             self::assertSame($encoded,base64_decode(json_decode($persisted,true,512,JSON_THROW_ON_ERROR)['node'],true),'Complete encrypted message must be durable before transport');
             if($attempts++>0){self::assertSame($wire,$encoded,'Retry must preserve exact ciphertext, business envelope, ID and metadata');return new BinaryNode('ack',['class'=>'message','id'=>$node->attrs['id']]);}
@@ -67,7 +76,7 @@ final class BusinessFormTransportTest extends TestCase
                 else{self::assertFalse($params->flow_action_payload->data->full_name_visible);self::assertTrue($params->flow_action_payload->data->email_visible);self::assertTrue($params->flow_action_payload->data->phone_number_visible);self::assertSame('Nome completo',$params->flow_action_payload->data->custom_fields[0]->label);self::assertSame(['Básico','Avançado'],$params->flow_action_payload->data->custom_fields[1]->options);}
                 $ctx=$decoded['data']['contextInfo'];self::assertSame('QUOTED-ORIGINAL',$ctx['stanzaId']);self::assertSame('Conversa original',$ctx['quotedMessage']['conversation']);self::assertSame([$jid],$ctx['mentionedJid']);
                 $context=$decoded['messageContextInfo'];self::assertSame(32,strlen($context['messageSecret']));$secret??=$context['messageSecret'];self::assertSame($secret,$context['messageSecret']);
-                if($device===$own){self::assertSame($jid,$decoded['destination']);self::assertSame($context,$decoded['proto']['messageContextInfo']);self::assertSame($context,$decoded['proto']['deviceSentMessage']['message']['messageContextInfo']);}
+                if($device===$ownCopy){self::assertSame($jid,$decoded['destination']);self::assertSame($context,$decoded['proto']['messageContextInfo']);self::assertSame($context,$decoded['proto']['deviceSentMessage']['message']['messageContextInfo']);}
             }
             self::assertSame($secret,BinaryData::decode($this->store->get('message-secrets',hash('sha256',$jid."\0".$messageId)))['secret']);throw new \RuntimeException('Synthetic ACK timeout');
         };
@@ -75,7 +84,7 @@ final class BusinessFormTransportTest extends TestCase
         $forms=new BusinessFormsService($catalog,$this->store,function(array $snapshot,string $country)use(&$publications,$form):array{$publications++;self::assertSame($form,$snapshot);self::assertSame('BR',$country);return ['flowId'=>'9007199254740993','wellVersion'=>'V700'];},$messages->sendMessage(...));
         $options=['title'=>'MVO PHP','footer'=>'Formulário de teste','pushPriority'=>'high','mentions'=>[$jid],'quote'=>['id'=>'QUOTED-ORIGINAL','remoteJid'=>$jid,'message'=>['conversation'=>'Conversa original']]];
         try{$forms->send($form['id'],$jid,'BR',$options,$requestId);self::fail('Timeout should remain uncertain');}catch(\RuntimeException $error){self::assertSame('Synthetic ACK timeout',$error->getMessage());}
-        self::assertSame(1,$publications);self::assertEqualsCanonicalizing([$jid,$own],array_keys($decodedByDevice));self::assertSame('unknown',$messages->getMessageStatus($messageId)['status']);self::assertSame('unknown',$forms->sendStatus($requestId)['state']);
+        self::assertSame(1,$publications);self::assertEqualsCanonicalizing([$jid,$ownCopy],array_keys($decodedByDevice));self::assertSame('unknown',$messages->getMessageStatus($messageId)['status']);self::assertSame('unknown',$forms->sendStatus($requestId)['state']);
         $forms->rename($form['id'],'Edited after timeout');$forms->delete($form['id']);self::assertSame($form,$forms->publicationStatus($requestId)['form']);
         unset($messages,$catalog,$forms,$this->signal,$this->store);gc_collect_cycles();$this->store=new SignalStore($this->paths[0]);$this->signal=new SignalProtocol($this->store,$this->credentials);$messages=$this->messages($query);
         $catalog=new BusinessFormStore($this->store);$forms=new BusinessFormsService($catalog,$this->store,static fn():array=>throw new \LogicException('Retry must not republish'),$messages->sendMessage(...));self::assertNull($forms->get($form['id']));self::assertSame($messageId,$forms->sendStatus($requestId)['messageId']);

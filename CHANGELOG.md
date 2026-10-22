@@ -4,6 +4,8 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Envelope Business Galaxy específico do papel da sessão: companion usa atributo direto, primário mantém metadados nativos aninhados. Contexto vem das credenciais, sem opção de mensagem para alterar o papel.
+
 - Corpo Business Galaxy alinhado à captura nativa com `messageVersion=3`, parâmetros de mensagem vazios e fanout inicial sem override legado; replay mantém o nó exato.
 
 - Envelope nativo para Business Galaxy v4 com nome real e metadados de extensões, preservando o JSON cifrado e o caminho dos Flows legados.

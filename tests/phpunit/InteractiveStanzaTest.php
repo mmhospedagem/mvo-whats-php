@@ -4,7 +4,7 @@ namespace MVO\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use MVO\Message\{BusinessFormBuilder,InteractiveStanza};
+use MVO\Message\{BusinessFormBuilder,ContentBuilder,InteractiveStanza};
 use MVO\Protocol\BinaryNode;
 
 final class InteractiveStanzaTest extends TestCase
@@ -35,13 +35,7 @@ final class InteractiveStanzaTest extends TestCase
             ['device_fanout'=>'false'], [$biz],
         ];
         foreach(['registered Business template'=>false,'registered Business AI'=>true]as$name=>$isAi){
-            yield $name=>[self::businessForm($isAi),[],[['tag'=>'biz','attrs'=>[],'content'=>[
-                ['tag'=>'interactive','attrs'=>['type'=>'native_flow','v'=>'1'],'content'=>[
-                    ['tag'=>'native_flow','attrs'=>['name'=>'galaxy_message'],'content'=>[
-                        ['tag'=>'extensions_metadata','attrs'=>['well_version'=>'700','flow_message_version'=>'4']],
-                    ]],
-                ]],
-            ]]]];
+            yield $name=>[self::businessForm($isAi),[],[['tag'=>'biz','attrs'=>['native_flow_name'=>'galaxy_message']]]];
         }
         yield 'local form selects the Android form parser'=>[
             ['interactiveMessage'=>['nativeFlowMessage'=>['buttons'=>[['name'=>'form_message']]]]],
@@ -176,7 +170,7 @@ final class InteractiveStanzaTest extends TestCase
 
     public function testNativeMetadataRemovesAllCaseInsensitiveVsWithoutChangingButtonJson():void
     {
-        $message=self::businessForm(version:'v7V00');$before=$message;$built=InteractiveStanza::build($message,self::NOW);
+        $message=self::businessForm(version:'v7V00');$before=$message;$built=InteractiveStanza::build($message,self::NOW,true);
         self::assertSame('700',$built['nodes'][0]->child('interactive')->child('native_flow')->child('extensions_metadata')->attrs['well_version']);self::assertSame($before,$message);
         $message['interactiveMessage']['nativeFlowMessage']['buttons'][]=['name'=>'quick_reply'];
         self::assertSame('mixed',InteractiveStanza::build($message,self::NOW)['nodes'][0]->child('interactive')->child('native_flow')->attrs['name']);
@@ -187,6 +181,32 @@ final class InteractiveStanzaTest extends TestCase
         $message=self::businessForm();$message['interactiveMessage']['nativeFlowMessage']['messageVersion']=1;
         $built=InteractiveStanza::build($message,self::NOW);self::assertSame(['device_fanout'=>'false'],$built['attrs']);
         self::assertSame(['v'=>'9','name'=>'mixed'],$built['nodes'][0]->child('interactive')->child('native_flow')->attrs);
+    }
+
+    public function testPrimaryRegisteredBusinessUsesNativeNestedEnvelopeAndKeepsBodyUntouched():void
+    {
+        foreach([false,true]as$isAi){
+            $message=self::businessForm($isAi);$before=$message;$built=InteractiveStanza::build($message,self::NOW,true);
+            self::assertSame([],$built['attrs']);self::assertSame([['tag'=>'biz','attrs'=>[],'content'=>[
+                ['tag'=>'interactive','attrs'=>['type'=>'native_flow','v'=>'1'],'content'=>[
+                    ['tag'=>'native_flow','attrs'=>['name'=>'galaxy_message'],'content'=>[
+                        ['tag'=>'extensions_metadata','attrs'=>['well_version'=>'700','flow_message_version'=>'4']],
+                    ]],
+                ]],
+            ]]],array_map(self::nodeFixture(...),$built['nodes']));self::assertSame($before,$message);
+        }
+    }
+
+    public function testMessageOptionsCannotOverrideTheSessionRoleContext():void
+    {
+        $raw=['type'=>'raw','message'=>self::businessForm(),'senderIsPrimary'=>true];
+        $companion=ContentBuilder::build($raw,'5511999999999@s.whatsapp.net');
+        self::assertSame(['native_flow_name'=>'galaxy_message'],$companion['companionNodes'][0]->attrs);
+        self::assertNull($companion['companionNodes'][0]->content);
+        $primary=ContentBuilder::build($raw,'5511999999999@s.whatsapp.net',['senderIsPrimary'=>true]);
+        self::assertSame([],$primary['companionNodes'][0]->attrs);self::assertNotNull($primary['companionNodes'][0]->child('interactive'));
+        $raw['senderIsPrimary']=false;
+        self::assertNotNull(ContentBuilder::build($raw,'5511999999999@s.whatsapp.net',['senderIsPrimary'=>true])['companionNodes'][0]->child('interactive'));
     }
 
     /** @return array<string,mixed> */

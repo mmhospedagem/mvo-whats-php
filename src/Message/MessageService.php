@@ -860,7 +860,7 @@ final class MessageService
         $content = $this->hydratePartialQuote($content,$to,$credentials);
         $content = $this->prepareContent($content);
         $author = $groupPlan['sender'] ?? ($recipient->server === 'lid' ? ($credentials['meLid'] ?? $credentials['meJid']) : $credentials['meJid']);
-        $built = ContentBuilder::build($content,$to,['outgoingId'=>$id,'meJid'=>$author,'meLid'=>$credentials['meLid'] ?? null,'nowMs'=>(int)floor(microtime(true)*1000),'scheduledCallCancellationAuthorized'=>$scheduledCallAuthorized]);
+        $built = ContentBuilder::build($content,$to,['outgoingId'=>$id,'meJid'=>$author,'meLid'=>$credentials['meLid'] ?? null,'nowMs'=>(int)floor(microtime(true)*1000),'scheduledCallCancellationAuthorized'=>$scheduledCallAuthorized,'senderIsPrimary'=>($credentials['role']??null)==='primary']);
         $bot=BotTransport::invokedBot($built['proto']);
         if (($recipient->server==='bot' || $bot!==null) && !isset($built['secrets']['messageSecret'])) {
             $proto=$built['proto']; $proto['messageContextInfo']=[...($proto['messageContextInfo'] ?? []),'messageSecret'=>random_bytes(32)];

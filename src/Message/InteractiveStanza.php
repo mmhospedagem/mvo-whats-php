@@ -17,7 +17,7 @@ final class InteractiveStanza
      * @param array<string,mixed> $message WAProto.Message, before per-device encryption.
      * @return array{attrs:array<string,string>,nodes:list<BinaryNode>}
      */
-    public static function build(array $message, int $timestampSeconds): array
+    public static function build(array $message, int $timestampSeconds, bool $isPrimary=false): array
     {
         $message = ContentDecoder::unwrap($message)['message'];
         $buttonType = self::buttonType($message);
@@ -49,9 +49,9 @@ final class InteractiveStanza
             // Cpa.AUe: registered Business v4 uses its real name and nested extensions metadata.
             // Preserve the established envelope for other Galaxy messages and malformed/raw inputs.
             $biz=$metadata===null?new BinaryNode('biz',$businessAttrs,[self::flow('9','mixed')]):
-                new BinaryNode('biz',[],[new BinaryNode('interactive',['type'=>'native_flow','v'=>'1'],[
+                ($isPrimary?new BinaryNode('biz',[],[new BinaryNode('interactive',['type'=>'native_flow','v'=>'1'],[
                     new BinaryNode('native_flow',['name'=>'galaxy_message'],[new BinaryNode('extensions_metadata',$metadata)]),
-                ])]);
+                ])]):new BinaryNode('biz',['native_flow_name'=>'galaxy_message']));
         } elseif (is_array($nativeFlow) && in_array($firstButtonName, ['review_and_pay','payment_info'], true)) {
             $biz = new BinaryNode('biz', [
                 'native_flow_name'=>$firstButtonName === 'review_and_pay' ? 'order_details' : 'payment_info',

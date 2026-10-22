@@ -75,7 +75,8 @@ final class ContentBuilder
             $attrs['type'] = 'text';
             unset($encAttrs['mediatype']);
         }
-        $companions = InteractiveStanza::build($message,intdiv($now,1000));
+        // Connection context is supplied by the session owner, never merged from message options.
+        $companions = InteractiveStanza::build($message,intdiv($now,1000),($context['senderIsPrimary']??false)===true);
         if (($options['type'] ?? null) === 'provider-notice') {
             $companions['nodes'] = [...$companions['nodes'], ...ProviderNoticeContent::companionNodes($options,intdiv($now,1000))];
         }
