@@ -263,9 +263,25 @@ O teste local `BusinessFormTransportTest` usa uma resposta versão 4 **sintétic
 
 ## Consultar metadados e exportar respostas
 
+A consulta de metadados usa o catálogo HTTP do Web: endpoint fixo `https://graph.whatsapp.com/graphql/catalog`, documento `24989855014035777` e `variables.request.extensions` como um único objeto com `biz_jid`/`flow_id`. Ela não usa MEX nem o token privado da autenticação Business de publicação. A aplicação consumidora fornece a configuração atual do catálogo por um callback em memória; o SDK não inclui uma chave real, lê variáveis de ambiente ou procura arquivos automaticamente. Isso não exige registrar manualmente um Flow pessoal na Meta.
+
 ```php
+// $catalogConfiguration é carregada explicitamente pela aplicação, fora do SDK.
+// Não registre nem publique o valor access_token dessa configuração.
+$client->setBusinessFormsCatalogTokenProvider(
+    static function () use (&$catalogConfiguration): string {
+        return $catalogConfiguration['access_token'];
+    },
+);
+
 $metadata = $forms->getFlowData('5511999999999@s.whatsapp.net', $remoteId);
 ```
+
+`setBusinessFormsCatalogTokenProvider(?callable $provider)` não faz I/O nem reinicia a conexão. O callback `function(): string` é consultado novamente a cada pedido, inclusive em uma fachada já obtida; trocar o provider altera os pedidos seguintes. `null` remove a configuração: a consulta falha localmente antes do HTTP, sem usar um token antigo nem tentar MEX ou autenticação SMB como fallback. Não passe tokens privados de Graph/Facebook/Messenger ou cookies nesse provider.
+
+`setBusinessFormsGuard()` é reavaliado antes e depois do provider e do HTTP; uma suspensão ou fachada de conexão antiga bloqueia a consulta. O transporte não segue redirecionamentos, verifica TLS, usa somente o proxy explicitamente configurado na sessão, limita a resposta descomprimida a 2 MiB e aceita timeout maior que zero e de até 32 segundos. Recusas expõem somente código numérico seguro e texto fixo; JSON inválido, falha de transporte, resposta parcial ou HTTP 5xx não viram sucesso nem retry automático. `new GalaxyMetadataService($mex)` continua disponível como integração legada explícita, sem ser a escolha padrão de `WaClient::forms()`.
+
+O exemplo `examples/business-forms.php --action=metadata` configura o provider a partir de um arquivo local explicitamente informado e mostra somente uma projeção dos metadados. O transporte e seus limites têm testes locais; obter metadados não confirma que o envio será aceito, entregue ou aberto nos clientes.
 
 Essa consulta conserva o `data` GraphQL original, inclusive metadados desconhecidos e recusas. Não infira ownership, validade de assinatura ou permissão de gestão apenas pela existência de uma resposta. O resultado pode conter assinaturas e informações de acesso do Flow; exponha uma projeção explícita na sua aplicação, sem registrar indiscriminadamente o payload inteiro.
 

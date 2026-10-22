@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 // --help and an invocation without arguments exit before autoload, storage or connection.
-$options = getopt('', ['help', 'action:', 'session:', 'auth-dir:', 'form-file:', 'id:', 'name:', 'country:', 'request-id:', 'to:', 'cta:', 'text:', 'title:', 'footer:', 'message-id:', 'connect-timeout:']);
+$options = getopt('', ['help', 'action:', 'session:', 'auth-dir:', 'form-file:', 'id:', 'name:', 'country:', 'request-id:', 'to:', 'cta:', 'text:', 'title:', 'footer:', 'message-id:', 'connect-timeout:', 'business-jid:', 'flow-id:', 'catalog-token-file:']);
 if (isset($options['help']) || count($argv) === 1) {
     echo <<<'HELP'
 Formulários Business pela biblioteca PHP — contrato desta revisão
@@ -16,6 +16,7 @@ php examples/business-forms.php --action=delete --session=cliente-demo --id=ID_L
 php examples/business-forms.php --action=publish --session=cliente-demo --id=ID_LOCAL --country=BR --request-id=publicacao-001
 php examples/business-forms.php --action=publication-status --session=cliente-demo --request-id=publicacao-001
 php examples/business-forms.php --action=authentication-status --session=cliente-demo
+php examples/business-forms.php --action=metadata --session=cliente-demo --business-jid=5511999999999@s.whatsapp.net --flow-id=ID_REMOTO --catalog-token-file=./var/catalog-token.txt
 php examples/business-forms.php --action=send --session=cliente-demo --id=ID_LOCAL --country=BR --request-id=envio-001 --to=5511999999999 --cta="Preencher formulário"
 php examples/business-forms.php --action=send-status --session=cliente-demo --request-id=envio-001
 php examples/business-forms.php --action=send-publication --session=cliente-demo --request-id=publicacao-001 --to=5511999999999 --message-id=MENSAGEM_NOVA_001
@@ -23,6 +24,8 @@ php examples/business-forms.php --action=send-publication --session=cliente-demo
 --auth-dir=PASTA          Pasta privada de sessões; padrão: ./var/whatsapp-auth.
 --connect-timeout=60      Espera por connected; entre 1 e 300 segundos.
 --cta/--text/--title/--footer personalizam a apresentação do envio.
+metadata usa somente a configuração de aplicação do catálogo em arquivo privado
+explicitamente informado; não use o token SMB, Facebook, Messenger ou cookies.
 
 Execute em uma sessão livre: apenas um worker pode possuir o lock de cada sessão.
 Os destinos são fictícios; substitua somente por contas autorizadas.
@@ -68,7 +71,7 @@ $forms = null;
 $exitCode = 0;
 try {
     $action = businessFormArgument($options, 'action');
-    if (!in_array($action, ['templates', 'list', 'create', 'get', 'rename', 'delete', 'publish', 'send', 'send-publication', 'publication-status', 'send-status', 'authentication-status'], true)) {
+    if (!in_array($action, ['templates', 'list', 'create', 'get', 'rename', 'delete', 'publish', 'send', 'send-publication', 'publication-status', 'send-status', 'authentication-status', 'metadata'], true)) {
         throw new InvalidArgumentException('Ação desconhecida; consulte --help.');
     }
     $session = businessFormArgument($options, 'session');
@@ -97,6 +100,17 @@ try {
     require dirname(__DIR__).'/vendor/autoload.php';
     if (!method_exists(WaClient::class, 'forms')) throw new LogicException('Este checkout ainda não contém WaClient::forms(); use a revisão do recurso.');
     $client = new WaClient(sessionId: $session, authDirectory: $authDirectory);
+    if ($action === 'metadata') {
+        businessFormArgument($options, 'business-jid'); businessFormArgument($options, 'flow-id');
+        $catalogTokenPath = businessFormArgument($options, 'catalog-token-file');
+        if (preg_match('~^[a-z][a-z0-9+.-]*://~i', $catalogTokenPath)) throw new InvalidArgumentException('catalog-token-file deve ser um caminho local privado.');
+        $client->setBusinessFormsCatalogTokenProvider(static function () use ($catalogTokenPath): string {
+            if (!is_file($catalogTokenPath) || !is_readable($catalogTokenPath)) throw new LogicException('Configuração de catálogo indisponível.');
+            $token = file_get_contents($catalogTokenPath, false, null, 0, 65537);
+            if (!is_string($token) || strlen($token) > 65536) throw new LogicException('Configuração de catálogo inválida.');
+            return trim($token);
+        });
+    }
     $client->on('auth_qr', static function (array $event): void {
         fwrite(STDERR, QrCode::terminal($event['qr']));
     });
@@ -114,6 +128,15 @@ try {
         'rename' => $forms->rename($options['id'], $options['name']),
         'delete' => ['deleted' => $forms->delete($options['id'])],
         'authentication-status' => $forms->authenticationStatus(),
+        'metadata' => (static function (?array $data): ?array {
+            if ($data === null) return null;
+            $rows = $data['xwa_extensions_get_flow_data']['extensions_flow_data'] ?? [];
+            return ['forms' => array_map(static function (array $row): array {
+                $metadata = $row['extensions']['metadata'] ?? [];
+                return ['flow_id' => $row['flow_id'] ?? null, 'metadata' => is_array($metadata) ? array_intersect_key($metadata, array_flip(['flow_name', 'state'])) : []];
+            }, is_array($rows) ? array_values(array_filter($rows, 'is_array')) : [])];
+        })($forms->getFlowData($options['business-jid'], $options['flow-id'])),
+
         'publish' => businessFormPublication($forms->publish($options['id'], $options['country'], $options['request-id'])),
         'publication-status' => businessFormPublication($forms->publicationStatus($options['request-id'])),
         'send-status' => (static function (?array $attempt): ?array {

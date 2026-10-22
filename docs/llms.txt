@@ -55,6 +55,7 @@ Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protoc
 
 ## Regras de interpretação
 
+- forms()->getFlowData() usa HTTP de catálogo fixo, sem fallback MEX/SMB. Configure setBusinessFormsCatalogTokenProvider(?callable), callback function(): string de configuração do catálogo (não token privado SMB/Facebook/Messenger). Setter em RAM, sem I/O/reset; provider atual por consulta, null bloqueia antes do HTTP. Guards antes/depois, timeout até 32s, até 2 MiB, sem redirects; não exponha metadados de acesso nem declare assinaturas verificadas.
 - APIs podem usar setBusinessFormsGuard(callback) para revalidar acesso/geração/parada em cada fronteira I/O de forms. O callback lança ao retirar acesso; não torna resultados incertos repetíveis nem altera outros serviços ou o catálogo local.
 - Espere connected antes de enviar; connect() não significa login concluído. Continue poll()/run().
 - stop()/disconnect() preservam a sessão; logout() desvincula. Não use logout para reiniciar.

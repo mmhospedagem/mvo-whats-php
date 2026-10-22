@@ -5,7 +5,7 @@ namespace MVO\Service;
 use MVO\Protocol\Jid;
 
 /**
- * Read-only metadata for a remotely registered Galaxy form, using the session MEX transport.
+ * Read-only metadata for a remotely registered Galaxy form. WaClient uses the HTTP catalog.
  *
  * Reference: WAWebGalaxyFlowsDrawerGetFlowDataQuery.graphql (public Web capture 2026-10-15),
  * document 32671434985780838; WAWebGraphQLPersistedQueries maps its client ID to
@@ -17,7 +17,8 @@ final class GalaxyMetadataService
     private const DOCUMENT_ID = '32671434985780838';
     private const CLIENT_DOCUMENT_ID = '24989855014035777';
 
-    public function __construct(private readonly MexService $mex) {}
+    /** MexService remains an explicit legacy integration; WaClient never falls back to it. */
+    public function __construct(private readonly MexService|BusinessFormCatalogHttpTransport $mex) {}
 
     /**
      * Return the original GraphQL data, including metadata, signatures and unknown fields.
@@ -41,6 +42,8 @@ final class GalaxyMetadataService
         if (!is_finite($timeout) || $timeout <= 0) {
             throw new \InvalidArgumentException('Galaxy metadata timeout must be finite and positive');
         }
+
+        if ($this->mex instanceof BusinessFormCatalogHttpTransport) return $this->mex->getFlowData($businessJid, $flowId, $timeout);
 
         return $this->mex->dispatch(
             self::DOCUMENT_ID,

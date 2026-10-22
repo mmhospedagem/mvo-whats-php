@@ -61,13 +61,50 @@ final class WaClientFormsTest extends TestCase
         self::assertFalse($restored->authenticationStatus()['authenticated']);
     }
 
-    public function testMetadataUsesMexWithoutRequestingSmbToken():void
+    public function testMetadataWithoutCatalogProviderFailsLocallyWithoutMexOrSmbAuthentication():void
     {
-        $peer=$this->connected();$result=$this->client->forms()->getFlowData('5511000000000@s.whatsapp.net','987654321');
-        self::assertSame(['xwa_extensions_get_flow_data'=>['extensions_flow_data'=>[]]],$result);
-        $mex=array_values(array_filter($peer->sent,static fn(BinaryNode $node):bool=>($node->attrs['xmlns']??null)==='w:mex'));
-        self::assertCount(1,$mex);self::assertSame('32671434985780838',$mex[0]->child('query')->attrs['query_id']);
-        self::assertSame([],array_values(array_filter($peer->sent,static fn(BinaryNode $node):bool=>($node->attrs['xmlns']??null)==='fb:thrift_iq')));
+        $peer=$this->connected();$before=count($peer->sent);$forms=$this->client->forms();
+        try{$forms->getFlowData('5511000000000@s.whatsapp.net','987654321');self::fail('Missing catalog provider accepted');}
+        catch(\LogicException $error){self::assertSame('Business form catalog token provider is unavailable or not configured',$error->getMessage());}
+        self::assertSame($before,count($peer->sent));self::assertFalse($forms->authenticationStatus()['authenticated']);
+    }
+
+    public function testCatalogProviderRotatesInExistingFacadeAndNeverPersistsOpaqueConfiguration():void
+    {
+        $peer=$this->connected();$before=count($peer->sent);$forms=$this->client->forms();$calls=0;
+        $metadata=(new \ReflectionProperty($forms,'metadata'))->getValue($forms);
+        $original=(new \ReflectionProperty($metadata,'mex'))->getValue($metadata);
+        self::assertInstanceOf(\MVO\Service\BusinessFormCatalogHttpTransport::class,$original);
+        // Reuse the actual facade's read-through provider and lifecycle guard with a bounded fake HTTP exchange.
+        $provider=(new \ReflectionProperty($original,'tokenProvider'))->getValue($original);
+        $guard=(new \ReflectionProperty($original,'authorizationGuard'))->getValue($original);$seen=[];
+        $http=new \MVO\Service\BusinessFormCatalogHttpTransport($provider,exchange:static function(string $url,array $headers,string $body)use(&$seen):array{
+            $seen[]=json_decode($body,true,128,JSON_THROW_ON_ERROR)['access_token'];return ['status'=>200,'body'=>'{"data":{}}'];
+        },authorizationGuard:$guard);
+        $this->client->setBusinessFormsCatalogTokenProvider(static function()use(&$calls):string{$calls++;return 'FIXTURE-CATALOG-FIRST';});
+        self::assertSame($forms,$this->client->forms());self::assertSame(0,$calls);
+        self::assertSame([],$http->getFlowData('123@lid','123'));
+        $this->client->setBusinessFormsCatalogTokenProvider(static function()use(&$calls):string{$calls++;return 'FIXTURE-CATALOG-ROTATED';});
+        self::assertSame([],$http->getFlowData('123@lid','123'));
+        $this->client->setBusinessFormsCatalogTokenProvider(null);
+        try{$http->getFlowData('123@lid','123');self::fail('Removed provider reused old configuration');}catch(\LogicException){}
+        self::assertSame(['FIXTURE-CATALOG-FIRST','FIXTURE-CATALOG-ROTATED'],$seen);self::assertSame(2,$calls);
+        self::assertSame($before,count($peer->sent));self::assertFalse($forms->authenticationStatus()['authenticated']);
+        $this->client->stop();
+        foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->directory,\FilesystemIterator::SKIP_DOTS))as$file){
+            if($file->isFile())self::assertStringNotContainsString('FIXTURE-CATALOG',file_get_contents($file->getPathname()));
+        }
+    }
+
+    public function testCatalogMetadataRetainsWithdrawalAndExpiredFacadeGuardsBeforeProvider():void
+    {
+        $this->connected();$forms=$this->client->forms();$active=false;$calls=0;
+        $this->client->setBusinessFormsCatalogTokenProvider(static function()use(&$calls):string{$calls++;return 'FIXTURE';});
+        $this->client->setBusinessFormsGuard(static function()use(&$active):void{if(!$active)throw new \LogicException('Access withdrawn');});
+        try{$forms->getFlowData('123@lid','123');self::fail('Metadata read while suspended');}catch(\LogicException $error){self::assertSame('Access withdrawn',$error->getMessage());}
+        self::assertSame(0,$calls);$active=true;$this->client->stop();$this->connected();
+        try{$forms->getFlowData('123@lid','123');self::fail('Expired facade queried metadata');}catch(\LogicException $error){self::assertStringContainsString('expired',$error->getMessage());}
+        self::assertSame(0,$calls);
     }
 
     public function testNativeAuthenticationRefusalKeepsSessionAndDoesNotCreateRemotePublication():void

@@ -84,6 +84,8 @@ final class WaClient
     private int $businessFormsGeneration=0;
     /** @var \Closure():void|null */
     private ?\Closure $businessFormsGuard=null;
+    /** @var \Closure():string|null In-memory application catalog configuration, distinct from SMB auth. */
+    private ?\Closure $businessFormsCatalogTokenProvider=null;
     /** @var array<string,int> Only exact outgoing Business form message IDs are guarded. */
     private array $businessFormsMessageGuards=[];
     /** @var \Closure():void|null */
@@ -370,11 +372,11 @@ final class WaClient
             function(string $to,array $content)use($guard):array{$guard();return $this->sendMessage($to,$content);},
             fn(string $prompt):array=>$remote->generate($prompt),
             $this->galaxyResponseExports(),
-            new \MVO\Service\GalaxyMetadataService(new \MVO\Service\MexService(new \MVO\Service\ServiceTransport(
-                function(BinaryNode $node,float $timeout)use($guard):BinaryNode{$guard();$reply=$this->query($node,$timeout);$guard();return $reply;},
-                function(BinaryNode $node)use($guard):void{$guard();$this->sendNode($node);},
-                fn():array=>$this->credentials,
-            ))),
+            new \MVO\Service\GalaxyMetadataService(new \MVO\Service\BusinessFormCatalogHttpTransport(
+                fn():string=>($this->businessFormsCatalogTokenProvider??throw new \LogicException('Business form catalog token provider is not configured'))(),
+                proxy:$this->proxy,
+                authorizationGuard:$guard,
+            )),
             fn():int=>(int)floor(($this->wallClock)()*1000),
             fn():array=>$auth->status(),
         );
@@ -383,6 +385,10 @@ final class WaClient
      * The callback must throw when access, generation or lifecycle authorization is withdrawn.
      * @param callable():void|null $guard */
     public function setBusinessFormsGuard(?callable $guard):void{$this->businessFormsGuard=$guard===null?null:\Closure::fromCallable($guard);}
+    /** Configure only the application catalog token used by getFlowData(), never the private SMB token.
+     * No I/O or session reset. Existing forms facades read the current provider on each request.
+     * @param callable():string|null $provider */
+    public function setBusinessFormsCatalogTokenProvider(?callable $provider):void{$this->businessFormsCatalogTokenProvider=$provider===null?null:\Closure::fromCallable($provider);}
     private function assertBusinessFormsAuthorized(?int $generation=null):void
     {
         if(($generation!==null&&$generation!==$this->businessFormsGeneration)||!$this->isConnected())throw new \LogicException('Business forms facade expired or disconnected; obtain forms() after connecting');
