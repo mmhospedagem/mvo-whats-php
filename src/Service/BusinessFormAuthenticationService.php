@@ -4,7 +4,7 @@ namespace MVO\Service;
 
 use MVO\Protocol\{BinaryNode,Jid};
 
-/** Native SMB authentication observed in the Business app; server authorization is still required. */
+/** Native SMB authentication observed in shipped clients; server authorization is still required. */
 final class BusinessFormAuthenticationService
 {
     private const OPERATION='business.forms.authenticate';
@@ -23,6 +23,8 @@ final class BusinessFormAuthenticationService
     private string $state='idle';
     private ?string $serverCode=null;
     private bool $recoveryRequired=false;
+    /** @var array{phase:string,kind:string,smaxId:?string,response:?array<string,mixed>}|null Safe, fixed-key diagnostic; never contains transport text or credentials. */
+    private ?array $failure=null;
     /** @var array<string,array{until:float,escalated:bool,code:string}> */
     private array $lockouts=[];
     /** @var array<string,true> Only hashes, bounded in memory, including across invalidate(). */
@@ -60,33 +62,37 @@ final class BusinessFormAuthenticationService
         }
         if($this->recoveryRequired)throw new ServiceException(self::OPERATION,null,'Business account recovery must be completed in the official application');
         $startedAt=$this->now();$this->owner=$owner;$this->busy=true;$this->deadline=$startedAt+$this->timeout;
-        $this->nonce=null;$this->serverCode=null;$this->state='requesting_nonce';
+        $this->nonce=null;$this->serverCode=null;$this->state='requesting_nonce';$this->failure=null;
         $generation=$this->generation;
+        $phase='request_nonce';$response=null;$kind=null;
         try{
             $first=$this->request('118',null,$generation);
+            $response=self::responseShape($first);
             $this->assertActive($generation);
             $result=$this->single($first,'result');
-            $status=$this->single($result,'status');
-            $value=ServiceTransport::text($status);
+            // WASmaxBizAccessTokenRequestSilentNonceRPC: status is an attribute on the single result.
+            // Never interpret legacy text children or conflicting sibling statuses as authorization.
+            $value=$result!==null&&$result->child('status')===null&&$first->child('status')===null&&$first->child('error')===null?$result->attrs['status']??null:null;
             if($value==='RecoveryRequired'){
-                $this->recoveryRequired=true;$this->state='recovery_required';
+                $this->recoveryRequired=true;$this->state='recovery_required';$kind='recovery_required';
                 throw new ServiceException(self::OPERATION,null,'Business account recovery must be completed in the official application');
             }
-            if($value!=='Success')throw new ServiceException(self::OPERATION,null,'Invalid Business authentication start response');
-            $this->state='waiting_nonce';$this->deadline=$this->now()+$this->timeout;
+            if($value!=='Success'){$kind='invalid_start_response';throw new ServiceException(self::OPERATION,null,'Invalid Business authentication start response');}
+            $phase='wait_nonce';$response=null;$this->state='waiting_nonce';$this->deadline=$this->now()+$this->timeout;
             while($this->nonce===null){
                 $this->assertActive($generation);
                 ($this->poll)(min(0.25,$this->remaining()));
             }
             $this->assertActive($generation);
-            $this->state='exchanging_token';$this->deadline=$this->now()+$this->timeout;
+            $phase='exchange_token';$response=null;$this->state='exchanging_token';$this->deadline=$this->now()+$this->timeout;
             $reply=$this->request('104',[new BinaryNode('parameters',[],[new BinaryNode('code',[],$this->nonce)])],$generation);
+            $response=self::responseShape($reply);
             $this->assertActive($generation);
             $person=$this->single($reply,'business_person');
             $token=ServiceTransport::text($this->single($reply,'access_token'));
             $cookies=ServiceTransport::text($this->single($reply,'session_cookies'));
             if(preg_match('/^[1-9][0-9]{0,19}$/D',$person?->attrs['id']??'')!==1||$token===null||$token===''||strlen($token)>65536||preg_match('/[\x00-\x1f\x7f]/',$token)===1||$cookies===null||!self::validCookies($cookies)){
-                throw new ServiceException(self::OPERATION,null,'Invalid Business authentication token response');
+                $kind='invalid_token_response';throw new ServiceException(self::OPERATION,null,'Invalid Business authentication token response');
             }
             $this->accessToken=$token;$this->state='authenticated';
             unset($this->lockouts[$owner]);
@@ -94,6 +100,10 @@ final class BusinessFormAuthenticationService
         }catch(\Throwable $error){
             $code=$error instanceof ServiceException&&preg_match('/^[0-9]{1,5}$/D',$error->serverCode??'')===1?$error->serverCode:null;
             if($generation===$this->generation){
+                $timedOut=$this->state==='timed_out'||($this->deadline!==null&&$this->now()>=$this->deadline);
+                if($timedOut&&!in_array($this->state,['disconnected','identity_changed','invalidated'],true))$this->state='timed_out';
+                $kind??=$timedOut?'timeout':($code!==null?'iq_rejected':'transport_error');
+                $this->failure=['phase'=>$phase,'kind'=>$kind,'smaxId'=>match($phase){'request_nonce'=>'118','exchange_token'=>'104',default=>null},'response'=>$response];
                 $this->accessToken=null;$this->serverCode=$code;
                 if(in_array($code,['429','431'],true)){
                     // HSx/H6b: first lockout is 600000 ms, subsequent lockout 86400000 ms.
@@ -132,10 +142,10 @@ final class BusinessFormAuthenticationService
     public function invalidate():void
     {
         ++$this->generation;$this->accessToken=null;$this->owner=null;$this->nonce=null;
-        $this->deadline=null;$this->recoveryRequired=false;$this->serverCode=null;$this->state='invalidated';
+        $this->deadline=null;$this->recoveryRequired=false;$this->serverCode=null;$this->failure=null;$this->state='invalidated';
     }
 
-    /** @return array{state:string,authenticated:bool,pending:bool,recoveryRequired:bool,serverCode:?string,retryAfterSeconds:?int,supportVerified:bool} */
+    /** @return array{state:string,authenticated:bool,pending:bool,recoveryRequired:bool,serverCode:?string,retryAfterSeconds:?int,supportVerified:bool,failure:?array{phase:string,kind:string,smaxId:?string,response:?array<string,mixed>}} */
     public function status():array
     {
         $owner=$this->context();
@@ -144,7 +154,7 @@ final class BusinessFormAuthenticationService
         if($retryAfter!==null){$this->state='cooldown';$this->serverCode=$lockout['code'];}
         elseif($this->state==='cooldown'){$this->state='idle';$this->serverCode=null;}
         return ['state'=>$this->state,'authenticated'=>$this->accessToken!==null,'pending'=>$this->busy&&$this->deadline!==null,
-            'recoveryRequired'=>$this->recoveryRequired,'serverCode'=>$this->serverCode,'retryAfterSeconds'=>$retryAfter,'supportVerified'=>false];
+            'recoveryRequired'=>$this->recoveryRequired,'serverCode'=>$this->serverCode,'retryAfterSeconds'=>$retryAfter,'supportVerified'=>false,'failure'=>$this->failure];
     }
 
     /** Avoid displaying opaque credentials in ordinary debug output. @return array<string,mixed> */
@@ -208,6 +218,21 @@ final class BusinessFormAuthenticationService
     {
         $children=ServiceTransport::children($node,$tag);
         return count($children)===1?$children[0]:null;
+    }
+
+    /** Fixed structural projection only: no arbitrary tag names, attributes, text or lengths.
+     * @return array<string,mixed> */
+    private static function responseShape(BinaryNode $node):array
+    {
+        $results=ServiceTransport::children($node,'result');
+        $statuses=count($results)===1?ServiceTransport::children($results[0],'status'):[];
+        $status=count($results)===1?($results[0]->attrs['status']??null):null;
+        return ['tag'=>$node->tag==='iq'?'iq':'other',
+            'type'=>in_array($node->attrs['type']??null,['result','error'],true)?$node->attrs['type']:'other',
+            'resultCount'=>min(100,count($results)),'statusCount'=>min(100,count($statuses)),
+            'knownStatus'=>in_array($status,['Success','RecoveryRequired'],true)?$status:null,
+            'hasError'=>$node->child('error')!==null,'hasBusinessPerson'=>$node->child('business_person')!==null,
+            'hasAccessToken'=>$node->child('access_token')!==null,'hasSessionCookies'=>$node->child('session_cookies')!==null];
     }
 
     private static function validCookies(string $json):bool

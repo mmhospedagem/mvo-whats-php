@@ -46,7 +46,7 @@ final class BusinessFormAuthenticationServiceTest extends TestCase
 
     private static function started(string $status='Success'):BinaryNode
     {
-        return new BinaryNode('iq',['type'=>'result'],[new BinaryNode('result',[],[new BinaryNode('status',[],$status)])]);
+        return new BinaryNode('iq',['type'=>'result'],[new BinaryNode('result',['status'=>$status])]);
     }
     private static function authenticated(?string $cookies='[{"name":"c_user","value":"10001"},{"name":"xs","value":"cookie-fixture"}]'):BinaryNode
     {
@@ -83,7 +83,7 @@ final class BusinessFormAuthenticationServiceTest extends TestCase
         self::assertSame('104',$exchange->attrs['smax_id']);self::assertCount(1,$exchange->content);
         self::assertSame('parameters',$exchange->content[0]->tag);self::assertCount(1,$exchange->content[0]->content);
         self::assertSame('code',$exchange->content[0]->content[0]->tag);self::assertSame(self::NONCE,$exchange->child('parameters')->child('code')->content);
-        self::assertSame(['state'=>'authenticated','authenticated'=>true,'pending'=>false,'recoveryRequired'=>false,'serverCode'=>null,'retryAfterSeconds'=>null,'supportVerified'=>false],$this->service->status());
+        self::assertSame(['state'=>'authenticated','authenticated'=>true,'pending'=>false,'recoveryRequired'=>false,'serverCode'=>null,'retryAfterSeconds'=>null,'supportVerified'=>false,'failure'=>null],$this->service->status());
         $this->assertSafeStatus();
     }
 
@@ -224,9 +224,10 @@ final class BusinessFormAuthenticationServiceTest extends TestCase
 
     public function testRecoveryRequiredIsExplicitAndNoAutomaticRetryOrExchangeOccurs():void
     {
-        $this->queryHook=static fn():BinaryNode=>new BinaryNode('iq',['type'=>'result'],[new BinaryNode('result',[],[new BinaryNode('status',[],'RecoveryRequired'),new BinaryNode('email',[],'private@example.invalid')])]);
+        $this->queryHook=static fn():BinaryNode=>new BinaryNode('iq',['type'=>'result'],[new BinaryNode('result',['status'=>'RecoveryRequired','email'=>'private@example.invalid'])]);
         for($i=0;$i<2;++$i){try{$this->service->token();self::fail('Recovery ignored');}catch(ServiceException $error){self::assertStringContainsString('official application',$error->reason);self::assertStringNotContainsString('private@',$error->getMessage());}}
         self::assertCount(1,$this->queries);self::assertTrue($this->service->status()['recoveryRequired']);self::assertSame('recovery_required',$this->service->status()['state']);
+        self::assertSame('recovery_required',$this->service->status()['failure']['kind']);self::assertSame('RecoveryRequired',$this->service->status()['failure']['response']['knownStatus']);
         self::assertStringNotContainsString('private@',json_encode($this->service->status(),JSON_THROW_ON_ERROR));$this->assertSafeStatus();
     }
 
@@ -310,5 +311,107 @@ final class BusinessFormAuthenticationServiceTest extends TestCase
         foreach([0.0,-1.0,32.01,INF,NAN]as$timeout){
             try{new BusinessFormAuthenticationService($transport,static function():void{},static fn():bool=>true,null,$timeout);self::fail('Invalid timeout accepted');}catch(\InvalidArgumentException $error){self::assertStringContainsString('32 seconds',$error->getMessage());}
         }
+    }
+
+    public function testMalformedNonceStartRetainsOnlyFixedStructuralDiagnostic():void
+    {
+        $private=self::TOKEN.' '.self::NONCE.' private@example.invalid';
+        $this->queryHook=static fn():BinaryNode=>new BinaryNode('iq',['type'=>'result','id'=>$private,'from'=>$private],[
+            new BinaryNode('result',['status'=>$private,'email'=>$private],[new BinaryNode('status',[],$private),new BinaryNode('email',[],$private)]),
+            new BinaryNode($private,[$private=>$private],$private),
+        ]);
+        try{$this->service->token();self::fail('Unknown response accepted');}catch(ServiceException){}
+        self::assertSame(['phase'=>'request_nonce','kind'=>'invalid_start_response','smaxId'=>'118','response'=>[
+            'tag'=>'iq','type'=>'result','resultCount'=>1,'statusCount'=>1,'knownStatus'=>null,'hasError'=>false,
+            'hasBusinessPerson'=>false,'hasAccessToken'=>false,'hasSessionCookies'=>false,
+        ]],$this->service->status()['failure']);
+        self::assertStringNotContainsString($private,json_encode($this->service->status(),JSON_THROW_ON_ERROR));$this->assertSafeStatus();
+    }
+
+    public function testDuplicateOrMissingStartContainersRemainStructuralFailures():void
+    {
+        foreach([[],[new BinaryNode('result')],[new BinaryNode('result'),new BinaryNode('result')]]as$children){
+            $this->service->invalidate();$this->queryHook=static fn():BinaryNode=>new BinaryNode('iq',['type'=>'result'],$children);
+            try{$this->service->token();self::fail('Malformed response accepted');}catch(ServiceException){}
+            $failure=$this->service->status()['failure'];self::assertSame('invalid_start_response',$failure['kind']);
+            self::assertSame(count($children),$failure['response']['resultCount']);self::assertSame(0,$failure['response']['statusCount']);
+        }
+    }
+
+    public function testIncompleteTokenDiagnosticIdentifiesExchangeAndNoSecrets():void
+    {
+        $this->queryHook=function(BinaryNode $node):BinaryNode{
+            if($node->attrs['smax_id']==='118'){$this->service->ingestServerNotification(self::notification());return self::started();}
+            return new BinaryNode('iq',['type'=>'result'],[new BinaryNode('business_person',['id'=>'private-owner']),new BinaryNode('access_token',[],self::TOKEN)]);
+        };
+        try{$this->service->token();self::fail('Invalid token response accepted');}catch(ServiceException){}
+        self::assertSame(['phase'=>'exchange_token','kind'=>'invalid_token_response','smaxId'=>'104','response'=>[
+            'tag'=>'iq','type'=>'result','resultCount'=>0,'statusCount'=>0,'knownStatus'=>null,'hasError'=>false,
+            'hasBusinessPerson'=>true,'hasAccessToken'=>true,'hasSessionCookies'=>false,
+        ]],$this->service->status()['failure']);$this->assertSafeStatus();
+    }
+
+    public static function diagnosticPhases():iterable
+    {
+        yield 'start'=>['request_nonce','118'];yield 'nonce wait'=>['wait_nonce',null];yield 'exchange'=>['exchange_token','104'];
+    }
+    #[DataProvider('diagnosticPhases')]
+    public function testEachNativePhaseReportsTimeoutWithoutClaimingServerRefusal(string $phase,?string $smaxId):void
+    {
+        $this->nonceOnPoll=false;
+        $this->queryHook=function(BinaryNode $node)use($phase):BinaryNode{
+            if($phase==='request_nonce'||($phase==='exchange_token'&&$node->attrs['smax_id']==='104')){
+                $this->clock+=32.0;throw new \RuntimeException(self::TOKEN);
+            }
+            if($phase==='exchange_token')$this->service->ingestServerNotification(self::notification());
+            return self::started();
+        };
+        try{$this->service->token();self::fail('Timeout accepted');}catch(ServiceException){}
+        self::assertSame('timed_out',$this->service->status()['state']);self::assertNull($this->service->status()['serverCode']);
+        self::assertSame(['phase'=>$phase,'kind'=>'timeout','smaxId'=>$smaxId,'response'=>null],$this->service->status()['failure']);$this->assertSafeStatus();
+    }
+
+    public function testTransportFailureAndExplicitIqRejectionRemainDifferent():void
+    {
+        foreach([new \RuntimeException(self::TOKEN),new ServiceException('private','403',self::TOKEN)]as$error){
+            $this->service->invalidate();$this->queryHook=static fn():never=>throw $error;
+            try{$this->service->token();self::fail('Failure accepted');}catch(ServiceException){}
+            self::assertSame(['phase'=>'request_nonce','kind'=>$error instanceof ServiceException?'iq_rejected':'transport_error','smaxId'=>'118','response'=>null],$this->service->status()['failure']);$this->assertSafeStatus();
+        }
+    }
+
+    public function testFailureClearsOnInvalidationAndSuccessfulNewAuthentication():void
+    {
+        $this->queryHook=static fn():BinaryNode=>self::started('Unknown');
+        try{$this->service->token();self::fail();}catch(ServiceException){}
+        self::assertNotNull($this->service->status()['failure']);$this->service->invalidate();self::assertNull($this->service->status()['failure']);
+        $this->queryHook=null;self::assertSame(self::TOKEN,$this->service->token());self::assertNull($this->service->status()['failure']);
+    }
+
+    public function testApplicationLogicExceptionIsPreservedWithoutCopyingItsText():void
+    {
+        $guard=new \LogicException(self::TOKEN);$this->queryHook=static fn():never=>throw $guard;
+        try{$this->service->token();self::fail();}catch(\LogicException $error){self::assertSame($guard,$error);}
+        self::assertSame('transport_error',$this->service->status()['failure']['kind']);$this->assertSafeStatus();
+    }
+
+    public static function ambiguousStartStatuses():iterable
+    {
+        yield 'legacy child status'=>[[new BinaryNode('result',[],[new BinaryNode('status',[],'Success')])]];
+        yield 'sibling status'=>[[new BinaryNode('result'),new BinaryNode('status',[],'Success')]];
+        yield 'conflicting child'=>[[new BinaryNode('result',['status'=>'Success'],[new BinaryNode('status',[],'RecoveryRequired')])]];
+        yield 'duplicate child'=>[[new BinaryNode('result',['status'=>'Success'],[new BinaryNode('status',[],'Success'),new BinaryNode('status',[],'Success')])]];
+        yield 'conflicting sibling'=>[[new BinaryNode('result',['status'=>'Success']),new BinaryNode('status',[],'RecoveryRequired')]];
+        yield 'duplicate result'=>[[new BinaryNode('result',['status'=>'Success']),new BinaryNode('result',['status'=>'RecoveryRequired'])]];
+        yield 'unrecognized attribute'=>[[new BinaryNode('result',['status'=>'success'])]];
+        yield 'error with success'=>[[new BinaryNode('result',['status'=>'Success']),new BinaryNode('error',['code'=>'403','text'=>self::TOKEN])]];
+    }
+    #[DataProvider('ambiguousStartStatuses')]
+    public function testOnlyUnambiguousResultStatusAttributeCanAuthorizeNonceWait(array $children):void
+    {
+        $this->queryHook=function()use($children):BinaryNode{$this->service->ingestServerNotification(self::notification());return new BinaryNode('iq',['type'=>'result'],$children);};
+        try{$this->service->token();self::fail('Ambiguous or unsupported status accepted');}catch(ServiceException){}
+        self::assertCount(1,$this->queries);self::assertSame(0,$this->polls);self::assertFalse($this->service->status()['authenticated']);
+        self::assertSame('invalid_start_response',$this->service->status()['failure']['kind']);$this->assertSafeStatus();
     }
 }

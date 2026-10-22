@@ -20,7 +20,7 @@ Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protoc
 - [Mídia](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MIDIA.md): upload/download e processamento opcional.
 - [Identidades](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/IDENTIDADES.md): PN, LID, aliases e privacidade.
 - [Formulários nativos](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FORMULARIOS.md): tipo form, texto livre portável com cancel_option explícito, InputFields Android e limites de validação.
-- [Gerenciar formulários Business](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FORMULARIOS-GERENCIAMENTO.md): forms(), catálogo local e envio business-form Galaxy versão 4; autenticação Business automática/HTTPS implementados, authenticationStatus seguro, homologação remota/companion pendente e sem sincronização do catálogo Android.
+- [Gerenciar formulários Business](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FORMULARIOS-GERENCIAMENTO.md): forms(), catálogo local e envio business-form Galaxy versão 4; autenticação Business automática/HTTPS implementados, authenticationStatus seguro com diagnóstico por etapa, homologação remota/companion pendente e sem sincronização do catálogo Android.
 - [WhatsApp Flows](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FLOWS.md): navigate/data_exchange, registro e limitações do formato inline.
 
 ## Documentação por biblioteca

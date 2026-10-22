@@ -218,7 +218,7 @@ final class FormsFacadeNodeSession implements NodeSession
         if(($node->attrs['xmlns']??null)==='fb:thrift_iq'&&$this->smbSuccess){
             if(($node->attrs['smax_id']??null)==='118'){
                 $nonce=new BinaryNode('notification',['type'=>'business','from'=>'s.whatsapp.net','id'=>'NATIVE-NONCE'],[new BinaryNode('wa_ad_account_nonce',[],'FIXTURE-NONCE')]);
-                $result=new BinaryNode('iq',['id'=>$node->attrs['id'],'type'=>'result'],[new BinaryNode('result',[],[new BinaryNode('status',[],'Success')])]);
+                $result=new BinaryNode('iq',['id'=>$node->attrs['id'],'type'=>'result'],[new BinaryNode('result',['status'=>'Success'])]);
                 array_push($this->incoming,...($this->nonceBeforeResult?[$nonce,$result]:[$result,$nonce]));return;
             }
             $this->incoming[]=new BinaryNode('iq',['id'=>$node->attrs['id'],'type'=>'result'],[

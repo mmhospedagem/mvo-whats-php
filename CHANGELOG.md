@@ -4,6 +4,8 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Parser do IQ 118 corrigido para o atributo `result.status` documentado no cliente Web, sem aceitar nós de texto legados ou status conflitantes. Diagnóstico seguro da autenticação de formulários: fase nativa, falha de formato/transporte/timeout distinta de recusa IQ e presença estrutural dos campos esperados, sem payloads privados ou mudança de protocolo.
+
 - Guard opcional `setBusinessFormsGuard()` para revalidar autorização entre fases remotas e antes do transporte de mensagens de formulários, preservando snapshots e impedindo replay implícito após retirada de acesso.
 - Gerenciamento de modelos Business por `WaClient::forms()`: catálogo local persistente, edição, duplicação, modelos iniciais e importação/exportação do schema Android. Não sincroniza o catálogo privado do aplicativo.
 - Autenticação SMB por nonce, publicação HTTP explícita e mensagem `business-form` Galaxy v4 com ID remoto e `wellVersion` retornados pelo servidor. Geração assistida devolve a saída ou recusa para revisão, sem publicar automaticamente.

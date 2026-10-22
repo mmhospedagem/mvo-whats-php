@@ -63,6 +63,8 @@ A retirada de autorização impede a próxima etapa de rede, sem desfazer um HTT
 
 Na primeira operação remota, o SDK solicita autorização por IQ 118, aguarda a notificação Business `wa_ad_account_nonce` e troca esse nonce por token no IQ 104. As requisições são enviadas a `s.whatsapp.net`; publicação e geração seguem por HTTPS para `https://graph.facebook.com/graphql`. Esse acesso é específico da conta WhatsApp Business e não reutiliza credenciais dos pacotes Facebook/Messenger.
 
+A resposta inicial do IQ 118 usa o atributo `status` do único nó `result`: `<result status="Success"/>` autoriza aguardar o nonce; `status="RecoveryRequired"` interrompe para recuperação. Um filho `<status>Success</status>` não representa esse contrato. O SDK rejeita resultados duplicados e status conflitantes. O cliente Web público contém essa sequência de autenticação companion; isso comprova o contrato observado, sem garantir que o servidor autorize cada conta ou que a publicação e a interface tenham sido homologadas.
+
 Cada fase nativa tem prazo de até 32 segundos: primeiro IQ, espera do nonce e segundo IQ. A primeira operação pode consumir até 96 segundos nessa autenticação, seguida de uma requisição HTTP com prazo padrão de 30 segundos. Isso é um orçamento de espera dessas etapas, não uma garantia de conclusão nem o prazo total de envio da mensagem. Execute a operação no worker dono da sessão, fora dos listeners, e dimensione o timeout da sua aplicação consumidora.
 
 ```php
@@ -72,6 +74,8 @@ $authentication = $forms->authenticationStatus();
 ```
 
 Na fachada de `WaClient`, a projeção contém `state`, `authenticated`, `pending`, `recoveryRequired`, `serverCode`, `retryAfterSeconds` e `supportVerified`. `authenticated=true` significa que o SDK recebeu um token nessa conexão; não confirma publicação, entrega ou abertura. `supportVerified` permanece `false` enquanto esta integração não tiver homologação real. Estados como `requesting_nonce`, `waiting_nonce`, `exchanging_token`, `authenticated`, `recovery_required`, `cooldown`, `timed_out` e `failed` descrevem a etapa, não a conclusão do formulário.
+
+A projeção inclui `failure=null` quando não há diagnóstico de falha. Em uma falha nativa, `failure` contém `phase` (`request_nonce`, `wait_nonce` ou `exchange_token`), `kind` (`iq_rejected`, `invalid_start_response`, `invalid_token_response`, `timeout`, `transport_error` ou `recovery_required`), `smaxId` (`118`, `104` ou `null`) e `response` estrutural ou `null`. A estrutura da resposta expõe somente tipo de nó/tipo IQ, contagens delimitadas de `result`/`status`, o enum conhecido `Success`/`RecoveryRequired` e presença de campos esperados. Não inclui textos arbitrários, atributos de identidade, nonce, token ou cookies. `invalid_start_response`, `invalid_token_response` e `transport_error` não comprovam uma recusa explícita do servidor; preserve essa distinção nos erros da sua aplicação. Um diagnóstico é limpo na invalidação ou no início de uma nova tentativa. Essa consulta não repete a autenticação.
 
 O token fica somente em RAM e é limpo ao encerrar a conexão, mudar a identidade ou invalidar a autenticação. O nonce é temporário e só é aceito de uma notificação Business do transporte enquanto existe uma tentativa pendente e dentro do prazo; não é aceito de uma mensagem comum ou peer. Nonce, access token e session cookies são removidos das projeções públicas dos nós de autenticação/eventos. Não registre capturas de transporte nem exponha payloads privados na sua aplicação.
 
