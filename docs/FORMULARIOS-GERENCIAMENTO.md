@@ -192,7 +192,7 @@ $attempt = $forms->sendStatus($sendRequestId);
 $publication = $forms->publicationStatus($sendRequestId);
 ```
 
-O envio tipado Business Galaxy v4 usa o envelope nativo `galaxy_message`, com `extensions_metadata` dentro de `native_flow`. A versão desse metadado remove `v`/`V` como no escritor Android (por exemplo, `V700` vira `700`), preservando `well_version=V700` no JSON cifrado. Outros Flows mantêm seu envelope anterior. Essa conformidade de formato é validada localmente; aceitação pelo servidor, entrega e abertura precisam de validação real separada.
+O envio tipado Business Galaxy v4 usa o envelope nativo `galaxy_message`, com `extensions_metadata` dentro de `native_flow`. O corpo `nativeFlowMessage` usa `messageVersion=3` e `messageParamsJson="{}"`, conforme captura do aplicativo nativo; essa versão do corpo é distinta de `flow_message_version="4"`. O envio inicial desse tipo não força `device_fanout=false`; retries conservam o nó já persistido sem acrescentar esse atributo. A versão desse metadado remove `v`/`V` como no escritor Android (por exemplo, `V700` vira `700`), preservando `well_version=V700` no JSON cifrado. Outros Flows mantêm seu envelope anterior. Essa conformidade de formato é validada localmente; aceitação pelo servidor, entrega e abertura precisam de validação real separada.
 
 `send()` preserva a publicação mesmo se o envio da mensagem falhar. Uma tentativa com resultado incerto não é reenviada silenciosamente. O estado do envio tem `messageId` para conciliar com outbox, recibos e eventos. `server_ack` confirma aceitação da mensagem pelo servidor, não entrega, abertura do formulário, conclusão ou leitura.
 

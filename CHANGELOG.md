@@ -4,6 +4,8 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Corpo Business Galaxy alinhado à captura nativa com `messageVersion=3`, parâmetros de mensagem vazios e fanout inicial sem override legado; replay mantém o nó exato.
+
 - Envelope nativo para Business Galaxy v4 com nome real e metadados de extensões, preservando o JSON cifrado e o caminho dos Flows legados.
 
 - Publicação de formulários aplica o padrão nativo `V700` somente quando a versão estiver ausente, preservando versões explícitas e a incerteza das tentativas anteriores.

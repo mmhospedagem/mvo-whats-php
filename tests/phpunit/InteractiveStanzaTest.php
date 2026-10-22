@@ -35,7 +35,7 @@ final class InteractiveStanzaTest extends TestCase
             ['device_fanout'=>'false'], [$biz],
         ];
         foreach(['registered Business template'=>false,'registered Business AI'=>true]as$name=>$isAi){
-            yield $name=>[self::businessForm($isAi),['device_fanout'=>'false'],[['tag'=>'biz','attrs'=>[],'content'=>[
+            yield $name=>[self::businessForm($isAi),[],[['tag'=>'biz','attrs'=>[],'content'=>[
                 ['tag'=>'interactive','attrs'=>['type'=>'native_flow','v'=>'1'],'content'=>[
                     ['tag'=>'native_flow','attrs'=>['name'=>'galaxy_message'],'content'=>[
                         ['tag'=>'extensions_metadata','attrs'=>['well_version'=>'700','flow_message_version'=>'4']],
@@ -180,6 +180,13 @@ final class InteractiveStanzaTest extends TestCase
         self::assertSame('700',$built['nodes'][0]->child('interactive')->child('native_flow')->child('extensions_metadata')->attrs['well_version']);self::assertSame($before,$message);
         $message['interactiveMessage']['nativeFlowMessage']['buttons'][]=['name'=>'quick_reply'];
         self::assertSame('mixed',InteractiveStanza::build($message,self::NOW)['nodes'][0]->child('interactive')->child('native_flow')->attrs['name']);
+    }
+
+    public function testRegisteredLookingLegacyVersionOneKeepsEstablishedFanoutAndEnvelope():void
+    {
+        $message=self::businessForm();$message['interactiveMessage']['nativeFlowMessage']['messageVersion']=1;
+        $built=InteractiveStanza::build($message,self::NOW);self::assertSame(['device_fanout'=>'false'],$built['attrs']);
+        self::assertSame(['v'=>'9','name'=>'mixed'],$built['nodes'][0]->child('interactive')->child('native_flow')->attrs);
     }
 
     /** @return array<string,mixed> */

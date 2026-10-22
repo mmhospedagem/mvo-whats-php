@@ -35,7 +35,8 @@ final class BusinessFormBuilderTest extends TestCase
         $message = BusinessFormBuilder::build(self::content());
         $params = self::parameters($message);
         self::assertSame('galaxy_message', $message['interactiveMessage']['nativeFlowMessage']['buttons'][0]['name']);
-        self::assertSame(1, $message['interactiveMessage']['nativeFlowMessage']['messageVersion']);
+        self::assertSame(3, $message['interactiveMessage']['nativeFlowMessage']['messageVersion']);
+        self::assertSame('{}', $message['interactiveMessage']['nativeFlowMessage']['messageParamsJson']);
         self::assertSame('4', $params['flow_message_version']);
         self::assertSame('12345678901234567890', $params['flow_id']);
         self::assertSame('1.0', $params['well_version']);

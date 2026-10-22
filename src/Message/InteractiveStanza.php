@@ -44,6 +44,8 @@ final class InteractiveStanza
             ])]);
         } elseif (is_array($nativeFlow) && $firstButtonName === 'galaxy_message') {
             $metadata=self::businessFormMetadata($nativeFlow);
+            // Initial native Business fanout does not force the legacy interactive override.
+            if($metadata!==null)unset($attrs['device_fanout']);
             // Cpa.AUe: registered Business v4 uses its real name and nested extensions metadata.
             // Preserve the established envelope for other Galaxy messages and malformed/raw inputs.
             $biz=$metadata===null?new BinaryNode('biz',$businessAttrs,[self::flow('9','mixed')]):
@@ -99,7 +101,7 @@ final class InteractiveStanza
     private static function businessFormMetadata(array $nativeFlow):?array
     {
         $buttons=$nativeFlow['buttons']??null;
-        if(($nativeFlow['messageVersion']??null)!==1||!is_array($buttons)||count($buttons)!==1)return null;
+        if(($nativeFlow['messageVersion']??null)!==3||!is_array($buttons)||count($buttons)!==1)return null;
         $json=$buttons[0]['buttonParamsJson']??null;
         if(!is_string($json)||strlen($json)>262144)return null;
         try{$params=json_decode($json,false,32,JSON_THROW_ON_ERROR);}catch(\JsonException){return null;}

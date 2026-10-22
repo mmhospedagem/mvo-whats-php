@@ -69,7 +69,8 @@ final class BusinessFormBuilder
         if (strlen($json) > self::MAX_PARAMETERS_BYTES) throw new \InvalidArgumentException('Business form parameters exceed the SDK 256 KiB authoring limit');
         $interactive = [
             'body' => ['text' => self::text($content['text'] ?? $form['message_text'] ?? '', 'text', 65536, true)],
-            'nativeFlowMessage' => ['buttons' => [['name' => 'galaxy_message', 'buttonParamsJson' => $json]], 'messageVersion' => 1],
+            // Native Business capture: message version 3 and an explicit empty message-parameters object.
+            'nativeFlowMessage' => ['buttons' => [['name' => 'galaxy_message', 'buttonParamsJson' => $json]], 'messageParamsJson'=>'{}', 'messageVersion' => 3],
         ];
         if (array_key_exists('title', $content)) $interactive['header'] = ['title' => self::text($content['title'], 'title', 4096), 'hasMediaAttachment' => false];
         if (array_key_exists('footer', $content)) $interactive['footer'] = ['text' => self::text($content['footer'], 'footer', 4096)];
