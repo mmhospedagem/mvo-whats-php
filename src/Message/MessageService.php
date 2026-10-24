@@ -988,11 +988,29 @@ final class MessageService
     {
         if ($depth>8) throw new \LengthException('Message content nesting exceeded');
         if (!is_array($content)) return $content;
+        if(isset($content['type'])&&$content['type']!=='raw'&&array_key_exists('messageContextInfo',$content)){
+            $metadata=$content['messageContextInfo'];unset($content['messageContextInfo']);
+            if($metadata!==null&&!is_array($metadata))throw new \InvalidArgumentException('messageContextInfo must be an array');
+            // The outer spoiler replaces nested caller options; raw proto-owned metadata still wins.
+            if($content['type']==='spoiler'&&is_array($content['content']??null))unset($content['content']['messageContextInfo']);
+            // Preserve shared typed metadata across strict preparers and media's typed-to-raw conversion.
+            // This recursion does not add a message wrapper and consumes the option before re-entering.
+            $prepared=$this->prepareContent($content,$depth);
+            if($metadata===null)return $prepared;
+            if(!is_array($prepared))throw new \LogicException('Typed preparation did not return message content');
+            if(($prepared['type']??null)==='raw'){
+                $message=$prepared['message']??null;$generated=is_array($message)?($message['messageContextInfo']??[]):null;
+                if(!is_array($message)||!is_array($generated))throw new \LogicException('Invalid prepared Message metadata');
+                $message['messageContextInfo']=array_replace($metadata,$generated);
+                $prepared['message']=$message;
+            }else $prepared['messageContextInfo']=$metadata;
+            return $prepared;
+        }
         if(($content['type']??null)==='spoiler'){
-            foreach($content as$key=>$_)if(!in_array($key,['type','content','quote','messageId'],true))throw new \InvalidArgumentException('Unknown spoiler field '.$key);
+            foreach($content as$key=>$_)if(!in_array($key,['type','content','quote','messageId','messageContextInfo'],true))throw new \InvalidArgumentException('Unknown spoiler field '.$key);
             $inner=$content['content']??null;if(is_string($inner))$inner=['type'=>'text','text'=>$inner];
             if(!is_array($inner)||($inner['type']??null)==='spoiler')throw new \InvalidArgumentException('Spoiler requires text or media');
-            return $this->prepareContent([...$inner,...array_intersect_key($content,array_flip(['quote','messageId'])),'spoiler'=>true],$depth+1);
+            return $this->prepareContent([...$inner,...array_intersect_key($content,array_flip(['quote','messageId','messageContextInfo'])),'spoiler'=>true],$depth+1);
         }
         if(($content['type']??null)==='carousel')return CarouselContent::prepare($content,fn(array $media):array=>$this->media->prepare($media),$this->media->maxBytes());
         if (isset($content['statusMetadata'])) {
@@ -1561,6 +1579,16 @@ final class MessageService
         $decoded = null; $failure = false; $unsupported = false;
         $msmsgNodes=array_values(array_filter(self::children($node,'enc'),static fn(BinaryNode $enc):bool=>($enc->attrs['type'] ?? '')==='msmsg'));
         $encryptedNodes = $msmsgNodes!==[] ? $msmsgNodes : ($multi ? [$node] : self::children($node,'enc'));
+        if ($multi && $msmsgNodes===[]) {
+            $groupEncs=self::children($node,'enc');
+            $senderKeyEncs=array_values(array_filter($groupEncs,static fn(BinaryNode $enc):bool=>($enc->attrs['type']??'')==='skmsg'));
+            $hasDirect=false;foreach($groupEncs as$groupEnc)if(in_array($groupEnc->attrs['type']??'',['msg','pkmsg'],true))$hasDirect=true;
+            // Each attempt has its own outer transaction. An invalid optional
+            // direct carrier must not veto an independently authenticated skmsg
+            // using a previously established sender key. Never catch a nested
+            // Signal failure and then commit its partially changed ratchet.
+            if($hasDirect&&count($senderKeyEncs)===1)$encryptedNodes[]=new BinaryNode('message',$node->attrs,$senderKeyEncs);
+        }
         foreach ($encryptedNodes as $enc) {
             $type = $enc->attrs['type'] ?? '';
             if (!$multi && (!in_array($type, ['msg','pkmsg','msmsg'], true) || !is_string($enc->content))) { $unsupported = true; continue; }
@@ -1573,7 +1601,7 @@ final class MessageService
                         $raw=MessageCodec::encode(['secretEncryptedMessage'=>['encIv'=>$secret['encIv'] ?? '', 'encPayload'=>$secret['encPayload'] ?? '']]);
                         $consumed=false;
                     } elseif (in_array($address->server,['g.us','broadcast'],true)) {
-                        $raw = $this->groups->processIncoming($node,$sender);
+                        $raw = $this->groups->processIncoming($enc,$sender);
                         $consumed = $raw === null;
                     } else {
                         $raw = MessageCodec::unpad($this->signal->decrypt($sender, $type, $enc->content));

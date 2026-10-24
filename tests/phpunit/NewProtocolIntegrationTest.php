@@ -43,7 +43,7 @@ final class NewProtocolIntegrationTest extends TestCase
     public function testAlbumHeaderIsTextAndChildAssociationSurvivesOwnDeviceWrapper():void
     {
         $header=ContentBuilder::build(['type'=>'raw','message'=>['albumMessage'=>['expectedImageCount'=>1,'expectedVideoCount'=>1]]],'456@lid');
-        self::assertSame('text',$header['attrs']['type']);self::assertArrayNotHasKey('mediatype',$header['encAttrs']);
+        self::assertSame('text',$header['attrs']['type']);self::assertSame('collection',$header['encAttrs']['mediatype']);
         $proto=['deviceSentMessage'=>['destinationJid'=>'456@lid','message'=>['imageMessage'=>['caption'=>'Second']]],'messageContextInfo'=>['messageAssociation'=>['associationType'=>'MEDIA_ALBUM','parentMessageKey'=>['id'=>'PARENT','remoteJid'=>'456@lid','fromMe'=>true],'messageIndex'=>1]]];
         $child=ContentDecoder::decode(SchemaCodec::encode('Message',$proto));
         self::assertSame('image',$child['kind']);self::assertSame('media_album',$child['association']['type']);

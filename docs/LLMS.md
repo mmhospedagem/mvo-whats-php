@@ -39,6 +39,12 @@ composer require "mmhospedagem/mvo-whats-php:^1.0"
 
 Carregue `vendor/autoload.php` da aplicação. Não copie classes para outro namespace nem substitua o SDK por um serviço intermediário para executar estes exemplos.
 
+## Metadados em envios tipados
+
+`sendMessage()` aceita `messageContextInfo` no conteúdo tipado, incluindo o caminho que prepara upload de mídia. A mesclagem é na raiz de `Message`; campos já gerados pelo builder prevalecem. Não confunda esse envelope com `contextInfo`: citação, menções, encaminhamento e expiração permanecem na submensagem correspondente. Em `raw`, mantenha os metadados dentro de `message`; a opção externa não altera o payload bruto. O agrupador de álbum usa `enc.mediatype=collection`, mantendo o tipo externo de texto.
+
+No recebimento, SKDM acompanhado somente de metadados é controle interno; contexto sem SKDM e campos desconhecidos continuam expostos. Sucesso na distribuição individual não confirma o `skmsg`: a falha do conteúdo mantém retry limitado. O descarte de um portador individual inválido exige que o único `skmsg` seja autenticado por uma chave de grupo já estabelecida, em transação separada.
+
 ## Modelo de execução que o agente precisa respeitar
 
 1. Cada conta WhatsApp usa seu próprio `sessionId` e armazenamento persistente. Uma instalação do pacote atende várias contas; não se copia a biblioteca para cada cliente.

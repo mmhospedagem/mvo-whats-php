@@ -4,6 +4,9 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- `messageContextInfo` disponível em envios tipados, com precedência dos campos gerados pelo builder, contexto de citação/menções separado e preservação do formato raw.
+- Agrupadores de álbuns usam `enc.mediatype=collection`, inclusive quando o conteúdo está envolvido por wrappers de mensagem.
+- Portadores de distribuição de chave acompanhados somente de metadados internos não geram mensagens vazias. Conteúdo de grupo autenticado por uma chave já estabelecida pode ser recebido mesmo quando um portador pairwise opcional é inválido, sem confirmar ratchets parciais; falhas do conteúdo `skmsg` continuam exigindo retry limitado.
 - Envelope Business Galaxy específico do papel da sessão: companion usa atributo direto, primário mantém metadados nativos aninhados. Contexto vem das credenciais, sem opção de mensagem para alterar o papel.
 
 - Corpo Business Galaxy alinhado à captura nativa com `messageVersion=3`, parâmetros de mensagem vazios e fanout inicial sem override legado; replay mantém o nó exato.

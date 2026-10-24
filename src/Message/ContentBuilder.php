@@ -19,18 +19,33 @@ final class ContentBuilder
     public static function build(string|array $content, string $to, array $context = []): array
     {
         if ($to === '') throw new \InvalidArgumentException('Message recipient is required');
+        $spoilerMetadata = false;
         if(is_array($content)&&($content['type']??null)==='spoiler'){
-            foreach($content as$key=>$_)if(!in_array($key,['type','content','quote','messageId'],true))throw new \InvalidArgumentException('Unknown spoiler field '.$key);
+            $spoilerMetadata = array_key_exists('messageContextInfo', $content);
+            foreach($content as$key=>$_)if(!in_array($key,['type','content','quote','messageId','messageContextInfo'],true))throw new \InvalidArgumentException('Unknown spoiler field '.$key);
             $inner=$content['content']??null;
             if(is_string($inner))$inner=['type'=>'text','text'=>$inner];
             if(!is_array($inner)||($inner['type']??null)==='spoiler')throw new \InvalidArgumentException('Spoiler requires text or prepared content');
-            $content=[...$inner,...array_intersect_key($content,array_flip(['quote','messageId'])),'spoiler'=>true];
+            $content=[...$inner,...array_intersect_key($content,array_flip(['quote','messageId','messageContextInfo'])),'spoiler'=>true];
         }
         $options = is_array($content) ? $content : [];
         $now = $context['nowMs'] ?? (int)floor(microtime(true) * 1000);
         if (is_string($content)) { MessageCodec::text($content); $message = ['conversation'=>$content]; }
         elseif (!isset($content['type'])) $message = $content;
-        else $message = self::typed($content, $to, $context, $now);
+        else {
+            $typed = $content;
+            // This belongs to Message, never to a media/content submessage.
+            $sharedTypedMetadata = $typed['type'] !== 'raw' || $spoilerMetadata;
+            if ($sharedTypedMetadata) unset($typed['messageContextInfo']);
+            $message = self::typed($typed, $to, $context, $now);
+            if ($sharedTypedMetadata && isset($content['messageContextInfo'])) {
+                // Builder-owned fields (for example pin duration or a generated secret) win.
+                $message['messageContextInfo'] = array_replace(
+                    self::array($content['messageContextInfo'], 'messageContextInfo'),
+                    self::array($message['messageContextInfo'] ?? [], 'built messageContextInfo'),
+                );
+            }
+        }
         if ($message === []) throw new \InvalidArgumentException('Message content cannot be empty');
         $contextOptions = array_replace($options, $context);
         $ctx = self::context($contextOptions, $to);
@@ -317,6 +332,7 @@ final class ContentBuilder
     {
         if (isset($message['conversation'])) { $message['extendedTextMessage'] = ['text'=>$message['conversation']]; unset($message['conversation']); }
         foreach ($message as $name => $body) {
+            if ($name === 'messageContextInfo') continue;
             $field = SchemaCodec::fields('Message')[$name] ?? null;
             if ($field === null || !is_array($body)) continue;
             if (in_array($field['type'],['Message.FutureProofMessage','Message.DeviceSentMessage'],true) && isset($body['message'])) {
@@ -358,7 +374,7 @@ final class ContentBuilder
         if (isset($m['reactionMessage']) && ($m['reactionMessage']['text'] ?? null) === '') $attrs['edit'] = '7';
         if (isset($m['pinInChatMessage'])) $attrs['edit'] = '2';
         if (isset($m['keepInChatMessage']) && ($m['keepInChatMessage']['key']['fromMe'] ?? false) && in_array($m['keepInChatMessage']['keepType'] ?? 0,[2,'UNDO_KEEP_FOR_ALL'],true)) $attrs['edit'] = '7';
-        $mediaTypes = ['imageMessage'=>'image','videoMessage'=>'video','ptvMessage'=>'ptv','audioMessage'=>'audio','documentMessage'=>'document','stickerMessage'=>'sticker','stickerPackMessage'=>'sticker_pack','locationMessage'=>'location','liveLocationMessage'=>'livelocation','contactMessage'=>'vcard','contactsArrayMessage'=>'contact_array','listMessage'=>'list','listResponseMessage'=>'list_response','buttonsMessage'=>'button','buttonsResponseMessage'=>'buttons_response','orderMessage'=>'order','productMessage'=>'product','groupInviteMessage'=>'url','interactiveResponseMessage'=>'native_flow_response','messageHistoryBundle'=>'group_history','scheduledCallCreationMessage'=>'scheduled_call','scheduledCallEditMessage'=>'scheduled_call_edit'];
+        $mediaTypes = ['imageMessage'=>'image','videoMessage'=>'video','ptvMessage'=>'ptv','audioMessage'=>'audio','documentMessage'=>'document','stickerMessage'=>'sticker','stickerPackMessage'=>'sticker_pack','locationMessage'=>'location','liveLocationMessage'=>'livelocation','contactMessage'=>'vcard','contactsArrayMessage'=>'contact_array','listMessage'=>'list','listResponseMessage'=>'list_response','buttonsMessage'=>'button','buttonsResponseMessage'=>'buttons_response','orderMessage'=>'order','productMessage'=>'product','groupInviteMessage'=>'url','interactiveResponseMessage'=>'native_flow_response','messageHistoryBundle'=>'group_history','albumMessage'=>'collection','scheduledCallCreationMessage'=>'scheduled_call','scheduledCallEditMessage'=>'scheduled_call_edit'];
         foreach ($mediaTypes as $field => $mediaType) if (isset($m[$field])) { $enc['mediatype'] = $mediaType; break; }
         if ($m['audioMessage']['ptt'] ?? false) $enc['mediatype'] = 'ptt';
         if ($m['videoMessage']['gifPlayback'] ?? false) $enc['mediatype'] = 'gif';

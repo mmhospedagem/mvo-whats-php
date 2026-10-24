@@ -106,6 +106,10 @@ Solicite em resposta a uma ação do usuário e acompanhe `auth_code`, `auth_cod
 
 ## Enviar e interpretar resultados
 
+Envios tipados por `sendMessage()` aceitam `messageContextInfo` na raiz de `Message`, inclusive quando há preparo e upload de mídia. Use os campos do schema `MessageContextInfo`; bytes são strings binárias PHP. Campos já gerados pelo builder prevalecem sobre os homônimos fornecidos pelo chamador. Citação, menções, encaminhamento e expiração continuam em `contextInfo` da submensagem, não nesse envelope. Em `raw`, informe os metadados dentro de `message`; a opção externa não altera o protobuf bruto. O agrupador de álbum usa `enc.mediatype=collection` e mantém o tipo externo de texto; o ACK não comprova entrega.
+
+No recebimento, portadores SKDM acompanhados somente de metadados são controles internos; contexto sem SKDM, conteúdo real e campos desconhecidos continuam expostos. Descriptografar a distribuição individual não confirma o conteúdo de grupo: falha do `skmsg` mantém o retry limitado e persistente. Se um portador individual opcional for inválido, somente um único `skmsg` autenticado com chave de grupo já estabelecida pode ser recebido por uma tentativa separada; ratchets parciais não são confirmadas.
+
 Os exemplos abaixo pressupõem uma sessão conectada. Os números são fictícios e devem ser substituídos pelo destinatário autorizado.
 
 ```php

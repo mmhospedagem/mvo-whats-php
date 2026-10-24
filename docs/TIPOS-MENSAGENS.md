@@ -30,6 +30,14 @@ O codec usa `resources/WAProto.schema.json`, atualizado e conferido com os módu
 
 Valores `uint64` que excedem `PHP_INT_MAX` usam strings decimais; bytes usam strings binárias PHP. A serialização do schema não garante que todos os formatos sejam aceitos: cada um depende dos requisitos de conteúdo, conta e versão do servidor. Chamadas de voz/vídeo usam outro protocolo.
 
+## Metadados do envelope
+
+Conteúdos tipados aceitam `messageContextInfo` como array PHP com os campos de `MessageContextInfo` do schema. O campo pertence à raiz de `Message`; bytes continuam sendo strings binárias PHP. Campos já gerados pelo builder prevalecem sobre campos homônimos fornecidos pelo chamador, inclusive duração de fixação, associação de mensagens ou segredos internos quando presentes.
+
+`quote`, `mentions`, encaminhamento e expiração continuam no `contextInfo` da submensagem correspondente. Não mova essas opções para `messageContextInfo`. No formato `raw`, os metadados devem estar dentro de `message`; a opção externa não modifica o protobuf bruto.
+
+O agrupador de um álbum mantém `type=text` e usa `enc.mediatype=collection` no transporte. Isso não muda os descritores individuais das imagens e vídeos nem transforma um ACK em confirmação de entrega.
+
 ## Usar no cliente conectado
 
 Os exemplos seguintes pressupõem `$client->isConnected() === true`. Veja [MENSAGENS.md](MENSAGENS.md) para o loop de conexão.
@@ -156,6 +164,8 @@ $client->on('message_protocol', function(array $event) {
 ```
 
 Campos novos/desconhecidos são preservados em `proto['_unknown']`. A inbox mantém bytes e coordenadas sem conversão destrutiva para JSON. Se salvar eventos fora da biblioteca, use `MVO\Protocol\BinaryData::encode()`/`decode()`.
+
+Portadores de distribuição de chave que contêm apenas controle e metadados não são apresentados como mensagens vazias. Texto e campos desconhecidos ao lado do controle continuam disponíveis. Falha de `skmsg` não é tratada como sucesso só porque outra parte do envelope foi descriptografada.
 
 Grupos usam Sender Keys Signal com assinatura, rotação quando muda a lista de membros/aparelhos, distribuição por sessão individual e persistência atômica junto da outbox. A lista é consultada novamente no envio; a distribuição só é marcada como aceita após ACK. Há testes entre instâncias PHP, com reinício, replay, adulteração e retry exato. Não há sincronização completa de histórico/app-state, envio a Status/broadcast/newsletters ou protocolo de chamadas nesta etapa. A validação em contas reais varia por tipo; consulte os casos comprovados e os limites no guia de cada recurso.
 

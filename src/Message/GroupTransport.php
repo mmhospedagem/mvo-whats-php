@@ -296,6 +296,7 @@ final class GroupTransport
         if ($depth > 8) throw new \LengthException('Sender key wrapper nesting exceeded');
         $fields = Protobuf::decode($message, 16777216, 10000);
         $distribution = self::field($fields, 2);
+        $fastRatchetDistribution = self::field($fields, 15);
         if ($distribution !== null) {
             $inner = Protobuf::decode($distribution, 4096, 100);
             $group = self::group(self::field($inner, 1) ?? '');
@@ -303,7 +304,14 @@ final class GroupTransport
             if ($expectedGroup !== null && $group !== self::group($expectedGroup)) throw new \UnexpectedValueException('Sender key distribution belongs to another group');
             $this->senderKeys->processDistribution($group, $sender, $bytes);
             // Content alongside a distribution must still reach the application.
-            foreach ($fields as $field) if (!in_array($field['number'], [2,35], true)) return false;
+            foreach ($fields as $field) if (!in_array($field['number'], [2,15,35], true)) return false;
+            return true;
+        }
+        if ($fastRatchetDistribution !== null) {
+            // Fast-ratchet keys have a different cryptographic format. Do not
+            // feed them to the ordinary sender-key protocol or advertise support
+            // for that cipher; an authenticated control carrier is still internal.
+            foreach ($fields as $field) if (!in_array($field['number'], [15,35], true)) return false;
             return true;
         }
         foreach ([31,37,40,53,55,58,59,62] as $number) {

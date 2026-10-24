@@ -82,6 +82,8 @@ Comandos ainda não iniciados expiram no prazo solicitado. Um comando encontrado
 
 O worker mostra o tipo e o resumo do conteúdo recebido depois da validação criptográfica, com remetente e horário. O evento `message` preserva `data`, `proto`, contexto e o descritor de mídia; `message_protocol` informa ações de protocolo. Falhas de descriptografia geram `message_error` e pedido limitado de retry. Veja [TIPOS-MENSAGENS.md](TIPOS-MENSAGENS.md) e [MIDIA.md](MIDIA.md) para os formatos e exemplos.
 
+Portadores de distribuição de chaves acompanhados somente de `messageContextInfo` são controles internos, sem evento de mensagem vazia. Contexto sozinho, conteúdo real e campos futuros desconhecidos continuam seguindo o fluxo de recebimento. Em grupos, uma distribuição individual descriptografada não confirma o conteúdo `skmsg`: se esse conteúdo falhar, o retry continua limitado e persistente. Um portador individual inválido não impede receber um único `skmsg` autenticado por chave de grupo já estabelecida; cada tentativa usa uma transação separada, preservando o rollback das ratchets.
+
 As atualizações do ratchet e o evento de entrada pendente são gravados na mesma transação. Se a aplicação cair antes de concluir o callback, o evento pendente pode ser reemitido com `replayed=true` após o reinício. Trate ações externas de forma idempotente pelo par `key.remoteJid`/`id`. Depois do callback concluído, o texto temporário do evento é descartado e fica um marcador de deduplicação; isso não é um arquivo completo do histórico de conversas.
 
 ## API PHP
