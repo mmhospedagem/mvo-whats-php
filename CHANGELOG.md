@@ -4,6 +4,10 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Encerramento de chamada finaliza localmente e usa uma escrita, sem espera indevida de 30 segundos por ACK; falha de notificação preserva o estado encerrado e não ganha replay automático.
+
+- Chamadas exigem MLow no perfil automático, sem fallback incompatível para Opus. Sessões expõem disponibilidade do transporte separada da recepção autenticada. Um último frame MLow agrupado é liberado por prazo limitado quando o transporte está pronto, preservando a ausência de replay após erro de escrita.
+
 - Retry de destinatário com conflito de identidade Signal mantém a recusa de confiança e retorna diagnóstico sanitizado, sem repetição automática do mesmo pedido. Ciphertext já preparado não é substituído por contador maior e permanece preservado quando a confirmação é incerta.
 
 - Inscrições de plugins isoladas por contexto, inclusive `once`; descarte antigo preserva listeners de uma conexão substituta e não emite seu erro na nova geração.

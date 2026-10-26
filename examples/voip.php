@@ -58,7 +58,7 @@ try {
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
-use MVO\Voip\{AudioOutput,CallMediaEngine,FfmpegBinary,FfmpegCapture,MediaClock,MediaSession,MLowCodec,NativeDataChannel,OpusCodec};
+use MVO\Voip\{AudioOutput,CallMediaEngine,FfmpegBinary,FfmpegCapture,MediaClock,MediaSession,MLowCodec,NativeDataChannel};
 use MVO\WaClient;
 
 $audioWanted=isset($options['microphone']) || isset($options['tone']);
@@ -80,7 +80,7 @@ try {
     $willUseMedia=$to!==null || isset($options['accept']);
     if($willUseMedia) {
         if(!extension_loaded('FFI')) throw new RuntimeException('Native media FFI is unavailable');
-        if(!is_file(MLowCodec::defaultMLowLibrary()) && !is_file(OpusCodec::defaultLibrary())) throw new RuntimeException('Native audio codec is unavailable');
+        if(!is_file(MLowCodec::defaultMLowLibrary())) throw new RuntimeException('WhatsApp call audio requires native MLow; configure MVO_MLOW_LIBRARY');
         if($transport!=='raw-udp' && !is_file(NativeDataChannel::defaultLibrary())) throw new RuntimeException('Native WebRTC library is unavailable');
         if((isset($options['microphone']) || $videoWanted) && !is_file(FfmpegBinary::tool('ffmpeg'))) throw new RuntimeException('Native capture FFmpeg is unavailable');
         if(isset($options['play']) && !is_file(FfmpegBinary::tool('ffplay'))) throw new RuntimeException('Native playback ffplay is unavailable');

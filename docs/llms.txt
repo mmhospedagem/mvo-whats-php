@@ -44,6 +44,8 @@ Fachadas e uploads pertencem à conexão de origem; após reconectar, obtenha os
 - [App-state](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/APPSTATE.md): sincronização autenticada de conversas e configurações.
 - [Agendamentos](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/AGENDAMENTOS.md): publicação local persistente.
 
+- [Chamadas e mídia](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/VOIP.md): perfil MLow obrigatório no engine automático, transporte pronto distinto de mídia recebida, pacing e limites da validação real de PCM.
+
 ## MCP e desenvolvimento
 
 - [MCP e WAM](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MCP-WAM.md): transportes, allowlist e telemetria opt-in.

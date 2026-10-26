@@ -50,6 +50,8 @@ MLow multiframe e RED compacto são implementados em `MLowPacket`. `enableSecond
 
 `AudioCodecNegotiation::select($offer, $supported, $mlowForOpus)` escolhe somente uma taxa/codificação oferecida e localmente suportada. O terceiro argumento é explícito porque o upstream usa SMPL sob a sinalização histórica `enc=opus`; não se deve confundir esse nome com disponibilidade local do MLow.
 
+O perfil padrão de `MediaSession::mediaEngine()` e `GroupMediaSession::mediaEngine()` exige MLow. Sem `MVO_MLOW_LIBRARY`/binário compatível, falha explicitamente; não cai para Opus comum. A sinalização histórica `enc=opus` não autoriza trocar de decoder. O construtor `CallMediaEngine(new OpusCodec(), ...)` permanece uma escolha explícita de baixo nível.
+
 ## Motor integrado
 
 `CallMediaEngine` recebe um codec e três callbacks do transporte:
@@ -75,7 +77,7 @@ O motor usa um mesmo `MediaClock` para áudio e vídeo, gera SR/SDES e estimativ
 
 RED de saída é opt-in: configure `['audioRed' => true]` ou `setAudioRedEnabled(true)` somente quando a negociação com o destinatário permitir. O modo padrão `compact` preserva PT121/`mlow-red-1`; `['audioRed' => true, 'audioRedMode' => 'copy-first']` usa PT120 com cópia anterior seguida do frame atual, como no transporte da referência. A recepção descarta redundância já reproduzida. RED secundário não pode ser combinado com FEC/DTX incompatíveis do encoder MLow nativo; a API impede essa configuração antes de chamar C.
 
-`applyVoipSettings()` aplica intervalo RTCP, política REMB e `maxfpp`: agrupamento de até dois frames MLow de 60 ms. `configureRtcp()` permite configuração direta. Os Sender Reports acompanham o avanço de áudio RTP ou a emissão de frames de vídeo; executar somente `tick()` não inventa transmissão. O timestamp de captura de `sendAudioPcm()` usa o mesmo relógio monotônico do engine. `voip_sender_media` informa início, silêncio ou remoção de remetentes; o silêncio padrão é 20 segundos.
+`applyVoipSettings()` aplica intervalo RTCP, política REMB e `maxfpp`: agrupamento de até dois frames MLow de 60 ms, com liberação de um frame isolado após prazo de 120 ms contado da entrada na fila. `configureRtcp()` permite configuração direta. Os Sender Reports acompanham o avanço de áudio RTP ou a emissão de frames de vídeo; executar somente `tick()` não inventa transmissão. O timestamp de captura de `sendAudioPcm()` usa o mesmo relógio monotônico do engine. `voip_sender_media` informa início, silêncio ou remoção de remetentes; o silêncio padrão é 20 segundos.
 
 Cada pacote de saída é protegido uma vez. O cache conserva o ciphertext SRTP completo; ao receber NACK, reenvia esses mesmos bytes, sem repetir a cifra no mesmo índice. O padrão limita o cache a 512 pacotes por 2 segundos e três reenvios por pacote. A reordenação de vídeo aguarda até 100 ms por um pacote perdido e limita cada stream a 256 pacotes/256 KiB pendentes. NACKs pedem no máximo 128 sequências e PLIs de um stream têm intervalo mínimo de 500 ms.
 

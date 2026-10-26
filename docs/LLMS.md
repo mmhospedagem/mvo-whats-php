@@ -335,3 +335,10 @@ php vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress
 O [ambiente WhatsApp simulado](FAKE-WHATSAPP.md) cobre transporte/protocolo em PHP sem usar uma conta. Não confunda um teste local com validação no WhatsApp real ou com compatibilidade em todo aparelho.
 
 As fontes da integração MCP são [examples/mcp.php](../examples/mcp.php), [examples/mcp-http.php](../examples/mcp-http.php), [ClientRuntime](../src/Mcp/ClientRuntime.php), [ToolRegistry](../src/Mcp/ToolRegistry.php), [StdioServer](../src/Mcp/StdioServer.php) e [HttpServer](../src/Mcp/HttpServer.php). Para detalhes adicionais de MCP e WAM, consulte [MCP-WAM.md](MCP-WAM.md).
+
+
+## Chamadas e áudio
+
+`terminate($id, $reason)` encerra a chamada local e transmite uma única notificação final, sem abrir uma consulta nem esperar ACK. No encerramento normal, `user_ended` é motivo local e não vai no stanza; durações só são enviadas se houve conexão. Escrita concluída não é `server_ack` nem confirmação do telefone remoto. Se a escrita falhar, o estado permanece encerrado e o erro é propagado; repetir `terminate()` não reenvia. Consumidores devem liberar buffers/capturas também no caminho de erro.
+
+Para chamadas WhatsApp, o engine automático exige MLow/SMPL (`MVO_MLOW_LIBRARY`); libopus comum não é fallback do formato histórico `enc=opus`. Opus fornecido explicitamente continua sendo opção de baixo nível. Mantenha `poll()`/`tick()` e PCM no frame/pacing negociados. `isTransportReady()` nas sessões de mídia informa disponibilidade de escrita, enquanto `isReady()` indica recepção autenticada; nenhum dos dois comprova som. O frame MLow isolado no agrupamento tem deadline de 120 ms e não ganha replay automático após falha de escrita. Meça amostras PCM/tom recebido, não apenas ACK, RTCP ou contadores decoded.

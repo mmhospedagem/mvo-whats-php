@@ -120,7 +120,15 @@ final class VoipService
         $this->queueTransport($id,$call['peerJid'],'1','1');$this->drainSignals();try{$ack=$this->submit($this->stanza($call['group']?$id.'@call':$call['peerJid'],'accept',$id,$call['callCreator'],[],$children));}catch(\Throwable $error){$this->end($id,'accept_failed');throw $error;}if($this->calls[$id]['state']==='ended')return;$this->applySettings($id,$ack);$relays=RelayDescriptor::parse($ack);if($relays!==[])$this->relays[$id]=$relays;$this->rememberParticipants($id,$ack);$this->applyPendingKeys($id);if($call['group']){$this->heartbeatDue[$id]=$this->now();if(isset($call['rekeyTransactionRequested']))$this->queueRekey($id,$call['rekeyTransactionRequested']);}$this->state($id);
     }
     public function reject(string $id):void { $call=$this->requireCall($id);if($call['direction']!=='incoming' || $call['state']!=='ringing')throw new \LogicException('Call is not ringing');$this->submit($this->stanza($call['group']?$id.'@call':$call['peerJid'],'reject',$id,$call['callCreator'],$call['group']?['count'=>'0']:[]));$this->end($id,'rejected'); }
-    public function terminate(string $id,string $reason='user_ended'):void { $call=$this->requireCall($id);if($call['state']==='ended')return;$duration=isset($call['connectedAt'])?(int)(($this->now()-$call['connectedAt'])*1000):0;$node=$this->stanza($call['group']?$id.'@call':$call['peerJid'],'terminate',$id,$call['callCreator'],['duration'=>(string)$duration,'audio_duration'=>(string)$duration,'reason'=>$reason]);$this->end($id,$reason);$this->submit($node); }
+    public function terminate(string $id,string $reason='user_ended'):void {
+        $call=$this->requireCall($id);if($call['state']==='ended')return;$attrs=[];
+        if(isset($call['connectedAt'])){$duration=(int)(($this->now()-$call['connectedAt'])*1000);$attrs=['duration'=>(string)$duration,'audio_duration'=>(string)$duration];}
+        if($reason!=='user_ended')$attrs['reason']=$reason;
+        $node=$this->stanza($call['group']?$id.'@call':$call['peerJid'],'terminate',$id,$call['callCreator'],$attrs);
+        $this->end($id,$reason);
+        // Termination is a single write, not an acknowledged call transaction.
+        ($this->sendNode)($node);
+    }
     public function setMuted(string $id,bool $muted):void { $call=$this->requireCall($id);if(!in_array($call['state'],['connecting','connected'],true))throw new \LogicException('Call has not been accepted');$this->calls[$id]['audioMuted']=$muted;$this->cancelOwnStateSignals($id,'mute_v2');($this->media[$id]??null)?->setAudioEnabled(!$muted);($this->groupMedia[$id]??null)?->setAudioEnabled(!$muted);$this->submit($this->stanza($call['group']?$id.'@call':$call['peerJid'],'mute_v2',$id,$call['callCreator'],['mute-state'=>$muted?'1':'0']));$this->state($id); }
     public function preaccept(string $id):void
     {

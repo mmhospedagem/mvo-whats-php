@@ -78,7 +78,15 @@ final class GroupMediaSession
     /** @param array<string,mixed> $options */
     public function mediaEngine(?OpusCodec $codec=null,array $options=[]):CallMediaEngine
     {
-        $this->active();if($this->engine===null){$own=GroupCallState::device($this->ownDevice);$codec??=is_file(MLowCodec::defaultMLowLibrary())?new MLowCodec():new OpusCodec();$engine=new CallMediaEngine($codec,$this->protectPayload(...),$this->sendEncrypted(...),$this->sendRtcp(...),['emit'=>function(string $event,array $data):void{$this->event($event,['callId'=>$this->callId,...$data]);},...$options,'protectVideoPayload'=>fn(string $payload,int $timestamp,int $pt,int $slot,bool $marker,string $extension,int $profile):string=>$this->protectPayload($payload,$timestamp,$pt,$slot,$marker,false,$extension,$profile),'localAudioSsrc'=>CallCrypto::ssrc($this->callId,$own,0),'localVideoSsrc'=>CallCrypto::ssrc($this->callId,$own,2)]);try{if($this->voipSettingsConfigured)$engine->applyVoipSettings($this->voipSettings);}catch(\Throwable $error){$engine->close();throw $error;}$this->engine=$engine;$this->syncEngine();$this->engine->setAudioEnabled($this->audioEnabled);$this->engine->setVideoEnabled($this->coversVideo && $this->videoSendEnabled);}return $this->engine;
+        $this->active();if($this->engine===null){$own=GroupCallState::device($this->ownDevice);
+            // Keep the WhatsApp MLow profile independent of installed files;
+            // callers may still supply another codec explicitly at this layer.
+            if($codec===null){
+                $library=MLowCodec::defaultMLowLibrary();
+                if(!is_file($library))throw new \RuntimeException('WhatsApp call audio requires native MLow; install the codec or configure MVO_MLOW_LIBRARY');
+                $codec=new MLowCodec($library);
+            }
+            $engine=new CallMediaEngine($codec,$this->protectPayload(...),$this->sendEncrypted(...),$this->sendRtcp(...),['emit'=>function(string $event,array $data):void{$this->event($event,['callId'=>$this->callId,...$data]);},...$options,'protectVideoPayload'=>fn(string $payload,int $timestamp,int $pt,int $slot,bool $marker,string $extension,int $profile):string=>$this->protectPayload($payload,$timestamp,$pt,$slot,$marker,false,$extension,$profile),'localAudioSsrc'=>CallCrypto::ssrc($this->callId,$own,0),'localVideoSsrc'=>CallCrypto::ssrc($this->callId,$own,2)]);try{if($this->voipSettingsConfigured)$engine->applyVoipSettings($this->voipSettings);}catch(\Throwable $error){$engine->close();throw $error;}$this->engine=$engine;$this->syncEngine();$this->engine->setAudioEnabled($this->audioEnabled);$this->engine->setVideoEnabled($this->coversVideo && $this->videoSendEnabled);}return $this->engine;
     }
     public function setAudioEnabled(bool $enabled):void { $this->active();$this->audioEnabled=$enabled;$this->engine?->setAudioEnabled($enabled); }
     public function setVideoEnabled(bool $enabled):void { $this->active();$this->videoSendEnabled=$enabled;$this->engine?->setVideoEnabled($enabled && $this->coversVideo); }
@@ -154,7 +162,13 @@ final class GroupMediaSession
     public function keyTransaction():?int { return $this->keyTransaction; }
     public function poll(float $timeout=0.0):void
     {
-        if($this->closed || $this->receive===null || !$this->prepareTransport())return;for($i=0;$i<64;$i++){$bytes=($this->receive)($i===0?$timeout:0.0);if($bytes===null)break;try{$this->handleDatagram($bytes);}catch(\UnexpectedValueException){$this->event('voip_media_error',['callId'=>$this->callId,'reason'=>'invalid_media_packet']);}if($this->closed)return;}$this->engine?->tick();
+        if($this->closed || $this->receive===null || !$this->prepareTransport())return;for($i=0;$i<64;$i++){$bytes=($this->receive)($i===0?$timeout:0.0);if($bytes===null)break;try{$this->handleDatagram($bytes);}catch(\UnexpectedValueException){$this->event('voip_media_error',['callId'=>$this->callId,'reason'=>'invalid_media_packet']);}if($this->closed)return;}if($this->isTransportReady())$this->engine?->tick();
+    }
+    /** Callback transports keep their explicit send contract; relay readiness does not prove peer media. */
+    public function isTransportReady():bool {
+        if($this->closed || $this->send===null)return false;
+        if($this->relay===null)return true;
+        $metrics=$this->relay->metrics();return $metrics['open'] && ($metrics['allocated'] || $metrics['lastPongAt']>0);
     }
     /** A relay callback can close this session synchronously through the owning call service. */
     private function prepareTransport():bool

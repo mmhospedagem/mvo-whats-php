@@ -45,7 +45,7 @@ final class CallMediaEngine
     private bool $audioGap=false;
     /** @var array{packet:string,timestamp:int,captureMs:float}|null */
     private ?array $previousSecondary=null;
-    /** @var array{packet:string,timestamp:int,captureMs:float,marker:bool}|null */
+    /** @var array{packet:string,timestamp:int,captureMs:float,marker:bool,flushAt:float}|null */
     private ?array $pendingAudio=null;
     private bool $closed=false;
     private int $videoBitrate=0;
@@ -193,7 +193,12 @@ final class CallMediaEngine
             if($pending!==null && $speech && !$marker) { $encoded=$this->codec->packFrames([$pending['packet'],$encoded]); $timestamp=$pending['timestamp']; $captureMs=$pending['captureMs']; $marker=$pending['marker']; $this->pendingAudio=null; }
             else {
                 if($pending!==null) { $this->pendingAudio=null; $sent[]=$this->sendAudioPacket($pending['packet'],$pending['timestamp'],$pending['marker'],$pending['captureMs'],120); }
-                if($speech) { $this->pendingAudio=['packet'=>$encoded,'timestamp'=>$timestamp,'captureMs'=>$captureMs,'marker'=>$marker]; return $sent; }
+                if($speech) {
+                    // Allow the next frame to join, but bound finite sources by one
+                    // complete packetization window (two 60 ms MLow frames).
+                    $holdMs=$sampleCount*$this->audioFramesPerPacket*1000/$this->codec->sampleRate;
+                    $this->pendingAudio=['packet'=>$encoded,'timestamp'=>$timestamp,'captureMs'=>$captureMs,'marker'=>$marker,'flushAt'=>$this->clock->now()+$holdMs]; return $sent;
+                }
             }
             $sent[]=$this->sendAudioPacket($encoded,$timestamp,$marker,$captureMs,$pt); return $sent;
         }
@@ -293,6 +298,13 @@ final class CallMediaEngine
     public function tick():void
     {
         $this->active(); $now=$this->clock->now(); $this->expireCache($now);
+        $pending=$this->pendingAudio;
+        if($this->audioEnabled && $pending!==null && $now>=$pending['flushAt']) {
+            // Remove before transport I/O: a failed write can have reached the peer.
+            $this->pendingAudio=null;
+            $this->sendAudioPacket($pending['packet'],$pending['timestamp'],$pending['marker'],$pending['captureMs'],120);
+            if($this->closed) return;
+        }
         foreach($this->audio->takeSilent($now,$this->senderSilenceMs) as $id) { $this->event('voip_sender_media',['senderId'=>$id,'receiving'=>false,'reason'=>'silent']); if($this->closed) return; }
         foreach(array_keys($this->video) as $ssrc) { if(isset($this->video[$ssrc])) $this->drainVideo($ssrc,$now); if($this->closed) return; }
         if($this->reports->shouldReport(((int)$now)&0xffffffff)) {

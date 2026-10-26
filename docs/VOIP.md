@@ -2,7 +2,7 @@
 
 `MVO\Voip` implementa sinalização individual e de grupo, distribuição Signal de chaves, composição de participantes/rekey, RTP/SRTP/SRTCP, relays raw UDP e WebRTC nativo com ICE/DTLS/SCTP. O motor opcional processa PCM Opus/MLow, H.264, RTCP, jitter, RED e retransmissão por NACK. Captura/reprodução usam processos FFmpeg explícitos, sem Node.js ou WASM.
 
-**Ainda não houve validação de uma chamada real do WhatsApp.** A evidência atual inclui vetores independentes, participantes simulados, UDP loopback, conexão ICE/DTLS/SCTP bidirecional real entre dois peers locais, codecs C reais e gravações sintéticas verificadas com ffprobe. ACK de sinalização, abertura de socket ou alocação de relay não são apresentados como mídia conectada.
+Em 26/10/2026, uma chamada real entre duas sessões de teste conectadas recebeu arquivos com tons distintos nos dois sentidos: PCM capturado com áudio não zero e o tom esperado. Uma segunda ligação, iniciada no sentido inverso, também recebeu tons por transmissão HTTP contínua; a rodada anterior à correção apresentou backpressure na fila do consumidor. Essa evidência é específica dessas sessões e desse transporte: não homologa microfone, alto-falante, celular, navegador ou chamadas de vídeo. ACK de sinalização, socket aberto e RTCP não comprovam áudio audível por si só.
 
 ## Sinalização e decisão da aplicação
 
@@ -21,6 +21,8 @@ $client->on('voip_incoming_call', function (array $call): void {
 
 $voip->terminate($id);
 ```
+
+`terminate($id, $reason)` encerra a chamada local e transmite uma única notificação final, sem abrir uma consulta nem esperar ACK. No encerramento normal, `user_ended` é motivo local e não vai no stanza; durações só são enviadas se houve conexão. Escrita concluída não é `server_ack` nem confirmação do telefone remoto. Se a escrita falhar, o estado permanece encerrado e o erro é propagado; repetir `terminate()` não reenvia. Consumidores devem liberar buffers/capturas também no caminho de erro.
 
 Receber uma oferta não aceita a chamada, abre mídia, ativa microfone nem câmera. O bridge usa `Message.call.callKey`, padding e envelope Signal `destination/to/enc`, com identidade quando necessária para `pkmsg`. Ofertas sem chave autenticável não criam uma chamada utilizável. Chaves ficam privadas e não aparecem em `getCall()`, `getCalls()` ou eventos. Pacotes atrasados não reabrem uma chamada encerrada.
 
@@ -73,6 +75,14 @@ O engine protege cada pacote uma vez. NACK retransmite o ciphertext SRTP já per
 
 `FfmpegCapture` fornece microfone, câmera, tela e sinais sintéticos; `AudioOutput`/`VideoOutput` oferecem reprodução ou gravação. Tudo exige `start()` explícito e oferece stop/cancel, deadlines e filas limitadas. A aplicação mantém seu loop, relógio de captura e política de UI. Os fluxos brutos não fornecem os PTS originais dos dispositivos. Veja [VOIP-MIDIA.md](VOIP-MIDIA.md) para APIs, tamanhos de frame e exemplos.
 
+## Codec e disponibilidade da mídia
+
+O perfil WhatsApp desta implementação usa MLow/SMPL, inclusive sob o nome histórico `enc=opus` e PT120. `mediaEngine()` sem codec explícito exige a biblioteca MLow: configure `MVO_MLOW_LIBRARY` com o binário compatível do host. Instalar somente libopus padrão não habilita esse perfil e gera erro explícito. Opus comum continua disponível quando passado deliberadamente ao engine para integrações de baixo nível; a presença de um arquivo não negocia o formato com o cliente remoto.
+
+`MediaSession::isTransportReady()` e `GroupMediaSession::isTransportReady()` informam se há transporte aberto e alocado/responsivo para tentar a escrita. Diferem de `isReady()`, que indica mídia autenticada recebida do peer. Enquanto o transporte é preparado, o poll continua o handshake e a recepção; timers do engine não tentam enviar um frame pendente antes da disponibilidade. Transportes de grupo fornecidos diretamente por callbacks preservam o contrato de disponibilidade do chamador. Isso não converte uma falha real de escrita em sucesso nem autoriza replay.
+
+Mantenha o loop ativo e respeite o tamanho de frame negociado. Consumidores que alimentam PCM precisam de pacing e recuperação limitada dos deadlines atrasados; não basta enviar um único frame a cada iteração se a iteração atrasou vários frames. Uma fila cheia deve aplicar backpressure. O agrupamento MLow de dois frames tem prazo de 120 ms para liberar um último frame isolado, sem aguardar indefinidamente outra amostra; mute/close descartam o pendente.
+
 ## Instalação opcional
 
 ```powershell
@@ -111,7 +121,7 @@ Os flags de mídia são opt-in: `--microphone="NOME EXATO"`, `--camera="NOME EXA
 
 ## Limites e validação
 
-- Compatibilidade com relays, contas e clientes WhatsApp reais ainda exige teste de chamada específico.
+- Compatibilidade com outros relays, contas e clientes exige teste específico. Os testes reais descritos acima mediram PCM entre dois workers; não ativaram microfone, câmera ou reprodução em hardware.
 - Companion exige o backend separado e um modelo DNNw externo. O ciclo nativo foi testado; qualidade neural não foi avaliada.
 - SFrame anunciado por ambos os flags é uma camada adicional de app-data não aplicada pela referência consultada. A biblioteca recusa PT119 nesse caso, mantendo áudio/vídeo SRTP.
 - Paridade Reed-Solomon de vídeo é identificada e descartada com contador, conforme o upstream, sem alegar recuperação. RED/FEC do codec e NACK são mecanismos distintos implementados.

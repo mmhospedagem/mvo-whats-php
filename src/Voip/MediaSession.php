@@ -53,7 +53,13 @@ final class MediaSession
     public function mediaEngine(?OpusCodec $codec=null,array $options=[]):CallMediaEngine {
         $this->active();
         if($this->engine===null){
-            $codec??=is_file(MLowCodec::defaultMLowLibrary())?new MLowCodec():new OpusCodec();
+            // WhatsApp's historical enc=opus profile carries MLow. Native
+            // dependency availability cannot change the peer's wire format.
+            if($codec===null){
+                $library=MLowCodec::defaultMLowLibrary();
+                if(!is_file($library))throw new \RuntimeException('WhatsApp call audio requires native MLow; install the codec or configure MVO_MLOW_LIBRARY');
+                $codec=new MLowCodec($library);
+            }
             $engine=new CallMediaEngine($codec,$this->protectPayload(...),$this->sendEncrypted(...),$this->sendRtcp(...),['emit'=>function(string $event,array $data):void{$this->event($event,['callId'=>$this->callId,...$data]);},...$options,'protectVideoPayload'=>fn(string $payload,int $timestamp,int $pt,int $slot,bool $marker,string $extension,int $profile):string=>$this->protectPayload($payload,$timestamp,$pt,$slot,$marker,$extension,$profile),'localAudioSsrc'=>CallCrypto::ssrc($this->callId,$this->ownDevice,0),'localVideoSsrc'=>CallCrypto::ssrc($this->callId,$this->ownDevice,2)]);
             try{if($this->voipSettingsConfigured)$engine->applyVoipSettings($this->voipSettings);$engine->setAudioEnabled($this->audioEnabled);$engine->setVideoEnabled($this->videoEnabled);}catch(\Throwable $error){$engine->close();throw $error;}$this->engine=$engine;
         }
@@ -95,10 +101,15 @@ final class MediaSession
     public function poll(float $timeout=0.0):void {
         if($this->closed || $this->relay===null)return;$this->relay->tick();
         for($i=0;$i<64;$i++){$packet=$this->relay->receive($i===0?$timeout:0.0);if($packet===null)break;try{$this->handleDatagram($packet);}catch(\UnexpectedValueException){$this->event('voip_media_error',['callId'=>$this->callId,'reason'=>'invalid_media_packet']);}if($this->closed)return;}
-        $this->engine?->tick();
+        if($this->isTransportReady())$this->engine?->tick();
     }
     public function sendRtcp(string $packet):void { if($this->relay===null)throw new \LogicException('Call media relay is not configured');$this->relay->send($this->sender->protectRtcp($packet)); }
     public function isReady():bool { return $this->ready; }
+    /** Relay readiness allows transmission; it does not prove authenticated peer media. */
+    public function isTransportReady():bool {
+        if($this->closed || $this->relay===null)return false;
+        $metrics=$this->relay->metrics();return $metrics['open'] && ($metrics['allocated'] || $metrics['lastPongAt']>0);
+    }
     /** Transfers an accepted 1:1 transport to a group session without reconnecting it. */
     public function releaseTransport():?RelayTransport {
         $this->active();$transport=$this->relay;$this->relay=null;$this->closed=true;$this->ready=false;

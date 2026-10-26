@@ -449,6 +449,12 @@ O SDK fornece a conexão WhatsApp e os eventos. Fila da aplicação, credenciais
 Use `composer install` num clone de desenvolvimento antes de executar PHPUnit/PHPStan. Rode testes apropriados ao código alterado, preserve os exemplos públicos e informe o que foi realmente validado. Bancos, credenciais, QR de contas reais e dados privados não pertencem a exemplos ou contexto compartilhado de LLM.
 
 
+## Chamadas e áudio
+
+`terminate($id, $reason)` encerra a chamada local e transmite uma única notificação final, sem abrir uma consulta nem esperar ACK. No encerramento normal, `user_ended` é motivo local e não vai no stanza; durações só são enviadas se houve conexão. Escrita concluída não é `server_ack` nem confirmação do telefone remoto. Se a escrita falhar, o estado permanece encerrado e o erro é propagado; repetir `terminate()` não reenvia. Consumidores devem liberar buffers/capturas também no caminho de erro.
+
+Para chamadas WhatsApp, o engine automático exige MLow/SMPL (`MVO_MLOW_LIBRARY`); libopus comum não é fallback do formato histórico `enc=opus`. Opus fornecido explicitamente continua sendo opção de baixo nível. Mantenha `poll()`/`tick()` e PCM no frame/pacing negociados. `isTransportReady()` nas sessões de mídia informa disponibilidade de escrita, enquanto `isReady()` indica recepção autenticada; nenhum dos dois comprova som. O frame MLow isolado no agrupamento tem deadline de 120 ms e não ganha replay automático após falha de escrita. Meça amostras PCM/tom recebido, não apenas ACK, RTCP ou contadores decoded.
+
 ## Diagnóstico de retries e confiança Signal
 
 Conflitos de identidade Signal em retries emitem `message_error` com `reason=recipient_retry_failed`, `code=signal_trusted_identity_changed`, `retryStatus=blocked`, `retryable=false`, `retryOutcome=not_executed` e `action=verify_recipient_identity`. O diagnóstico omite JIDs e chaves. O bloqueio persistente é por mensagem/aparelho, sem aceitar a nova chave nem apagar sessões. Não existe aprovação/reset automático. Um retry já preparado com resultado incerto conserva o ciphertext exato, inclusive diante de contador maior; esgotado o limite de quatro tentativas, fica bloqueado com `retryOutcome=unknown`. Isso não comprova entrega nem resolve automaticamente a mudança legítima de confiança.
