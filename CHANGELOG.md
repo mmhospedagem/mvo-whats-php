@@ -4,6 +4,8 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Isolamento por geração de conexão: nós, respostas de consultas e falhas antigas não autenticam nem encerram uma sessão substituta após callbacks de ciclo de vida. Consultas interrompidas preservam o resultado incerto sem replay e não removem o estado de consultas da nova conexão.
+
 - `messageContextInfo` disponível em envios tipados, com precedência dos campos gerados pelo builder, contexto de citação/menções separado e preservação do formato raw.
 - Agrupadores de álbuns usam `enc.mediatype=collection`, inclusive quando o conteúdo está envolvido por wrappers de mensagem.
 - Portadores de distribuição de chave acompanhados somente de metadados internos não geram mensagens vazias. Conteúdo de grupo autenticado por uma chave já estabelecida pode ser recebido mesmo quando um portador pairwise opcional é inválido, sem confirmar ratchets parciais; falhas do conteúdo `skmsg` continuam exigindo retry limitado.

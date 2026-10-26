@@ -29,6 +29,8 @@ final class WaClient
     /** @var array<string,list<array{original:callable(array<string,mixed>):void,wrapped:callable(array<string,mixed>):void}>> */
     private array $onceListeners=[];
     private ?NodeSession $session = null;
+    /** Invalidates continuations when a callback stops or replaces the connection. */
+    private int $connectionGeneration = 0;
     private ?PairingFlow $pairing = null;
     private ?MessageService $messages = null;
     /** @var \Closure():NodeSession */
@@ -238,7 +240,39 @@ final class WaClient
     }
     /**
      * @param array<string,mixed> $payload */
-    private function emit(string $event,array $payload): void { foreach ($this->listeners[$event] ?? [] as $handler) $handler($payload); }
+    private function emit(string $event,array $payload): void {
+        $generation=$this->connectionGeneration;
+        foreach ($this->listeners[$event] ?? [] as $handler) {
+            $handler($payload);
+            if ($generation!==$this->connectionGeneration) return;
+        }
+    }
+    private function assertConnection(int $generation):void {
+        if (!$this->running || $generation!==$this->connectionGeneration) throw new SessionRestartRequired('Connection replaced during operation');
+    }
+    /** @return \Closure(BinaryNode,float=,bool=,bool=):BinaryNode */
+    private function connectionQuery(int $generation):\Closure {
+        return function(BinaryNode $node,float $timeout=30,bool $allowErrorResponse=false,bool $reconnectOnTimeout=true)use($generation):BinaryNode {
+            $this->assertConnection($generation);
+            $result=$this->query($node,$timeout,$allowErrorResponse,$reconnectOnTimeout);
+            $this->assertConnection($generation);
+            return $result;
+        };
+    }
+    /** @return \Closure(BinaryNode):void */
+    private function connectionSender(int $generation):\Closure {
+        return function(BinaryNode $node)use($generation):void {
+            $this->assertConnection($generation);$this->sendNode($node);$this->assertConnection($generation);
+        };
+    }
+    /** @return \Closure():array<string,mixed> */
+    private function connectionCredentials(int $generation):\Closure {
+        return function()use($generation):array {$this->assertConnection($generation);return $this->credentials;};
+    }
+    /** @return \Closure(array<string,mixed>):void */
+    private function connectionSave(int $generation):\Closure {
+        return function(array $credentials)use($generation):void {$this->assertConnection($generation);$this->save($credentials);};
+    }
     private function state(string $state): void {
         if ($this->state === $state) return;
         $this->state = $state; $this->emit('connection',['state'=>$state,'sessionId'=>$this->sessionId]);
@@ -592,6 +626,7 @@ final class WaClient
     public function connect(): void {
         if ($this->running || $this->session !== null) throw new \LogicException('Client already started');
         $this->store->acquire();
+        $generation=++$this->connectionGeneration;
         $this->running = true; $this->reconnectAttempt = 0; $this->versionRefreshed=false;
         try {
             $this->credentials = $this->store->load() ?? CredentialStore::fresh();
@@ -612,26 +647,34 @@ final class WaClient
             if ($this->version===self::VERSION && is_string($this->credentials['webVersion'] ?? null)) {
                 try{WaVersion::validate($this->credentials['webVersion']);$this->activeVersion=$this->credentials['webVersion'];}
                 catch(\InvalidArgumentException $error){$this->activeVersion=$this->version;$this->emit('version_error',['message'=>'Ignoring invalid saved WhatsApp Web version: '.$error->getMessage()]);}
-                if(!$this->running)return;
+                if(!$this->running || $generation!==$this->connectionGeneration)return;
             }
             $this->plugins->install($this);
+            if(!$this->running || $generation!==$this->connectionGeneration)return;
             $this->open();
         } catch (\Throwable $e) {
+            if ($generation!==$this->connectionGeneration) return;
             if (!$this->handleFailure($e)) throw $e;
         }
     }
     private function open(): void {
+        $generation=$this->connectionGeneration;
         $this->state('connecting');
-        if (!$this->running) return;
+        if (!$this->running || $generation!==$this->connectionGeneration) return;
         $this->pairingReady = false; $this->pairingCodeActive = false; $this->pairingRefsExpired = false; $this->reconnectRequested = false; $this->postLoginPending = false; $this->loginReceived = false;
         $this->reconnectAt = null; $this->connectedAt = null;
-        $this->session = ($this->sessionFactory)();
+        $session=($this->sessionFactory)();
+        if (!$this->running || $generation!==$this->connectionGeneration) {
+            if ($session!==$this->session) try{$session->close();}catch(\Throwable){}
+            return;
+        }
+        $this->session = $session;
+        $query=$this->connectionQuery($generation);$send=$this->connectionSender($generation);
+        $credentials=$this->connectionCredentials($generation);$save=$this->connectionSave($generation);
         $this->pairing = new PairingFlow(
-            fn():array=>$this->credentials,
-            function (array $c):void { $this->save($c); },
-            fn(BinaryNode $n)=>$this->sendNode($n),
-            fn(BinaryNode $n,float $timeout=30)=>$this->query($n,$timeout),
-            function (string $event,array $payload):void {
+            $credentials,$save,$send,$query,
+            function (string $event,array $payload) use($generation):void {
+                if ($generation!==$this->connectionGeneration) return;
                 if ($event === 'auth_qr') { $this->pairingReady = true; $this->pairingRefsExpired = false; }
                 if ($event === 'auth_code') $this->pairingCodeActive = true;
                 if ($event === 'auth_code_expired' || $event === 'auth_code_refresh') $this->pairingCodeActive = false;
@@ -641,35 +684,40 @@ final class WaClient
                 $this->emit($event,$payload);
             }
         );
-        $this->shortcake=new ShortcakeFlow(fn():array=>$this->credentials,
-            function(array $credentials):void { $this->save($credentials); },
-            function(BinaryNode $node):void { $this->sendNode($node); },
-            fn(BinaryNode $node,float $timeout=30):BinaryNode=>$this->query($node,$timeout),
-            function(string $event,array $payload):void {
+        $this->shortcake=new ShortcakeFlow($credentials,$save,$send,$query,
+            function(string $event,array $payload)use($generation):void {
+                if ($generation!==$this->connectionGeneration) return;
                 if (in_array($event,['auth_passkey_required','auth_passkey_prologue'],true)) { $this->pairing?->clear(); $this->pairingReady=false; $this->pairingCodeActive=false; $this->pairingRefsExpired=false; $this->removeQr(); }
                 $this->emit($event,$payload);
             },
             $this->passkeySigner,autoConfirm:$this->autoConfirmPasskey);
-        $this->offline=new OfflineResumeService(function(BinaryNode $node):void { $this->sendNode($node); },function(array $event):void { $this->emit('offline_resume',$event); },$this->clock);
+        $this->offline=new OfflineResumeService($send,function(array $event)use($generation):void { if($generation===$this->connectionGeneration)$this->emit('offline_resume',$event); },$this->clock);
         // The protocol's connectAttemptCount counts successful logins by this
         // client instance. Only lc/loginCounter persists across PHP processes.
         $loginCredentials = [...$this->credentials,'connectAttemptCount'=>$this->successfulConnections];
         $payload = $this->mobileDeviceInfo!==null ? \MVO\Mobile\ClientPayload::login($loginCredentials,$this->mobileDeviceInfo) : ($this->isRegistered() ? ClientPayload::login($loginCredentials,$this->activeVersion) : ClientPayload::registration($this->credentials,$this->activeVersion));
         $key = $this->credentials['noiseKeyPair'];
-        $this->credentials['serverStaticKey'] = $this->session->start($key['private'],$key['public'],$payload);
+        $serverStaticKey = $session->start($key['private'],$key['public'],$payload);
+        if (!$this->running || $generation!==$this->connectionGeneration) return;
+        $this->credentials['serverStaticKey'] = $serverStaticKey;
         $this->store->save($this->credentials);
-        if (!$this->running) return;
+        if ($generation!==$this->connectionGeneration) return;
         $this->state($this->isRegistered() ? 'authenticating' : 'pairing');
-        $this->lastPing = $this->now();
+        if (!$this->running || $generation!==$this->connectionGeneration) return;
+        $lastPing=$this->now();
+        if ($this->running && $generation===$this->connectionGeneration) $this->lastPing = $lastPing;
     }
     /**
      * @param array<string,mixed> $credentials */
     private function save(array $credentials): void { $this->store->save($credentials); $this->credentials = $credentials; }
     public function sendNode(BinaryNode $node): void {
-        if ($this->session === null) throw new \LogicException('No active transport');
+        $generation=$this->connectionGeneration;$session=$this->session;
+        if ($session === null) throw new \LogicException('No active transport');
         if($node->tag==='message'&&isset($this->businessFormsMessageGuards[$node->attrs['id']??'']))$this->assertBusinessFormsAuthorized($this->businessFormsMessageGuards[$node->attrs['id']]);
+        $this->assertConnection($generation);
         if($this->scheduledPublishing){
             $this->assertScheduledAuthorization();
+            $this->assertConnection($generation);
             // Mark before transport I/O: a failed write can still have reached the server.
             if($node->tag==='message'&&($node->attrs['id']??null)===$this->scheduledMessageId)$this->scheduledPublicationWriteStarted=true;
         }
@@ -680,9 +728,12 @@ final class WaClient
                 if($node->tag==='message'&&!isset($this->groupStatusWrites[$id]))throw new \MVO\Service\GroupStatusNotExecuted($id,$error);
                 throw $error;
             }
+            $this->assertConnection($generation);
             if($node->tag==='message')$this->groupStatusWrites[$id]=true;
         }
-        $this->session->sendNode($node);
+        $this->assertConnection($generation);
+        $session->sendNode($node);
+        $this->assertConnection($generation);
     }
 
     /**
@@ -692,6 +743,8 @@ final class WaClient
      */
     public function query(BinaryNode $node,float $timeoutSeconds = 30,bool $allowErrorResponse=false,bool $reconnectOnTimeout=true): BinaryNode {
         if (!is_finite($timeoutSeconds) || $timeoutSeconds <= 0) throw new \InvalidArgumentException('Invalid query timeout');
+        $generation=$this->connectionGeneration;
+        if ($this->session===null) throw new \LogicException('No active transport');
         $id = $node->attrs['id'] ?? bin2hex(random_bytes(8));
         if (array_key_exists($id,$this->pending)) throw new \LogicException('Duplicate pending IQ ID');
         $node = new BinaryNode($node->tag,[...$node->attrs,'id'=>$id],$node->content);
@@ -699,12 +752,18 @@ final class WaClient
         $previousQueryState = $this->queryInFlight; $this->queryInFlight = true; $timedOut=false;
         try {
             $this->sendNode($node); $deadline = $this->now()+$timeoutSeconds;
-            while (($this->pending[$id] ?? null) === null && $this->now()<$deadline) {
+            $this->assertConnection($generation);
+            while (($this->pending[$id] ?? null) === null) {
+                $now=$this->now();$this->assertConnection($generation);
+                if ($now >= $deadline) break;
                 if (!$this->running || $this->session === null) throw new SessionRestartRequired('Connection stopped while waiting for response');
-                $this->read(min(0.5,max(0.001,$deadline-$this->now())));
+                $this->read(min(0.5,max(0.001,$deadline-$now)));
+                $this->assertConnection($generation);
                 if ($this->reconnectRequested) throw new SessionRestartRequired('Connection restarted while waiting for response');
                 if ($this->running && $this->isConnected() && !$this->tickVoip()) throw new SessionRestartRequired('Connection stopped while polling call media');
+                $this->assertConnection($generation);
             }
+            $this->assertConnection($generation);
             $result = $this->pending[$id] ?? null;
             if ($result === null) { $timedOut=true; throw new \RuntimeException('WhatsApp IQ timeout: '.$id); }
             if (!$allowErrorResponse && (($result->attrs['type'] ?? '') === 'error' || isset($result->attrs['error']) || $result->child('error') !== null)) {
@@ -719,15 +778,24 @@ final class WaClient
             return $result;
         } catch (\Throwable $e) {
             // Recovery never replays an IQ/message whose delivery may be uncertain.
+            if ($generation!==$this->connectionGeneration) throw new SessionRestartRequired('Connection replaced while waiting for response',0,$e);
             if ((!$timedOut || $reconnectOnTimeout) && $this->running && $this->session !== null && !($e instanceof SessionRestartRequired) && ($this->isTransient($e) || $e instanceof ConnectionFailure)) $this->handleFailure($e);
+            if ($generation!==$this->connectionGeneration && $this->running && $this->session!==null) throw new SessionRestartRequired('Connection replaced while handling query failure',0,$e);
             throw $e;
-        } finally { unset($this->pending[$id],$this->pendingTags[$id]); $this->queryInFlight = $previousQueryState; }
+        } finally {
+            if ($generation===$this->connectionGeneration) { unset($this->pending[$id],$this->pendingTags[$id]); $this->queryInFlight = $previousQueryState; }
+        }
     }
     public function requestPairingCode(string $phoneNumber,?string $customCode = null): string {
         if ($this->session === null) throw new \LogicException('Call connect() before requesting a pairing code');
         if ($this->isRegistered()) throw new \LogicException('Session already paired');
+        $generation=$this->connectionGeneration;
         $deadline = $this->now()+30;
-        while (!$this->pairingReady && $this->running && $this->now()<$deadline) $this->poll(0.5);
+        $this->assertConnection($generation);
+        while (!$this->pairingReady && $this->running && $this->now()<$deadline) {
+            $this->assertConnection($generation);$this->poll(0.5);$this->assertConnection($generation);
+        }
+        $this->assertConnection($generation);
         if (!$this->pairingReady || $this->pairing === null) throw new \RuntimeException('Server did not provide pairing references');
         return $this->pairing->requestCode($phoneNumber,$customCode);
     }
@@ -888,36 +956,43 @@ final class WaClient
         return $this->messages->getMessageStatus($id);
     }
     private function initializeMessages(): void {
+        $generation=$this->connectionGeneration;
+        $query=$this->connectionQuery($generation);$send=$this->connectionSender($generation);
+        $credentials=$this->connectionCredentials($generation);$save=$this->connectionSave($generation);
+        $poll=function(float $timeout)use($generation):void{$this->assertConnection($generation);$this->poll($timeout);$this->assertConnection($generation);};
         if ($this->messages === null) {
-            $signalStore = new SignalStore($this->store->directory.'/state.sqlite',$this->sessionId,$this->backendFactory===null ? null : ($this->backendFactory)($this->sessionId));
+            $backend=$this->backendFactory===null ? null : ($this->backendFactory)($this->sessionId);
+            $this->assertConnection($generation);
+            $signalStore = new SignalStore($this->store->directory.'/state.sqlite',$this->sessionId,$backend);
             $this->stateStore=$signalStore;
-            $this->abprops=new AbPropsService(fn(BinaryNode $node,float $timeout):BinaryNode=>$this->query($node,$timeout),$signalStore,$this->clock);
+            $this->abprops=new AbPropsService($query,$signalStore,$this->clock);
             $this->maintenancePending=$this->automaticMaintenance;
-            $mediaQuery=fn(BinaryNode $node):BinaryNode=>$this->query($node);
-            $this->mediaTransfer=$this->mediaTransferFactory===null ? new MediaTransfer($mediaQuery,maxBytes:$this->mediaMaxBytes,proxy:$this->proxy,processor:$this->mediaProcessor ?? new MediaProcessor()) : ($this->mediaTransferFactory)($mediaQuery);
+            $mediaQuery=$query;
+            $mediaTransfer=$this->mediaTransferFactory===null ? new MediaTransfer($mediaQuery,maxBytes:$this->mediaMaxBytes,proxy:$this->proxy,processor:$this->mediaProcessor ?? new MediaProcessor()) : ($this->mediaTransferFactory)($mediaQuery);
+            $this->assertConnection($generation);$this->mediaTransfer=$mediaTransfer;
             $signal = new SignalProtocol($signalStore,$this->credentials);
             $this->messages = new MessageService($signal,$signalStore,
-                fn():array=>$this->credentials,
-                function(array $credentials):void { $this->save($credentials); },
-                fn(BinaryNode $node,float $timeout=30):BinaryNode=>$this->query($node,$timeout,($node->attrs['xmlns']??'')==='encrypt' && ($node->child('digest')!==null || $node->child('rotate')!==null)),
-                function(BinaryNode $node):void { $this->sendNode($node); },
-                function(string $event,array $payload):void { $this->messageEvent($event,$payload); },
+                $credentials,$save,
+                fn(BinaryNode $node,float $timeout=30):BinaryNode=>$query($node,$timeout,($node->attrs['xmlns']??'')==='encrypt' && ($node->child('digest')!==null || $node->child('rotate')!==null)),
+                $send,
+                function(string $event,array $payload)use($generation):void { if($generation===$this->connectionGeneration)$this->messageEvent($event,$payload); },
                 $this->mediaTransfer,
-                function(float $timeout):void { $this->poll($timeout); },
-                fn(string $to):string=>$this->resolveRecipient($to),
+                $poll,
+                function(string $to)use($generation):string{$this->assertConnection($generation);$resolved=$this->resolveRecipient($to);$this->assertConnection($generation);return $resolved;},
             );
-            $this->messages->setGroupStatusGuard(function():void{($this->groupStatusGuard)?->__invoke();});
-            $this->newsletterInbox=new NewsletterInbox($signalStore,$this->messages->history()->store,function(string $event,array $payload):void { $this->emit($event,$payload); });
+            $this->messages->setGroupStatusGuard(function()use($generation):void{$this->assertConnection($generation);($this->groupStatusGuard)?->__invoke();$this->assertConnection($generation);});
+            $this->newsletterInbox=new NewsletterInbox($signalStore,$this->messages->history()->store,function(string $event,array $payload)use($generation):void { if($generation===$this->connectionGeneration)$this->emit($event,$payload); });
             $this->appStateData=new AppStateProjector($signalStore,$this->messages->history()->store);
-            $this->messages->privacyTokens()->setConfigOverrides(function():array {
+            $this->messages->privacyTokens()->setConfigOverrides(function()use($generation):array {
+                $this->assertConnection($generation);
                 $out=[];foreach(['durationS'=>'tctoken_duration','numBuckets'=>'tctoken_num_buckets','senderDurationS'=>'tctoken_duration_sender','senderNumBuckets'=>'tctoken_num_buckets_sender'] as $key=>$name){$value=$this->abprops()->getConfigValue($name);if(!is_int($value))throw new \UnexpectedValueException('Invalid typed privacy token configuration');$out[$key]=$value;}return $out;
             });
             $salt=$this->appStateData->getSetting('NctSaltSync')['salt']??null;
             if(is_string($salt))$this->messages->privacyTokens()->handleNctSaltSync($salt);
             $this->appState=new AppStateService($signalStore,
-                fn(BinaryNode $node,float $timeout=30):BinaryNode=>$this->query($node,$timeout),
-                function(string $event,array $payload):void { $this->appStateEvent($event,$payload); },
-                fn(array $descriptor):string=>$this->mediaTransfer->download($descriptor),
+                $query,
+                function(string $event,array $payload)use($generation):void { if($generation===$this->connectionGeneration)$this->appStateEvent($event,$payload); },
+                function(array $descriptor)use($generation,$mediaTransfer):string{$this->assertConnection($generation);$bytes=$mediaTransfer->download($descriptor);$this->assertConnection($generation);return $bytes;},
                 function(string $sender):bool { return self::sameUser($sender,$this->credentials['meJid'] ?? '') || self::sameUser($sender,$this->credentials['meLid'] ?? ''); },
                 fn(string $chat):array=>$this->appStateData->messageRange($chat),
             );
@@ -925,30 +1000,35 @@ final class WaClient
             $this->stateFeatures();
             if ($this->isPrimary()) {
                 $this->appState->setPrimaryMode(true);
-                $this->mobile=new MobileService($signalStore,fn():array=>$this->credentials,
-                    fn(BinaryNode $node,float $timeout=30):BinaryNode=>$this->query($node,$timeout),
-                    fn(string $device,array $message):array=>$this->message()->publishProtocolMessage($device,$message['protocolMessage'] ?? $message),
-                    $this->appState,function(string $event,array $payload):void { $this->emit($event,$payload); },
-                    fn():bool=>$this->isPrimary(),function(float $timeout):void { $this->poll($timeout); },
-                    fn(string $bytes):array=>$this->mediaTransfer->upload($bytes,'md-msg-hist'));
+                $this->mobile=new MobileService($signalStore,$credentials,
+                    $query,
+                    function(string $device,array $message)use($generation):array{$this->assertConnection($generation);$result=$this->message()->publishProtocolMessage($device,$message['protocolMessage'] ?? $message);$this->assertConnection($generation);return $result;},
+                    $this->appState,function(string $event,array $payload)use($generation):void { if($generation===$this->connectionGeneration)$this->emit($event,$payload); },
+                    fn():bool=>$this->isPrimary(),$poll,
+                    function(string $bytes)use($generation,$mediaTransfer):array{$this->assertConnection($generation);$result=$mediaTransfer->upload($bytes,'md-msg-hist');$this->assertConnection($generation);return $result;});
             }
-            $this->appState->requestSync(); $this->nextAppStateSyncAt=$this->now();
+            $this->appState->requestSync();$now=$this->now();$this->assertConnection($generation);$this->nextAppStateSyncAt=$now;
         }
         $this->messages->initialize();
     }
     /** @param array<string,mixed> $payload */
     private function messageEvent(string $event,array $payload):void {
+        $generation=$this->connectionGeneration;
         if($event==='message_protocol' && $this->stateStore!==null && ($payload['authenticatedOwnDevice']??false)===true){
             $this->galaxyResponseExports()->ingestAuthenticatedEvent($payload);
         }
         if(in_array($event,['message','message_protocol'],true)&&$this->modernState!==null){
-            foreach($this->modernState->ingestAuthenticatedEvent($payload)as$projection)$this->emit($projection['name'],$projection['payload']);
+            foreach($this->modernState->ingestAuthenticatedEvent($payload)as$projection){
+                $this->emit($projection['name'],$projection['payload']);
+                if($generation!==$this->connectionGeneration)return;
+            }
         }
         if ($event==='message_protocol' && isset($payload['proto']) && ($payload['authenticatedOwnDevice'] ?? false)===true) {
             $sender=$payload['authenticatedSender'] ?? '';
             try { $this->appState?->handleProtocol($payload['protocolMessage'] ?? $payload['proto'],['sender'=>$sender,'authenticatedOwnDevice'=>true]); }
-            catch (\Throwable $e) { $this->emit('appstate_error',['error'=>$e->getMessage()]); }
+            catch (\Throwable $e) { if($generation!==$this->connectionGeneration)return;$this->emit('appstate_error',['error'=>$e->getMessage()]); }
         }
+        if($generation!==$this->connectionGeneration)return;
         $this->emit($event,$payload);
     }
     /** Uses the same account store and authenticated peer transport; callbacks only persist descriptors. */
@@ -980,8 +1060,9 @@ final class WaClient
     }
     /** @param array<string,mixed> $payload */
     private function appStateEvent(string $event,array $payload):void {
+        $generation=$this->connectionGeneration;
         if($event==='appstate_mutation' && $this->messages!==null){$action=AppStateSchema::parse($payload);if(($action['schema']??'')==='NctSaltSync')$this->messages->privacyTokens()->handleNctSaltSync(($action['operation']??'')==='remove'?null:($action['salt']??null));}
-        if ($event==='appstate_keys') $this->nextAppStateSyncAt=min($this->nextAppStateSyncAt,$this->now()+0.5);
+        if ($event==='appstate_keys') {$now=$this->now();$this->assertConnection($generation);$this->nextAppStateSyncAt=min($this->nextAppStateSyncAt,$now+0.5);}
         if ($event==='appstate_missing_keys' && ($payload['keyIds'] ?? [])!==[]) {
             $ids=[]; foreach ($payload['keyIds'] as $id) if (is_string($id) && $id!=='') $ids[]=['keyId'=>$id];
             if ($ids!==[]) $this->queuePeerProtocol(Jid::parse($this->credentials['meJid'])->canonical()->bare(),['type'=>7,'appStateSyncKeyRequest'=>['keyIds'=>$ids]]);
@@ -995,28 +1076,31 @@ final class WaClient
         $this->stateStore?->set('appstate-peer-pending',hash('sha256',$bytes),$bytes);
     }
     private function drainAppState():void {
-        if ($this->now()<$this->nextAppStateSyncAt || $this->stateStore===null || $this->appState===null || $this->messages===null) return;
-        $this->nextAppStateSyncAt=$this->now()+30;
+        $generation=$this->connectionGeneration;$now=$this->now();
+        $this->assertConnection($generation);
+        if ($now<$this->nextAppStateSyncAt || $this->stateStore===null || $this->appState===null || $this->messages===null) return;
+        $this->nextAppStateSyncAt=$now+30;
         foreach ($this->stateStore->entries('appstate-peer-pending',10) as $key=>$bytes) {
             $job=BinaryData::decode($bytes);
-            try { $this->messages->publishProtocolMessage($job['to'],$job['protocol']); $this->stateStore->delete('appstate-peer-pending',(string)$key); }
-            catch (\Throwable $e) { $this->emit('appstate_error',['error'=>$e->getMessage(),'operation'=>'key_exchange']); return; }
-            if (!$this->running) return;
+            try { $this->messages->publishProtocolMessage($job['to'],$job['protocol']); $this->assertConnection($generation);$this->stateStore->delete('appstate-peer-pending',(string)$key); }
+            catch (\Throwable $e) { if($generation!==$this->connectionGeneration)return;$this->emit('appstate_error',['error'=>$e->getMessage(),'operation'=>'key_exchange']); return; }
+            if (!$this->running || $generation!==$this->connectionGeneration) return;
         }
         if ($this->appState->needsSync()) {
             try { $this->appState->sync(); }
-            catch (\Throwable $e) { $this->emit('appstate_error',['error'=>$e->getMessage(),'operation'=>'sync']); }
+            catch (\Throwable $e) { if($generation!==$this->connectionGeneration)return;$this->emit('appstate_error',['error'=>$e->getMessage(),'operation'=>'sync']); }
         }
     }
     public function poll(float $timeoutSeconds = 0.5): void {
         if (!is_finite($timeoutSeconds) || $timeoutSeconds < 0 || $timeoutSeconds > 30) throw new \InvalidArgumentException('Invalid poll timeout');
         if (!$this->running) throw new \LogicException('Call connect() first');
         if ($this->session === null) { $this->resume($timeoutSeconds); return; }
+        $generation=$this->connectionGeneration;
         try {
             $this->read($timeoutSeconds);
-            if (!$this->running) return;
-            if (!$this->queryInFlight) { $this->shortcake?->drainPending(); $this->offline?->tick(); }
-            if (!$this->isRunning()) return;
+            if (!$this->running || $generation!==$this->connectionGeneration) return;
+            if (!$this->queryInFlight) { $this->shortcake?->drainPending(); $this->assertConnection($generation); $this->offline?->tick(); }
+            if (!$this->isRunning() || $generation!==$this->connectionGeneration) return;
             if (!$this->reconnectRequested && $this->postLoginPending && !$this->queryInFlight) {
                 $loginSession=$this->session; $loginNumber=$this->successfulConnections; $loginJid=$this->accountJid();
                 $this->postLoginPending = false;
@@ -1034,42 +1118,49 @@ final class WaClient
                 if (!$this->sameAuthenticatedLogin($loginSession,$loginNumber,$loginJid)) return;
                 $this->connectedAt = $this->lastPing = $connectedAt;
                 $this->state('connected');
+                $this->assertConnection($generation);
             }
             if (!$this->reconnectRequested && $this->isConnected() && !$this->tickVoip()) return;
+            $this->assertConnection($generation);
             if (!$this->reconnectRequested && $this->isConnected() && !$this->queryInFlight) {
                 $this->drainMaintenance();
-                if(!$this->isRunning())return;
+                if(!$this->isRunning() || $generation!==$this->connectionGeneration)return;
                 if ($this->mobile!==null) {
-                    if (!$this->mobileInitialized) { $this->mobile->initializeAppState(); $this->mobileInitialized=true; }
+                    if (!$this->mobileInitialized) { $this->mobile->initializeAppState(); $this->assertConnection($generation); $this->mobileInitialized=true; }
                     $this->mobile->drainPending();
+                    $this->assertConnection($generation);
                 }
                 $this->messages?->drainPending();
+                $this->assertConnection($generation);
                 $this->newsletterInbox?->drainPending();
-                if (!$this->running || $this->state!=='connected') return;
+                if (!$this->running || $generation!==$this->connectionGeneration || $this->state!=='connected') return;
                 $this->drainAppState();
-                if (!$this->running || $this->state!=='connected') return;
-                try{foreach($this->channelSchedules()->drain(1)as$result)$this->emit('channel_schedule',$result);}catch(\Throwable $error){$this->emit('service_error',['service'=>'channel_schedules','error'=>$error->getMessage()]);}
-                if (!$this->running || $this->state!=='connected') return;
-                try{foreach($this->messageSchedules()->drain(1)as$result)$this->emit('message_schedule',$result);}catch(\Throwable $error){$this->emit('service_error',['service'=>'message_schedules','error'=>$error->getMessage()]);}
-                if (!$this->running || $this->state!=='connected') return;
-                try{foreach($this->publicationBatches()->drain(1)as$result)$this->emit('publication_batch',$this->publicationBatches()->publicRecord($result));}catch(\Throwable $error){$this->emit('service_error',['service'=>'publication_batches','error'=>$error->getMessage()]);}
-                if (!$this->running || $this->state!=='connected') return;
+                if (!$this->running || $generation!==$this->connectionGeneration || $this->state!=='connected') return;
+                try{foreach($this->channelSchedules()->drain(1)as$result){$this->assertConnection($generation);$this->emit('channel_schedule',$result);$this->assertConnection($generation);}}catch(\Throwable $error){if($generation!==$this->connectionGeneration)return;$this->emit('service_error',['service'=>'channel_schedules','error'=>$error->getMessage()]);}
+                if (!$this->running || $generation!==$this->connectionGeneration || $this->state!=='connected') return;
+                try{foreach($this->messageSchedules()->drain(1)as$result){$this->assertConnection($generation);$this->emit('message_schedule',$result);$this->assertConnection($generation);}}catch(\Throwable $error){if($generation!==$this->connectionGeneration)return;$this->emit('service_error',['service'=>'message_schedules','error'=>$error->getMessage()]);}
+                if (!$this->running || $generation!==$this->connectionGeneration || $this->state!=='connected') return;
+                try{foreach($this->publicationBatches()->drain(1)as$result){$this->assertConnection($generation);$this->emit('publication_batch',$this->publicationBatches()->publicRecord($result));$this->assertConnection($generation);}}catch(\Throwable $error){if($generation!==$this->connectionGeneration)return;$this->emit('service_error',['service'=>'publication_batches','error'=>$error->getMessage()]);}
+                if (!$this->running || $generation!==$this->connectionGeneration || $this->state!=='connected') return;
             }
             // Noise is already established while waiting for a QR/code or login
             // approval. Keep that socket alive without marking the account online.
             if (!$this->reconnectRequested && !$this->needsPairingRefresh() && !$this->queryInFlight && $this->session!==null && in_array($this->state,['pairing','authenticating','connected'],true) && $this->now()-$this->lastPing>=20) {
+                $this->assertConnection($generation);
                 $this->query(new BinaryNode('iq',['type'=>'get','xmlns'=>'w:p','to'=>'s.whatsapp.net'],[new BinaryNode('ping')]),15);
-                if (!$this->running || $this->reconnectRequested || $this->session===null) return;
-                $this->lastPing = $this->now();
-                if ($this->connectedAt !== null && $this->now()-$this->connectedAt>=60) {$this->reconnectAttempt = 0;$this->versionRefreshed=false;}
+                if (!$this->running || $generation!==$this->connectionGeneration || $this->reconnectRequested || $this->session===null) return;
+                $now=$this->now();$this->assertConnection($generation);
+                $this->lastPing = $now;
+                if ($this->connectedAt !== null && $now-$this->connectedAt>=60) {$this->reconnectAttempt = 0;$this->versionRefreshed=false;}
             }
         } catch (SessionRestartRequired $restart) {
-            if (!$this->running) return;
+            if (!$this->running || $generation!==$this->connectionGeneration) return;
             if (!$this->reconnectRequested) {
                 if ($this->reconnectAt !== null) return;
                 if (!$this->handleFailure($restart)) throw $restart;
             }
         } catch (\Throwable $e) {
+            if ($generation!==$this->connectionGeneration) return;
             if (!$this->running) {
                 if ($this->state === 'stopped') return;
                 throw $e;
@@ -1098,32 +1189,37 @@ final class WaClient
             && $jid!==null && $jid!=='' && $this->accountJid()===$jid;
     }
     private function drainMaintenance():void {
+        $generation=$this->connectionGeneration;
         if(!$this->automaticMaintenance || $this->messages===null)return;
         if($this->maintenancePending){
             $this->maintenancePending=false;
-            try{$this->messages->passiveTasks()->run();}catch(\Throwable $e){$this->emit('service_error',['operation'=>'signal.maintenance','error'=>$e->getMessage()]);}
-            if(!$this->running || $this->state!=='connected')return;
+            try{$this->messages->passiveTasks()->run();}catch(\Throwable $e){if($generation!==$this->connectionGeneration)return;$this->emit('service_error',['operation'=>'signal.maintenance','error'=>$e->getMessage()]);}
+            if(!$this->running || $generation!==$this->connectionGeneration || $this->state!=='connected')return;
         }
-        try{$this->abprops?->tick();}catch(\Throwable $e){$this->emit('service_error',['operation'=>'abprops.sync','error'=>$e->getMessage()]);}
+        try{$this->abprops?->tick();}catch(\Throwable $e){if($generation!==$this->connectionGeneration)return;$this->emit('service_error',['operation'=>'abprops.sync','error'=>$e->getMessage()]);}
     }
     /** Event callbacks invoked while polling media may stop or reconnect the client. */
     private function tickVoip():bool {
+        $generation=$this->connectionGeneration;
         $this->voip?->tick(!$this->queryInFlight);
-        return $this->running && $this->state==='connected';
+        return $this->running && $generation===$this->connectionGeneration && $this->state==='connected';
     }
     private function read(float $timeout): void {
+        $generation=$this->connectionGeneration;$session=$this->session;
         foreach($this->voip?->getCalls()??[] as $call)if(in_array($call['state'],['connecting','connected'],true)){$timeout=min($timeout,0.01);break;}
         // Pairing expiration uses wall-clock timestamps; lifecycle deadlines use monotonic time.
         $this->pairing?->tick(microtime(true));
+        if ($generation!==$this->connectionGeneration) return;
         $this->shortcake?->tick();
-        $node = $this->session?->receiveNode($timeout);
-        if ($node === null) return;
+        if ($generation!==$this->connectionGeneration) return;
+        $node = $session?->receiveNode($timeout);
+        if ($node === null || $generation!==$this->connectionGeneration) return;
         // Authentication material stays on the internal query path. Public node
         // listeners, filters and business events receive a redacted projection.
         if($node->tag==='notification')$this->businessFormsAuthentication?->ingestServerNotification($node);
         $publicNode=self::publicBusinessAuthenticationNode($node);
         $this->emit('node',['node'=>$publicNode,...($publicNode!==$node?['redacted'=>true]:[])]);
-        if (!$this->running) return;
+        if ($generation!==$this->connectionGeneration) return;
         $id = $node->attrs['id'] ?? '';
         if (array_key_exists($id,$this->pending) && (
             ($node->tag === 'iq' && $this->pendingTags[$id] === 'iq' && in_array($node->attrs['type'] ?? '',['result','error'],true)) ||
@@ -1132,8 +1228,11 @@ final class WaClient
         $node=$publicNode;
         if ($this->isRegistered() && $node->tag === 'iq' && $node->child('pair-device') !== null) throw new ConnectionFailure('WhatsApp refused the saved linked identity','401',false,true);
         if ($this->shortcake?->handleNode($node)) return;
+        if ($generation!==$this->connectionGeneration) return;
         if ($this->mobile?->handleNode($node)) return;
+        if ($generation!==$this->connectionGeneration) return;
         if (!$this->isRegistered() && $this->pairing?->handleNode($node)) return;
+        if ($generation!==$this->connectionGeneration) return;
         if ($node->tag === 'success') {
             if (!$this->isRegistered()) throw new \RuntimeException('Server login success without a verified pairing identity');
             if ($this->loginReceived) return;
@@ -1164,25 +1263,34 @@ final class WaClient
         }
         if ($node->tag==='notification' && ($node->attrs['type'] ?? '')==='server_sync') { $this->appState?->requestSync(); $this->nextAppStateSyncAt=min($this->nextAppStateSyncAt,$this->now()); }
         $this->offline?->handleNode($node);
-        if (!$this->running) return;
+        if ($generation!==$this->connectionGeneration) return;
         if($node->tag==='status') {
             // Protocol acknowledgement precedes application handlers; this does not decode or mark a Status viewed.
             $attrs=['class'=>'status','id'=>$node->attrs['id'] ?? '', 'to'=>$node->attrs['from'] ?? 's.whatsapp.net'];
             foreach(['type','participant','recipient']as$key)if(isset($node->attrs[$key]))$attrs[$key]=$node->attrs[$key];
             $this->sendNode(new BinaryNode('ack',$attrs));
-            if(!$this->running)return;
+            if($generation!==$this->connectionGeneration)return;
         }
         // Own-device peer traffic contains protocol keys/history and cannot be ignored.
         if (in_array($node->tag,['message','receipt','notification','call'],true) && ($node->attrs['category'] ?? '')!=='peer') {
-            foreach ($this->incomingFilters as $filter) if ($filter($node)) {
-                $attrs=['class'=>$node->tag,'id'=>$node->attrs['id'] ?? '', 'to'=>$node->attrs['from'] ?? 's.whatsapp.net'];
-                foreach (['type','participant'] as $key) if (isset($node->attrs[$key])) $attrs[$key]=$node->attrs[$key];
-                $this->sendNode(new BinaryNode('ack',$attrs)); return;
+            foreach ($this->incomingFilters as $filter) {
+                $drop=$filter($node);
+                if ($generation!==$this->connectionGeneration) return;
+                if ($drop) {
+                    $attrs=['class'=>$node->tag,'id'=>$node->attrs['id'] ?? '', 'to'=>$node->attrs['from'] ?? 's.whatsapp.net'];
+                    foreach (['type','participant'] as $key) if (isset($node->attrs[$key])) $attrs[$key]=$node->attrs[$key];
+                    $this->sendNode(new BinaryNode('ack',$attrs)); return;
+                }
             }
         }
-        foreach ($this->incomingHandlers as $handler) if ($handler($node)) return;
+        foreach ($this->incomingHandlers as $handler) {
+            $handled=$handler($node);
+            if ($handled || $generation!==$this->connectionGeneration) return;
+        }
         if (($node->tag==='call' || ($node->tag==='ack' && ($node->attrs['class']??'')==='call')) && $this->messages!==null && $this->voip()->handleNode($node)) return;
+        if ($generation!==$this->connectionGeneration) return;
         if ($this->dispatchServiceEvents($node)) return;
+        if ($generation!==$this->connectionGeneration) return;
         if ($this->messages?->handleNode($node)) return;
         if ($node->tag === 'iq' && ($node->attrs['type'] ?? '') === 'get' && $node->child('ping') !== null) {
             $this->sendNode(new BinaryNode('iq',['type'=>'result','id'=>$node->attrs['id'] ?? '', 'to'=>$node->attrs['from'] ?? 's.whatsapp.net']));
@@ -1199,6 +1307,7 @@ final class WaClient
     }
     /** Parse service events before the generic message handler consumes their stanzas. */
     private function dispatchServiceEvents(BinaryNode $node):bool {
+        $generation=$this->connectionGeneration;
         $newsletter=$node->tag==='message' && str_ends_with($node->attrs['from'] ?? '','@newsletter');
         $entries=IncomingEvents::parse($node); $channelEntries=[]; $otherEntries=[];
         foreach ($entries as $entry) {
@@ -1207,7 +1316,7 @@ final class WaClient
             else $otherEntries[]=$entry;
         }
         if ($channelEntries!==[] && $this->newsletterInbox!==null) $this->newsletterInbox->accept($node,$channelEntries);
-        if (!$this->isRunning()) return true;
+        if (!$this->isRunning() || $generation!==$this->connectionGeneration) return true;
         foreach ($otherEntries as $entry) {
             $event=$entry['event']; $payload=$entry['data'];
             if($event==='mex_notification'&&($payload['kind']??null)==='lid_change'){
@@ -1217,7 +1326,7 @@ final class WaClient
                 }catch(\UnexpectedValueException){$this->emit('service_error',['operation'=>'identity.lid_change','reason'=>'identity_conflict','message'=>'Identity transition rejected']);continue;}
             }
             $this->emit($event,$payload);
-            if (!$this->running) return true;
+            if (!$this->running || $generation!==$this->connectionGeneration) return true;
         }
         if ($newsletter) {
             $this->sendNode(new BinaryNode('ack',['class'=>'message','id'=>$node->attrs['id'] ?? '', 'to'=>$node->attrs['from']]));
@@ -1238,25 +1347,28 @@ final class WaClient
     }
     /** Returns true when the failure is scheduled for automatic recovery. */
     private function handleFailure(\Throwable $error): bool {
+        $generation=$this->connectionGeneration;
         if ($error instanceof ConnectionFailure && $error->serverCode==='405' && !$error->revoked && $this->mobileDeviceInfo===null && !$this->versionRefreshed && $this->autoReconnect && $this->running) {
             $this->versionRefreshed=true;
-            $this->closeTransport();$this->state('reconnecting');
-            if(!$this->running)return true;
+            $this->closeTransport();++$generation;
+            if ($generation!==$this->connectionGeneration) return true;
+            $this->state('reconnecting');
+            if(!$this->running || $generation!==$this->connectionGeneration)return true;
             try {
                 $version=($this->versionResolver)();
-                if(!$this->running)return true;
+                if(!$this->running || $generation!==$this->connectionGeneration)return true;
                 WaVersion::validate($version);
                 if ($version!==$this->activeVersion) {
                     $credentials=[...$this->credentials,'webVersion'=>$version];$this->store->save($credentials);
                     $this->activeVersion=$version;$this->credentials=$credentials;
                     $this->emit('version_updated',['version'=>$version]);
-                    if(!$this->running)return true;
+                    if(!$this->running || $generation!==$this->connectionGeneration)return true;
                     $error=new ConnectionFailure('WhatsApp version updated; reconnecting','515',true);
                 }else{
                     $this->emit('version_error',['message'=>'The official WhatsApp Web version matches the rejected version']);
-                    if(!$this->running)return true;
+                    if(!$this->running || $generation!==$this->connectionGeneration)return true;
                 }
-            } catch (\Throwable $refreshError) { $this->emit('version_error',['message'=>$refreshError->getMessage()]);if(!$this->running)return true; }
+            } catch (\Throwable $refreshError) { if($generation!==$this->connectionGeneration)return true;$this->emit('version_error',['message'=>$refreshError->getMessage()]);if(!$this->running || $generation!==$this->connectionGeneration)return true; }
         }
         $serverCode = $error instanceof ConnectionFailure || $error instanceof \MVO\Service\ServiceException ? $error->serverCode : null;
         if (!is_string($serverCode) || preg_match('/^[0-9]{1,5}$/D',$serverCode)!==1) $serverCode=null;
@@ -1264,7 +1376,8 @@ final class WaClient
         $retry = $this->autoReconnect && $this->running && $this->isTransient($error);
         $immediate = $error instanceof ConnectionFailure && $error->serverCode === '515' && $this->reconnectAttempt === 0;
         $revoked = $error instanceof ConnectionFailure && $error->revoked;
-        $this->closeTransport();
+        $this->closeTransport();++$generation;
+        if ($generation!==$this->connectionGeneration) return true;
         if ($revoked && $this->credentials !== []) {
             $this->credentials['revoked'] = true;
             $this->store->save($this->credentials);
@@ -1273,26 +1386,38 @@ final class WaClient
             $this->reconnectAttempt++;
             $base = min($this->reconnectMaxSeconds,$this->reconnectMinSeconds*(2 ** min(20,$this->reconnectAttempt-1)));
             $delay = $immediate ? 0.0 : min($this->reconnectMaxSeconds,$base*(0.75+0.5*max(0.0,min(1.0,($this->random)()))));
-            $this->reconnectAt = $this->now()+$delay;
+            if (!$this->running || $generation!==$this->connectionGeneration) return true;
+            $reconnectAt=$this->now()+$delay;
+            if (!$this->running || $generation!==$this->connectionGeneration) return true;
+            $this->reconnectAt = $reconnectAt;
             $this->state('reconnecting');
+            if (!$this->running || $generation!==$this->connectionGeneration) return true;
             $this->emit('reconnect',['attempt'=>$this->reconnectAttempt,'delay'=>$delay,'reason'=>$error->getMessage(),...$failureDetails]);
             return true;
         }
         $this->running = false; $this->reconnectAt = null;
-        $this->store->close(); $this->disposePlugins(); $this->state($revoked ? 'logged_out' : 'disconnected');
+        $this->store->close(); $this->disposePlugins();
+        if ($generation!==$this->connectionGeneration) return true;
+        $this->state($revoked ? 'logged_out' : 'disconnected');
+        if ($generation!==$this->connectionGeneration) return true;
         if ($revoked) $this->emit('logged_out',['reason'=>$error->getMessage(),'code'=>$error->serverCode]);
+        if ($generation!==$this->connectionGeneration) return true;
         $this->emit('error',['message'=>$error->getMessage(),'retrying'=>false,...$failureDetails]);
+        if ($generation!==$this->connectionGeneration) return true;
         return false;
     }
     private function resume(float $timeout): void {
         if (!$this->running || $this->reconnectAt === null) return;
-        $remaining = $this->reconnectAt-$this->now();
+        $generation=$this->connectionGeneration;$reconnectAt=$this->reconnectAt;
+        $remaining = $reconnectAt-$this->now();
+        if (!$this->running || $generation!==$this->connectionGeneration) return;
         if ($remaining>0) {
             if ($timeout>0) usleep((int)(min($timeout,$remaining,0.5)*1000000));
-            if (!$this->running || $this->now()<$this->reconnectAt) return;
+            $now=$this->now();
+            if (!$this->running || $generation!==$this->connectionGeneration || $now<$reconnectAt) return;
         }
         try { $this->open(); }
-        catch (\Throwable $error) { if (!$this->handleFailure($error)) throw $error; }
+        catch (\Throwable $error) { if ($generation===$this->connectionGeneration && !$this->handleFailure($error)) throw $error; }
     }
     /** Blocking process loop. durationSeconds=0 continues until stop or a fatal failure. */
     public function run(float $durationSeconds = 0): void {
@@ -1303,30 +1428,36 @@ final class WaClient
     private function removeQr(): void { $path = $this->store->directory.'/qr.svg'; if (is_file($path)) unlink($path); }
     /** Close only the socket; retries retain the exclusive directory lock. */
     private function closeTransport(): void {
-        $session = $this->session; $this->session = null;
-        try { $session?->close(); } catch (\Throwable) { }
-        $voip=$this->voip; $this->voip=null;
-        try { $voip?->close(); } catch (\Throwable) { }
-        $this->pairing?->clear(); $this->pairing = null; $this->messages?->close(); $this->messages = null;
-        $this->shortcake?->clear(); $this->shortcake=null; $this->offline?->reset(); $this->offline=null;
+        ++$this->connectionGeneration;
+        // Detach every old resource before close callbacks may open a new login.
+        $session=$this->session;$voip=$this->voip;$pairing=$this->pairing;$messages=$this->messages;
+        $shortcake=$this->shortcake;$offline=$this->offline;$authentication=$this->businessFormsAuthentication;
+        $this->session=null;$this->voip=null;$this->pairing=null;$this->messages=null;
+        $this->shortcake=null;$this->offline=null;
         // Secrets expire with the connection; account lockout memory survives an
         // automatic reconnect in this client. Old facades cannot start new work.
-        $this->businessFormsAuthentication?->invalidate();++$this->businessFormsGeneration;$this->businessFormsService=null;
+        ++$this->businessFormsGeneration;$this->businessFormsService=null;
         $this->stateStore=null; $this->appState=null; $this->appStateData=null; $this->modernState=null; $this->channelScheduler=null; $this->messageScheduler=null; $this->historyFeaturesService=null; $this->galaxyResponseService=null; $this->publicationBatchService=null; $this->services=null; $this->mediaTransfer=null;
         $this->mobile=null; $this->mobileInitialized=false;
         $this->newsletterInbox=null;
         $this->abprops=null;$this->maintenancePending=false;
-        $this->pending = []; $this->pendingTags = [];
+        $this->pending = []; $this->pendingTags = []; $this->queryInFlight=false;
         $this->postLoginPending = false; $this->pairingReady = false; $this->pairingCodeActive = false; $this->pairingRefsExpired = false; $this->reconnectRequested = false;
         $this->connectedAt = null;
         if ($this->store->ownsLock()) $this->removeQr();
+        $pairing?->clear();$shortcake?->clear();$offline?->reset();$authentication?->invalidate();$messages?->close();
+        try { $voip?->close(); } catch (\Throwable) { }
+        try { $session?->close(); } catch (\Throwable) { }
     }
     /** Stop deliberately. Durable credentials and message state remain available for connect(). */
     public function disconnect(): void {
         $started = $this->running || $this->session !== null;
         $this->running = false; $this->reconnectAt = null;
-        $this->closeTransport(); $this->store->close(); $this->disposePlugins();
-        if ($started) $this->state('stopped');
+        $generation=$this->connectionGeneration+1;
+        $this->closeTransport();
+        if ($generation!==$this->connectionGeneration) return;
+        $this->store->close(); $this->disposePlugins();
+        if ($started && $generation===$this->connectionGeneration) $this->state('stopped');
     }
     public function stop(): void { $this->disconnect(); }
     /** Explicitly removes this linked device from the account; stored identity is retained as revoked. */

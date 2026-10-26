@@ -31,6 +31,8 @@ Os comandos são alternativas. Reiniciar com o mesmo `sessionId` e `authDirector
 
 Na futura API, mantenha um worker PHP por sessão ativa. As rotas HTTP pedem ações ao worker e consultam seu estado; o frontend recebe cada novo `auth_qr` por SSE/WebSocket ou consulta o último QR ainda válido. O processo do worker continua ativo depois de devolver o QR. O cliente usa I/O bloqueante: criar `WaClient` em uma rota PHP-FPM e encerrar o request logo após obter o QR fecha a conexão e interrompe o pareamento. O lock impede abrir duas conexões para a mesma sessão. Comandos com consultas devem ser executados no loop externo, depois de os callbacks retornarem.
 
+Cada tentativa de conexão mantém uma geração interna. Se um callback encerrar ou substituir a conexão, nós, respostas de consultas e falhas da tentativa anterior não podem autenticar, alterar credenciais nem derrubar a nova sessão. Uma consulta interrompida sinaliza `SessionRestartRequired`, sem repetir automaticamente a operação. Continue executando comandos e consultas no loop externo; essa proteção não transforma callbacks em um segundo loop de aplicação.
+
 Composer continua sendo usado normalmente para instalar/autocarregar dependências; a execução do cliente não depende dos scripts de desenvolvimento em `tools/dev.php`.
 
 ## Informações da própria conta
