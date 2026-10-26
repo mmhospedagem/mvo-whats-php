@@ -93,3 +93,14 @@ Use os métodos PHP de resolução de identidades e sincronização Signal descr
 ## Validação
 
 O [relatório de validação da biblioteca](identities-validation.json) registra o pacote original testado, a suíte Linux e os testes com Redis isolado. Mudanças de LID, recuperação Signal, mensagens e grupos são cobertos por fixtures autenticadas. Esses registros descrevem o snapshot da data informada; verificações da aplicação privada e detalhes de contas conectadas não fazem parte do relatório público.
+
+## Conflitos de identidade Signal em retries
+
+O vínculo PN/LID não substitui a validação da chave criptográfica do aparelho. Se um pedido de retry apresentar uma identidade diferente da confiada, o SDK não aceita a chave, não apaga a sessão e não reenvia automaticamente. A falha aparece em `message_error` com `reason: recipient_retry_failed`, `code: signal_trusted_identity_changed`, `retryStatus: blocked`, `retryable: false`, `retryOutcome: not_executed` e `action: verify_recipient_identity`. O campo `error` é sanitizado, sem endereço do destinatário ou chave.
+
+O bloqueio é por mensagem e endereço exato do aparelho, sobrevive ao reinício e não impede retries de outros destinatários. Verifique a identidade com o destinatário pelos meios apropriados; esta correção não adiciona método de aprovação ou reset de confiança. Consultar o evento não comprova entrega, e o bloqueio não deve ser tratado como sucesso.
+
+Quando o retry já preparou ciphertext e a escrita não foi confirmada, um contador maior não o substitui nem avança novamente o ratchet. As tentativas limitadas conservam o nó cifrado exato; esgotado o limite, o registro fica bloqueado com `retryOutcome: unknown`. Não repita a mensagem como uma nova operação para tentar ocultar essa incerteza.
+
+
+Os registros bloqueados são removidos por uma varredura local limitada (até 16 por minuto de loop) quando a outbox deixa de existir ou quando o timestamp original da mensagem ultrapassa sete dias. A limpeza não aprova identidades, não retoma envios e não remove ratchets, outbox ou outros pedidos pendentes.

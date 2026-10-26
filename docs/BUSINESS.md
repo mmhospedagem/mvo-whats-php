@@ -6,6 +6,8 @@ O contrato de formulários Business desta revisão usa o serviço separado `form
 
 As alterações remotas aguardam a resposta do servidor. Uma conta sem autorização recebe erro; a biblioteca não converte uma recusa em sucesso. Etiquetas, respostas rápidas e listas dependem das chaves de [app-state](APPSTATE.md) compartilhadas pelo aparelho principal.
 
+As fachadas de serviços pertencem à conexão em que foram obtidas. Após parar ou reconectar, obtenha novamente `business()`, `catalog()` ou o serviço desejado. Se um callback de HTTP/upload encerrar ou substituir a conexão, a operação antiga lança `MVO\Transport\SessionRestartRequired` e não vincula a capa, o produto ou a mídia usando a nova sessão. O upload HTTP já iniciado pode ter ocorrido; confira o resultado antes de repetir, sem presumir cancelamento remoto nem repetir automaticamente.
+
 ## Perfil, horários e capa
 
 ```php

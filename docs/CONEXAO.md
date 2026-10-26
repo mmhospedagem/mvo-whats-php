@@ -35,6 +35,8 @@ Cada tentativa de conexão mantém uma geração interna. Se um callback encerra
 
 Após encerrar uma sessão ativa, chamadas repetidas de `stop()`/`disconnect()`, inclusive durante o descarte de plugins, conservam o estado `stopped` e liberam o lock. Se um callback abrir de fato uma conexão substituta, o encerramento anterior não a sobrescreve.
 
+Cada inscrição criada por `PluginContext::on()` ou `once()` pertence ao seu contexto: o descarte remove somente essa inscrição, mesmo quando outro contexto usa a mesma callable. Um erro do descarte anterior não emite `plugin_error` na conexão substituta. Essas garantias têm testes locais de reconexão e cleanup, sem comprovar entrega em clientes reais.
+
 Composer continua sendo usado normalmente para instalar/autocarregar dependências; a execução do cliente não depende dos scripts de desenvolvimento em `tools/dev.php`.
 
 ## Informações da própria conta

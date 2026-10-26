@@ -4,6 +4,8 @@
 
 Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protocolo executa em PHP, sem Node.js. Instale pelo Packagist com `composer require "mmhospedagem/mvo-whats-php:^1.0"`, sem configurar repositório VCS. As extensões obrigatórias estão em composer.json, incluindo XMLWriter para QR SVG. Uma instalação suporta várias sessões isoladas; cada sessão ativa precisa de um worker/loop persistente e lock exclusivo.
 
+Fachadas e uploads pertencem à conexão de origem; após reconectar, obtenha os serviços novamente. `SessionRestartRequired` interrompe a continuação antiga sem replay automático. Plugins removem somente as inscrições do próprio contexto. Veja os limites de I/O nos guias de conexão e Business.
+
 ## Começar
 
 - [Guia para LLMs e configuração MCP](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/LLMS.md): instalação, ciclo de vida, ferramentas reais, exemplos e limites.

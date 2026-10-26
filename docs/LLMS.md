@@ -45,6 +45,10 @@ Carregue `vendor/autoload.php` da aplicação. Não copie classes para outro nam
 
 No recebimento, SKDM acompanhado somente de metadados é controle interno; contexto sem SKDM e campos desconhecidos continuam expostos. Sucesso na distribuição individual não confirma o `skmsg`: a falha do conteúdo mantém retry limitado. O descarte de um portador individual inválido exige que o único `skmsg` seja autenticado por uma chave de grupo já estabelecida, em transação separada.
 
+Conflitos de identidade Signal em retries emitem `message_error` com `reason=recipient_retry_failed`, `code=signal_trusted_identity_changed`, `retryStatus=blocked`, `retryable=false`, `retryOutcome=not_executed` e `action=verify_recipient_identity`. O diagnóstico omite JIDs e chaves. O bloqueio persistente é por mensagem/aparelho, sem aceitar a nova chave nem apagar sessões. Não existe aprovação/reset automático. Um retry já preparado com resultado incerto conserva o ciphertext exato, inclusive diante de contador maior; esgotado o limite de quatro tentativas, fica bloqueado com `retryOutcome=unknown`. Isso não comprova entrega nem resolve automaticamente a mudança legítima de confiança.
+
+Os registros bloqueados são removidos por uma varredura local limitada (até 16 por minuto de loop) quando a outbox deixa de existir ou quando o timestamp original da mensagem ultrapassa sete dias. A limpeza não aprova identidades, não retoma envios e não remove ratchets, outbox ou outros pedidos pendentes.
+
 ## Modelo de execução que o agente precisa respeitar
 
 1. Cada conta WhatsApp usa seu próprio `sessionId` e armazenamento persistente. Uma instalação do pacote atende várias contas; não se copia a biblioteca para cada cliente.
@@ -54,6 +58,8 @@ No recebimento, SKDM acompanhado somente de metadados é controle interno; conte
 5. Cadastre listeners antes de `connect()`. Faça operações com consultas/envio no loop externo, após o retorno dos callbacks.
 6. `stop()` e `disconnect()` mantêm o vínculo salvo. `logout()` desvincula o aparelho e tem outra finalidade. O encerramento de uma sessão ativa é idempotente, inclusive no cleanup de plugins, e não deve sobrescrever uma conexão substituta realmente aberta.
 7. Nós, respostas e falhas pertencem à geração da conexão de origem. Após encerramento ou substituição em um callback, a tentativa antiga não deve autenticar nem derrubar a sessão nova. Consultas interrompidas sinalizam `SessionRestartRequired`, sem replay automático; comandos e consultas continuam no loop externo.
+
+Fachadas de serviços e uploads também pertencem à conexão original: após reconectar, obtenha o serviço novamente. Um callback que substitui a conexão interrompe a continuação antiga com `SessionRestartRequired`; HTTP já iniciado pode ter ocorrido, sem replay automático. Inscrições de plugins têm ownership por contexto, incluindo `once`; cleanup antigo não remove handlers de outro contexto nem emite seu erro na conexão nova.
 
 O loop confirma nós de transporte `<status>` com `ack class="status"`; isso não
 decodifica seu conteúdo nem registra visualização. Com `autoReconnect=true`, um

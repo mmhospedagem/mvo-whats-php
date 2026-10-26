@@ -15,6 +15,9 @@ final class MessageService
     private const OUTGOING_PROJECTION_DONE='message-outgoing-projection-done-v1';
     private const OUTGOING_PROJECTION_BATCH=16;
     private string $outgoingProjectionCursor='';
+    private const RECIPIENT_RETRY_BLOCKED_CLEANUP_BATCH=16;
+    private string $recipientRetryBlockedCursor='';
+    private int $recipientRetryBlockedCleanupAt=0;
     /**
      * @var array<string,true> */
     private array $projectingOutgoing=[];
@@ -1432,11 +1435,17 @@ final class MessageService
         if (($record['metadata']['timestamp'] ?? 0)<time()-604800) return;
         if (isset($record['metadata']['receipts'][$requester])) return;
         $key=hash('sha256',$id."\0".$requester);
+        // An identity conflict needs an explicit trust decision. New retry
+        // counts must not turn that refusal into an automatic trust/reset.
+        if ($this->store->get('recipient-retry-blocked',$key)!==null) return;
         $last=(int)($this->store->get('recipient-retry-count',$key) ?? '0');
         if ((int)$count<=$last) return;
         $pendingBytes=$this->store->get('recipient-retry-pending',$key);
         if ($pendingBytes!==null) {
             $pending=BinaryData::decode($pendingBytes);
+            // A write may have succeeded despite its missing ACK. Preserve
+            // the committed ciphertext/ratchet rather than preparing again.
+            if (isset($pending['prepared'])) return;
             if (($pending['count'] ?? 0)>=(int)$count) return;
         }
         $this->store->set('recipient-retry-pending',$key,BinaryData::encode(['request'=>(new BinaryCodec())->encode($node),
@@ -1458,6 +1467,7 @@ final class MessageService
     /** Retry preparation is deferred so key fetches cannot recursively enter the node dispatcher. */
     private function drainRecipientRetries():void
     {
+        $this->pruneBlockedRecipientRetries();
         foreach ($this->store->entries('recipient-retry-pending',100) as $key=>$bytes) {
             $job=BinaryData::decode($bytes);
             if (!is_array($job) || !is_string($job['request'] ?? null)) throw new \UnexpectedValueException('Invalid persisted retry request');
@@ -1516,14 +1526,66 @@ final class MessageService
                 ($this->emit)('message_retry',['id'=>$job['id'],'requester'=>$job['requester'],'count'=>$job['count'],'status'=>'server_ack']);
             } catch (\Throwable $error) {
                 $job['attempt']=($job['attempt'] ?? 0)+1;
-                if ($job['attempt']>=4 || $error instanceof \UnexpectedValueException) $this->store->delete('recipient-retry-pending',(string)$key);
-                else {
+                // SignalStore currently exposes this refusal as an
+                // UnexpectedValueException. Classify only its exact local
+                // prefix, before any write, without publishing the address.
+                $identityChanged=!isset($job['prepared']) && $error instanceof \UnexpectedValueException
+                    && str_starts_with($error->getMessage(),'Signal identity changed for ');
+                $terminal=$job['attempt']>=4 || $error instanceof \UnexpectedValueException;
+                $blocked=$identityChanged || ($terminal && isset($job['prepared']));
+                $code=$identityChanged ? 'signal_trusted_identity_changed' : 'recipient_retry_failed';
+                if ($blocked) {
+                    // Retain the authenticated request, and any uncertain
+                    // ciphertext, outside the runnable queue. It survives a
+                    // restart without starving other recipients or spinning.
+                    $this->store->transaction(function() use($job,$key,$code):void {
+                        $this->store->set('recipient-retry-blocked',(string)$key,BinaryData::encode([
+                            ...$job,'blockedReason'=>$code,'blockedAt'=>time(),
+                        ]));
+                        $this->store->delete('recipient-retry-pending',(string)$key);
+                    });
+                } elseif ($terminal) {
+                    $this->store->transaction(function() use($job,$key):void {
+                        $last=(int)($this->store->get('recipient-retry-count',(string)$key) ?? '0');
+                        $this->store->set('recipient-retry-count',(string)$key,(string)max($last,$job['count']));
+                        $this->store->delete('recipient-retry-pending',(string)$key);
+                    });
+                } else {
                     $job['nextAttempt']=time()+min(300,2**$job['attempt']);
                     $this->store->set('recipient-retry-pending',(string)$key,BinaryData::encode($job));
                 }
-                ($this->emit)('message_error',['id'=>$job['id'],'reason'=>'recipient_retry_failed','error'=>$error->getMessage()]);
+                ($this->emit)('message_error',[
+                    'id'=>$job['id'],'reason'=>'recipient_retry_failed','code'=>$code,
+                    'error'=>$identityChanged ? 'Recipient retry blocked: trusted Signal identity changed'
+                        : (isset($job['prepared']) ? 'Recipient retry was not confirmed' : 'Recipient retry preparation failed'),
+                    'retryable'=>!$blocked && !$terminal,'retryStatus'=>$blocked ? 'blocked' : ($terminal ? 'failed' : 'pending'),
+                    'retryOutcome'=>isset($job['prepared']) ? 'unknown' : 'not_executed',
+                    'action'=>$identityChanged ? 'verify_recipient_identity' : 'inspect_recipient_retry',
+                ]);
             }
         }
+    }
+
+    /** Retention only: never resume a blocked request or change cryptographic state. */
+    private function pruneBlockedRecipientRetries():void
+    {
+        $now=time();
+        if ($this->recipientRetryBlockedCleanupAt>$now) return;
+        $rows=$this->store->entries('recipient-retry-blocked',self::RECIPIENT_RETRY_BLOCKED_CLEANUP_BATCH,$this->recipientRetryBlockedCursor);
+        $this->recipientRetryBlockedCleanupAt=$now+60;
+        foreach ($rows as $key=>$bytes) {
+            $this->recipientRetryBlockedCursor=(string)$key;
+            $job=BinaryData::decode($bytes);
+            if (!is_array($job) || !is_string($job['id'] ?? null)) continue;
+            $this->store->transaction(function() use($job,$key,$now):void {
+                $record=$this->outbox($job['id']);
+                // Match admission's original message window, not blockedAt:
+                // expiry cannot make an otherwise eligible request runnable.
+                if ($record===null || ($record['metadata']['timestamp'] ?? 0)<$now-604800)
+                    $this->store->delete('recipient-retry-blocked',(string)$key);
+            });
+        }
+        if (count($rows)<self::RECIPIENT_RETRY_BLOCKED_CLEANUP_BATCH) $this->recipientRetryBlockedCursor='';
     }
 
     /**

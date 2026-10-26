@@ -273,6 +273,29 @@ final class WaClient
     private function connectionSave(int $generation):\Closure {
         return function(array $credentials)use($generation):void {$this->assertConnection($generation);$this->save($credentials);};
     }
+    /** The operation may call an injected HTTP transport or application callback.
+     * @template T
+     * @param \Closure():T $operation
+     * @return T */
+    private function connectionOperation(int $generation,\Closure $operation):mixed {
+        $this->assertConnection($generation);
+        try { $result=$operation(); }
+        catch (\Throwable $error) {
+            try { $this->assertConnection($generation); }
+            catch (SessionRestartRequired $replaced) { throw new SessionRestartRequired($replaced->getMessage(),0,$error); }
+            throw $error;
+        }
+        $this->assertConnection($generation);
+        return $result;
+    }
+    /** Keep both stream reading and its upload bound to the original media transport.
+     * @return array<string,mixed> */
+    private function connectionBusinessUpload(int $generation,?MediaTransfer $media,mixed $source,string $type):array {
+        $this->assertConnection($generation);
+        $media??=throw new \LogicException('WhatsApp is not connected');
+        $bytes=$this->connectionOperation($generation,static fn():string=>\MVO\Media\MediaSource::read($source,$media->maxBytes()));
+        return $this->connectionOperation($generation,static fn():array=>$media->uploadBusiness($bytes,$type));
+    }
     private function state(string $state): void {
         if ($this->state === $state) return;
         $this->state = $state; $this->emit('connection',['state'=>$state,'sessionId'=>$this->sessionId]);
@@ -328,32 +351,35 @@ final class WaClient
         if ($queryTimeoutSeconds!==null && (!is_finite($queryTimeoutSeconds) || $queryTimeoutSeconds<=0 || $queryTimeoutSeconds>30)) throw new \InvalidArgumentException('Invalid service query timeout');
         if (!$this->isConnected()) throw new \LogicException('WhatsApp is not connected');
         if($queryTimeoutSeconds===null && $this->services!==null)return $this->services;
+        $generation=$this->connectionGeneration;
+        $query=$this->connectionQuery($generation);$credentials=$this->connectionCredentials($generation);$save=$this->connectionSave($generation);
+        $messages=$this->message();$media=$this->mediaTransfer;$appState=$this->appState;$inbox=$this->newsletterInbox;$store=$this->stateStore;
         $services = new Services(
-            fn(BinaryNode $node,float $timeout=30):BinaryNode=>$this->query($node,$queryTimeoutSeconds===null ? $timeout : min($timeout,$queryTimeoutSeconds),$queryTimeoutSeconds!==null,$queryTimeoutSeconds===null),
-            function(BinaryNode $node):void { $this->sendNode($node); },
-            fn():array=>$this->credentials,
-            fn(string $to,string|array $content):array=>$this->sendMessage($to,$content),
-            fn():AppStateService=>$this->chat(),
-            fn(string $to,string|array $content,array $recipients,array $options=[]):array=>$this->sendBroadcast($to,$content,$recipients,$options),
-            function(string $name):void { $this->credentials['meDisplayName']=$name; $this->store->save($this->credentials); },
-            fn(string $to,string|array $content,array $options=[]):array=>$this->message()->sendBotPrompt($to,$content,$options),
-            fn(array $content):array=>$this->prepareNewsletterMedia($content),
-            fn(string|array $source):string=>($this->mediaTransfer??throw new \LogicException('WhatsApp is not connected'))->uploadBusiness(\MVO\Media\MediaSource::read($source,$this->mediaTransfer->maxBytes()),'product-catalog-image')['url'],
-            fn(mixed $source):array=>($this->mediaTransfer??throw new \LogicException('WhatsApp is not connected'))->uploadBusiness(\MVO\Media\MediaSource::read($source,$this->mediaTransfer->maxBytes()),'biz-cover-photo'),
-            fn():\MVO\History\StatusStore=>$this->message()->statusStore(),
-            function(array $keys,string $type):void {$this->sendReceipt($keys,$type);},
-            fn(array $message):string=>$this->downloadMedia($message),
-            fn(BinaryNode $node,string $jid):array=>($this->newsletterInbox??throw new \LogicException('Channel inbox is not initialized'))->ingestResponse($node,$jid),
-            fn():\MVO\History\ChannelStore=>$this->channelStore(),
-            fn(array $descriptor):string=>$this->downloadNewsletterMedia($descriptor),
-            function(BinaryNode $post,BinaryNode $ack):void {($this->newsletterInbox??throw new \LogicException('Channel inbox is not initialized'))->recordPublication($post,$ack);},
+            static fn(BinaryNode $node,float $timeout=30):BinaryNode=>$query($node,$queryTimeoutSeconds===null ? $timeout : min($timeout,$queryTimeoutSeconds),$queryTimeoutSeconds!==null,$queryTimeoutSeconds===null),
+            $this->connectionSender($generation),
+            $credentials,
+            fn(string $to,string|array $content):array=>$this->connectionOperation($generation,fn():array=>$this->sendMessage($to,$content)),
+            fn():AppStateService=>$this->connectionOperation($generation,static fn():AppStateService=>$appState??throw new \LogicException('Wait for authenticated login before synchronizing chats')),
+            fn(string $to,string|array $content,array $recipients,array $options=[]):array=>$this->connectionOperation($generation,static fn():array=>$messages->sendBroadcast($to,$content,$recipients,$options)),
+            static function(string $name)use($credentials,$save):void { $next=$credentials();$next['meDisplayName']=$name;$save($next); },
+            fn(string $to,string|array $content,array $options=[]):array=>$this->connectionOperation($generation,static fn():array=>$messages->sendBotPrompt($to,$content,$options)),
+            fn(array $content):array=>$this->connectionOperation($generation,static fn():array=>($media??throw new \LogicException('WhatsApp is not connected'))->prepareNewsletter($content)),
+            fn(string|array $source):string=>$this->connectionBusinessUpload($generation,$media,$source,'product-catalog-image')['url'],
+            fn(mixed $source):array=>$this->connectionBusinessUpload($generation,$media,$source,'biz-cover-photo'),
+            fn():\MVO\History\StatusStore=>$this->connectionOperation($generation,static fn():\MVO\History\StatusStore=>$messages->statusStore()),
+            function(array $keys,string $type)use($generation,$messages):void {$this->connectionOperation($generation,static function()use($messages,$keys,$type):void{$messages->sendReceipt($keys,$type);});},
+            fn(array $message):string=>$this->connectionOperation($generation,static fn():string=>$messages->downloadMedia($message)),
+            fn(BinaryNode $node,string $jid):array=>$this->connectionOperation($generation,static fn():array=>($inbox??throw new \LogicException('Channel inbox is not initialized'))->ingestResponse($node,$jid)),
+            fn():\MVO\History\ChannelStore=>$this->connectionOperation($generation,static fn():\MVO\History\ChannelStore=>new \MVO\History\ChannelStore($store??throw new \LogicException('Channel store is not initialized'),$messages->history()->store)),
+            fn(array $descriptor):string=>$this->connectionOperation($generation,static fn():string=>($media??throw new \LogicException('WhatsApp is not connected'))->downloadNewsletter($descriptor)),
+            function(BinaryNode $post,BinaryNode $ack)use($generation,$inbox):void {$this->connectionOperation($generation,static function()use($inbox,$post,$ack):void{($inbox??throw new \LogicException('Channel inbox is not initialized'))->recordPublication($post,$ack);});},
         );
-        $services->configurePrivacyTokens($this->message()->privacyTokens());
+        $services->configurePrivacyTokens($messages->privacyTokens());
         $services->configureGroupStatusPublishing(
-            fn(string|array $groups,string|array $content,array $options):array=>$this->withGroupStatusAuthorization(fn():array=>$this->message()->sendGroupStatuses($groups,$content,$options)),
-            fn(string $group,string $id):array=>$this->withGroupStatusAuthorization(fn():array=>$this->message()->revokeGroupStatus($group,$id)),
+            fn(string|array $groups,string|array $content,array $options):array=>$this->connectionOperation($generation,fn():array=>$this->withGroupStatusAuthorization(fn():array=>$this->connectionOperation($generation,static fn():array=>$messages->sendGroupStatuses($groups,$content,$options)))),
+            fn(string $group,string $id):array=>$this->connectionOperation($generation,fn():array=>$this->withGroupStatusAuthorization(fn():array=>$this->connectionOperation($generation,static fn():array=>$messages->revokeGroupStatus($group,$id)))),
         );
-        if($this->stateStore!==null)$services->configureIdentities(new IdentityService($this->stateStore));
+        if($store!==null)$services->configureIdentities(new IdentityService($store));
         if ($queryTimeoutSeconds===null) $this->services=$services;
         return $services;
     }
@@ -1470,7 +1496,11 @@ final class WaClient
         $this->credentials['revoked']=true; $this->store->save($this->credentials);
         $this->disconnect(); $this->state('logged_out'); $this->emit('logged_out',['reason'=>$reason,'code'=>'401']);
     }
-    private function disposePlugins():void { try { $this->plugins->dispose(); } catch (\Throwable $e) { $this->emit('plugin_error',['message'=>$e->getMessage()]); } }
+    private function disposePlugins():void {
+        $generation=$this->connectionGeneration;
+        try { $this->plugins->dispose(); }
+        catch (\Throwable $e) { if ($generation===$this->connectionGeneration) $this->emit('plugin_error',['message'=>$e->getMessage()]); }
+    }
     public function __destruct() {
         $this->running = false; $this->closeTransport(); $this->store->close(); $this->disposePlugins();
     }

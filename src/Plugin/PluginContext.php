@@ -10,12 +10,17 @@ final class PluginContext
     private array $cleanup=[];
     public function __construct(public readonly WaClient $client) {}
     /** @param callable(array<string,mixed>):void $handler */
-    public function on(string $event,callable $handler):void { $this->client->on($event,$handler); $this->registerDispose(function() use($event,$handler):void { $this->client->off($event,$handler); }); }
+    public function on(string $event,callable $handler):void {
+        // The same application callable may also belong to a replacement context.
+        $owned=static function(array $payload)use($handler):void{$handler($payload);};
+        $client=$this->client;$client->on($event,$owned);
+        $this->registerDispose(static function()use($client,$event,$owned):void{$client->off($event,$owned);});
+    }
     /** @param callable(array<string,mixed>):void $handler */
     public function once(string $event,callable $handler):void {
-        $wrapped=null;
-        $wrapped=function(array $payload) use($event,$handler,&$wrapped):void { $this->client->off($event,$wrapped); $handler($payload); };
-        $this->on($event,$wrapped);
+        $owned=static function(array $payload)use($handler):void{$handler($payload);};
+        $client=$this->client;$client->once($event,$owned);
+        $this->registerDispose(static function()use($client,$event,$owned):void{$client->off($event,$owned);});
     }
     /** @param array<string,mixed> $payload */
     public function emit(string $event,array $payload=[]):void { $this->client->emitEvent($event,$payload); }

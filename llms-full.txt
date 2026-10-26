@@ -44,6 +44,8 @@ Carregue `vendor/autoload.php` da aplicação. Não copie classes para outro nam
 6. `stop()` e `disconnect()` mantêm o vínculo salvo. `logout()` desvincula o aparelho e tem outra finalidade. O encerramento de uma sessão ativa é idempotente, inclusive no cleanup de plugins: permanece `stopped` se não existe conexão substituta, preservando uma nova conexão quando ela foi realmente aberta.
 7. Cada tentativa mantém sua geração de conexão. Nós, respostas e falhas da tentativa anterior são descartados quando um callback encerra ou substitui a conexão; não podem autenticar, alterar credenciais nem derrubar a nova sessão. Consultas interrompidas sinalizam `MVO\Transport\SessionRestartRequired`, sem replay automático. Execute comandos e consultas no loop externo, após os callbacks.
 
+As fachadas de serviços, as funções de publicação e os uploads pertencem à geração em que foram obtidos. Após reconectar, obtenha o serviço novamente. Se o transporte HTTP injetado encerrar ou substituir a conexão durante um upload, a operação antiga lança `MVO\Transport\SessionRestartRequired` antes de vincular mídia ou alterar a nova sessão. O upload remoto pode já ter ocorrido; não há cancelamento ou replay automático. Cada `PluginContext::on/once` remove somente a própria inscrição durante o descarte, preservando outros contextos que usam a mesma callable. Erros do descarte antigo não são emitidos como `plugin_error` na conexão substituta.
+
 O loop confirma nós de transporte `<status>` com `ack class="status"`; isso não
 decodifica seu conteúdo nem registra visualização. Com `autoReconnect=true`, um
 erro de stream sem código explícito nem conflito, contendo `<ack class="status">`,
@@ -445,3 +447,11 @@ O SDK fornece a conexão WhatsApp e os eventos. Fila da aplicação, credenciais
 | `tests/phpunit/` e `src/Testing/` | Validação offline e simuladores. |
 
 Use `composer install` num clone de desenvolvimento antes de executar PHPUnit/PHPStan. Rode testes apropriados ao código alterado, preserve os exemplos públicos e informe o que foi realmente validado. Bancos, credenciais, QR de contas reais e dados privados não pertencem a exemplos ou contexto compartilhado de LLM.
+
+
+## Diagnóstico de retries e confiança Signal
+
+Conflitos de identidade Signal em retries emitem `message_error` com `reason=recipient_retry_failed`, `code=signal_trusted_identity_changed`, `retryStatus=blocked`, `retryable=false`, `retryOutcome=not_executed` e `action=verify_recipient_identity`. O diagnóstico omite JIDs e chaves. O bloqueio persistente é por mensagem/aparelho, sem aceitar a nova chave nem apagar sessões. Não existe aprovação/reset automático. Um retry já preparado com resultado incerto conserva o ciphertext exato, inclusive diante de contador maior; esgotado o limite de quatro tentativas, fica bloqueado com `retryOutcome=unknown`. Isso não comprova entrega nem resolve automaticamente a mudança legítima de confiança.
+
+
+Os registros bloqueados são removidos por uma varredura local limitada (até 16 por minuto de loop) quando a outbox deixa de existir ou quando o timestamp original da mensagem ultrapassa sete dias. A limpeza não aprova identidades, não retoma envios e não remove ratchets, outbox ou outros pedidos pendentes.

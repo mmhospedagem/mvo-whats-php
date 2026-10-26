@@ -4,6 +4,11 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Retry de destinatário com conflito de identidade Signal mantém a recusa de confiança e retorna diagnóstico sanitizado, sem repetição automática do mesmo pedido. Ciphertext já preparado não é substituído por contador maior e permanece preservado quando a confirmação é incerta.
+
+- Inscrições de plugins isoladas por contexto, inclusive `once`; descarte antigo preserva listeners de uma conexão substituta e não emite seu erro na nova geração.
+- Fachadas e callbacks de serviços vinculados à geração original, incluindo upload de capa, catálogo e canais: reconexão durante HTTP interrompe a continuação antiga sem vincular mídia na sessão nova nem repetir a operação.
+
 - Encerramento idempotente mesmo quando o cleanup de um plugin chama `stop()` novamente: o estado final permanece `stopped`, sem sobrescrever uma conexão substituta realmente aberta pelo callback.
 
 - Isolamento por geração de conexão: nós, respostas de consultas e falhas antigas não autenticam nem encerram uma sessão substituta após callbacks de ciclo de vida. Consultas interrompidas preservam o resultado incerto sem replay e não removem o estado de consultas da nova conexão.
