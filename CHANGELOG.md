@@ -4,6 +4,8 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Encerramento idempotente mesmo quando o cleanup de um plugin chama `stop()` novamente: o estado final permanece `stopped`, sem sobrescrever uma conexão substituta realmente aberta pelo callback.
+
 - Isolamento por geração de conexão: nós, respostas de consultas e falhas antigas não autenticam nem encerram uma sessão substituta após callbacks de ciclo de vida. Consultas interrompidas preservam o resultado incerto sem replay e não removem o estado de consultas da nova conexão.
 
 - `messageContextInfo` disponível em envios tipados, com precedência dos campos gerados pelo builder, contexto de citação/menções separado e preservação do formato raw.

@@ -55,6 +55,8 @@ Este índice orienta LLMs e agentes para os contratos públicos do SDK. O protoc
 
 ## Regras de interpretação
 
+- O encerramento de uma sessão ativa por stop()/disconnect() é idempotente, inclusive quando um plugin repete a chamada no cleanup. Sem conexão substituta o estado final é stopped; uma nova conexão realmente aberta deve ser preservada.
+
 - Nós, respostas e falhas são vinculados à geração da conexão. Se um callback encerrar/substituir o transporte, a tentativa antiga não pode autenticar, alterar credenciais ou derrubar a nova sessão; consultas interrompidas sinalizam MVO\Transport\SessionRestartRequired sem replay automático. Comandos continuam no loop externo.
 
 - Envios tipados aceitam messageContextInfo na raiz de Message, inclusive após preparo de mídia; campos gerados pelo builder prevalecem. quote/mentions/encaminhamento/expiração continuam em contextInfo da submensagem. Raw mantém metadados dentro de message. Agrupadores de álbum usam enc.mediatype=collection com tipo externo text.

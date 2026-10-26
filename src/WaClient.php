@@ -1451,13 +1451,15 @@ final class WaClient
     }
     /** Stop deliberately. Durable credentials and message state remain available for connect(). */
     public function disconnect(): void {
-        $started = $this->running || $this->session !== null;
+        // A cleanup may stop again after the outer call detached its transport.
+        // Only a real new login should supersede that call's final state change.
+        if (!$this->running && $this->session===null) return;
         $this->running = false; $this->reconnectAt = null;
         $generation=$this->connectionGeneration+1;
         $this->closeTransport();
         if ($generation!==$this->connectionGeneration) return;
         $this->store->close(); $this->disposePlugins();
-        if ($started && $generation===$this->connectionGeneration) $this->state('stopped');
+        if ($generation===$this->connectionGeneration) $this->state('stopped');
     }
     public function stop(): void { $this->disconnect(); }
     /** Explicitly removes this linked device from the account; stored identity is retained as revoked. */

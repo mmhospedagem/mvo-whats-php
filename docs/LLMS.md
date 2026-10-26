@@ -52,7 +52,7 @@ No recebimento, SKDM acompanhado somente de metadados é controle interno; conte
 3. `poll()` ou `run()` precisa continuar executando. Encerrar uma rota PHP-FPM logo após obter o QR interrompe a conexão.
 4. Um processo mantém o lock exclusivo de cada sessão. A aplicação deve encaminhar comandos ao worker que já possui a sessão, em vez de abrir outro cliente para a mesma pasta.
 5. Cadastre listeners antes de `connect()`. Faça operações com consultas/envio no loop externo, após o retorno dos callbacks.
-6. `stop()` e `disconnect()` mantêm o vínculo salvo. `logout()` desvincula o aparelho e tem outra finalidade.
+6. `stop()` e `disconnect()` mantêm o vínculo salvo. `logout()` desvincula o aparelho e tem outra finalidade. O encerramento de uma sessão ativa é idempotente, inclusive no cleanup de plugins, e não deve sobrescrever uma conexão substituta realmente aberta.
 7. Nós, respostas e falhas pertencem à geração da conexão de origem. Após encerramento ou substituição em um callback, a tentativa antiga não deve autenticar nem derrubar a sessão nova. Consultas interrompidas sinalizam `SessionRestartRequired`, sem replay automático; comandos e consultas continuam no loop externo.
 
 O loop confirma nós de transporte `<status>` com `ack class="status"`; isso não

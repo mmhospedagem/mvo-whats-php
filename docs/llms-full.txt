@@ -41,7 +41,7 @@ Carregue `vendor/autoload.php` da aplicação. Não copie classes para outro nam
 3. `poll()` ou `run()` precisa continuar executando. Encerrar uma rota PHP-FPM logo após obter o QR interrompe a conexão.
 4. Um processo mantém o lock exclusivo de cada sessão. A aplicação deve encaminhar comandos ao worker que já possui a sessão, em vez de abrir outro cliente para a mesma pasta.
 5. Cadastre listeners antes de `connect()`. Faça operações com consultas/envio no loop externo, após o retorno dos callbacks.
-6. `stop()` e `disconnect()` mantêm o vínculo salvo. `logout()` desvincula o aparelho e tem outra finalidade.
+6. `stop()` e `disconnect()` mantêm o vínculo salvo. `logout()` desvincula o aparelho e tem outra finalidade. O encerramento de uma sessão ativa é idempotente, inclusive no cleanup de plugins: permanece `stopped` se não existe conexão substituta, preservando uma nova conexão quando ela foi realmente aberta.
 7. Cada tentativa mantém sua geração de conexão. Nós, respostas e falhas da tentativa anterior são descartados quando um callback encerra ou substitui a conexão; não podem autenticar, alterar credenciais nem derrubar a nova sessão. Consultas interrompidas sinalizam `MVO\Transport\SessionRestartRequired`, sem replay automático. Execute comandos e consultas no loop externo, após os callbacks.
 
 O loop confirma nós de transporte `<status>` com `ack class="status"`; isso não

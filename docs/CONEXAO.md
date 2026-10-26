@@ -33,6 +33,8 @@ Na futura API, mantenha um worker PHP por sessão ativa. As rotas HTTP pedem aç
 
 Cada tentativa de conexão mantém uma geração interna. Se um callback encerrar ou substituir a conexão, nós, respostas de consultas e falhas da tentativa anterior não podem autenticar, alterar credenciais nem derrubar a nova sessão. Uma consulta interrompida sinaliza `SessionRestartRequired`, sem repetir automaticamente a operação. Continue executando comandos e consultas no loop externo; essa proteção não transforma callbacks em um segundo loop de aplicação.
 
+Após encerrar uma sessão ativa, chamadas repetidas de `stop()`/`disconnect()`, inclusive durante o descarte de plugins, conservam o estado `stopped` e liberam o lock. Se um callback abrir de fato uma conexão substituta, o encerramento anterior não a sobrescreve.
+
 Composer continua sendo usado normalmente para instalar/autocarregar dependências; a execução do cliente não depende dos scripts de desenvolvimento em `tools/dev.php`.
 
 ## Informações da própria conta
