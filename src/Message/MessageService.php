@@ -68,6 +68,8 @@ final class MessageService
         ?MediaTransfer $media = null,
         private readonly ?\Closure $pump = null,
         private readonly ?\Closure $usernameResolver = null,
+        ?\MVO\History\HistorySyncSink $historySink = null,
+        bool $historyPersist = true,
     ) {
         $this->media = $media ?? new MediaTransfer(fn(BinaryNode $node):BinaryNode => ($this->query)($node,30.0));
         $this->groups = new GroupTransport($signal,$store,$query,
@@ -79,7 +81,7 @@ final class MessageService
             $this->recordStatusReadReceipt($node);
         });
         $this->history = new HistoryService($store,$this->media,$getCredentials,$emit,
-            function(array $key,string $type):void { $this->sendReceipt([$key],$type); });
+            function(array $key,string $type):void { $this->sendReceipt([$key],$type); },sink:$historySink,persist:$historyPersist);
         $this->mediaRetry=new MediaRetryService($store,$getCredentials,$sendNode,$emit);
         $this->privacyTokens=new TrustedContactTokenService($query,$store,$getCredentials);
         $this->passiveTasks=new PassiveTasksService($query,$store,$signal,$getCredentials,$saveCredentials,function():void{$this->initializeInternal();});
@@ -291,6 +293,7 @@ final class MessageService
     public function close(): void
     {
         $this->closeRequested = true;
+        $this->history->close();
         if ($this->operationDepth === 0) $this->store->close();
     }
 

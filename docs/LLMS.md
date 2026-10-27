@@ -67,6 +67,37 @@ vinculada não muda. O telefone determina o histórico fornecido. Após confirma
 ADV e persistir o vínculo, o loop aguarda `515`/fechamento transitório do servidor
 antes de retomar; há fallback de 15 segundos e `stop()` cancela a espera.
 
+`WaClient` também aceita `historySink: $sink` e `historyPersist: false` para
+consumir `HistorySync` em armazenamento próprio. `$sink` implementa
+`MVO\History\HistorySyncSink` ou usa `CallbackHistorySyncSink(item:, commit:, abort:)`.
+`item(array $item, array $chunk): void` recebe `kind`/`value`; mensagens usam
+`kind=conversations.messages`, `conversationId` e o `HistorySyncMsg` completo.
+O cabeçalho `conversations` vem depois das mensagens, sem a lista de mensagens.
+`$chunk.id` é o ID estável do portador; `syncType`, `chunkOrder` e `progress`
+completam a referência. Campos conhecidos repetidos chegam individualmente;
+campos escalares são itens e `syncType` fica no descritor. Não descarte stubs,
+`msgOrderId`, PN/LID ou componentes da chave da mensagem ao deduplicar.
+
+MAC/hashes da mídia e compressão são verificados antes dos callbacks; arquivos
+temporários e leitura incremental evitam acumular a conversa. Itens continuam
+provisórios até `commit(array $chunk): void`, que recebe também as contagens.
+Falhas chamam `abort(array $chunk, Throwable $error): void`, sem substituir a
+causa caso o cleanup falhe. O recibo ocorre após commit e checkpoint. Uma falha
+de recibo não repete o sink; queda entre commit externo e checkpoint pode repetir
+itens e commit. Use staging durável e idempotência por conta/bloco e chave exata
+das mensagens. Projeções locais já podem estar gravadas se o commit externo falhar.
+
+`historyPersist` é `true` por padrão; `false` exige sink e omite somente as
+projeções bulk de `HistorySync`, mantendo mappings, segredos, tokens e
+configurações do protocolo. Não altera inbox/outbox, mensagens ao vivo,
+app-state ou `GroupHistory`. Consultas locais não leem o banco externo. Callbacks
+síncronos aplicam controle de fluxo e pausam o loop: não reentre no SDK, envie
+mensagens ou faça consultas neles. Stop/reconexão invalidam a continuação antiga.
+O sink é privado do processo, sem nova ferramenta MCP ou webhook automático;
+não registre conteúdo/chaves em logs. Veja [Histórico](HISTORICO.md) e o exemplo
+executável [history-sink.php](../examples/history-sink.php). Testes locais cobrem
+limites, replay, autenticação e cancelamento; não equivalem a validação em aparelho real.
+
 Um código de pareamento pendente pode ser registrado novamente após uma queda
 no mesmo cliente. Permanece somente em RAM, conserva a validade original e não
 repete push. Falha emite `auth_code_refresh` com `forceManual=true` e

@@ -56,7 +56,119 @@ foreach ($client->history()->iterateMessages('558400000000@s.whatsapp.net') as $
 
 O telefone pode enviar notificações `HISTORY_SYNC_NOTIFICATION`. A biblioteca aceita esse protocolo somente de um dispositivo autenticado da própria conta, coloca o trabalho em uma fila persistente e baixa o arquivo fora do despachante de nós. A transferência verifica MAC e hashes; depois descompacta gzip/zlib, lê os registros WAProto e aplica cada bloco em uma transação. O recibo `hist_sync` só é enfileirado após a importação. Falhas mantêm a tarefa para nova tentativa com intervalo crescente. O evento `history_sync_error` informa a falha sem descartar as credenciais.
 
-São importados mensagens, metadados de conversas, push names, contatos, vínculos PN/LID e segredos de mensagens necessários para respostas criptografadas a enquetes/eventos. Blocos já processados não são baixados novamente. A expansão tem limite padrão de 64 MiB e cada registro protobuf, 16 MiB; o download usa o limite do `MediaTransfer`. A expansão é limitada e bufferizada em PHP. A leitura do histórico local mantém apenas os melhores resultados da página em memória, embora precise percorrer o índice do chat.
+São importados mensagens, metadados de conversas, push names, contatos, vínculos PN/LID e segredos de mensagens necessários para respostas criptografadas a enquetes/eventos. Blocos já processados não são baixados novamente. A expansão tem limite padrão de 64 MiB e cada registro protobuf, 16 MiB; o download usa o limite do `MediaTransfer`. Sem um sink, a expansão é limitada e bufferizada em PHP. A leitura do histórico local mantém apenas os melhores resultados da página em memória, embora precise percorrer o índice do chat.
+
+## Consumir registros com `history.sink`
+
+Configure `historySink` no construtor antes de conectar. O contrato PHP é
+`MVO\History\HistorySyncSink`; o adaptador `CallbackHistorySyncSink` aceita
+`item`, `commit` e `abort`. Os dois últimos callbacks são opcionais no adaptador.
+
+```php
+use MVO\History\CallbackHistorySyncSink;
+use MVO\WaClient;
+
+$sink = new CallbackHistorySyncSink(
+    item: function (array $item, array $chunk) use ($repository): void {
+        $repository->stage($chunk['id'], $item);
+    },
+    commit: function (array $chunk) use ($repository): void {
+        $repository->publishOnce($chunk['id'], $chunk);
+    },
+    abort: function (array $chunk, Throwable $error) use ($repository): void {
+        $repository->discardStaged($chunk['id']);
+    },
+);
+
+$client = new WaClient(
+    sessionId: 'cliente-demo',
+    authDirectory: __DIR__.'/var/whatsapp-auth',
+    historySink: $sink,
+    historyPersist: false,
+);
+```
+
+`$repository` representa a persistência da sua aplicação. O exemplo executável
+[history-sink.php](../examples/history-sink.php) implementa staging, confirmação
+idempotente e retomada usando outro banco SQLite, sem consultas ao SDK dentro dos
+callbacks.
+
+O padrão `historyPersist: true` mantém as projeções locais e também chama o sink.
+Com `false`, somente os blocos `HistorySync` deixam de alimentar as tabelas locais
+de mensagens, conversas, contatos e observações. Essa opção exige um sink.
+Vínculos PN/LID, segredos necessários às respostas criptografadas, tokens de
+privacidade e configurações continuam na sessão. Ela não desliga a inbox/outbox,
+o histórico de mensagens ao vivo, app-state nem pacotes `GroupHistory` enviados
+por participantes de grupos. As consultas locais não passam a consultar o banco
+externo automaticamente.
+
+Cada item tem `kind` e `value`. Campos repetidos produzem um item por entrada;
+campos escalares conhecidos também são entregues. `syncType` fica no descritor
+do bloco e campos protobuf desconhecidos da raiz não são itens separados.
+
+```php
+// Uma mensagem: o HistorySyncMsg completo conserva stubs e msgOrderId.
+[
+    'kind' => 'conversations.messages',
+    'conversationId' => '558400000000@s.whatsapp.net',
+    'value' => [
+        'message' => [
+            'key' => ['id' => 'HISTORY_ID', 'fromMe' => false],
+            'message' => ['conversation' => 'Olá'],
+        ],
+        'msgOrderId' => 10,
+    ],
+];
+// Depois das mensagens dessa conversa: metadados sem a lista de mensagens.
+['kind' => 'conversations', 'value' => ['id' => '558400000000@s.whatsapp.net']];
+// Outros exemplos: pushnames, inlineContacts, statusV3Messages, globalSettings.
+```
+
+O segundo argumento contém `id`, `syncType`, `chunkOrder` e `progress` quando
+disponíveis. `id` é o ID do portador autenticado, estável nas tentativas do mesmo
+bloco. Importe somente dados confiáveis ao chamar diretamente
+`HistoryService::ingest()`/`ingestCompressed()`; nesses métodos, `notification.id`
+pode fornecer o identificador ou será usado SHA-256 do protobuf descompactado.
+Separe os dados por conta. O mesmo conteúdo pode aparecer em blocos diferentes;
+deduplique mensagens também por sua chave exata, incluindo chat, participante e
+`fromMe`, preservando PN/LID.
+
+O download usa streams e arquivos temporários privados, valida MAC/hashes da mídia
+e verifica completamente a compressão antes de chamar `item`. A leitura protobuf
+não acumula a lista de mensagens da conversa: uma conversa pode ultrapassar
+16 MiB no total, respeitando os limites do bloco, de cada registro e do cabeçalho.
+Há limite global de um milhão de campos estruturais. O consumo de RAM depende do
+maior registro/cabeçalho e do próprio consumidor; disco temporário e o tamanho
+do bloco continuam necessários. Esse caminho faz mais de uma passagem pelo
+spool para validar metadados e aplicar as projeções.
+
+Os callbacks são síncronos: o próximo item só é lido depois que `item` retorna.
+Isso aplica controle de fluxo, mas um callback lento também pausa o loop da
+sessão. Não envie mensagens, faça consultas ou reentre na importação a partir
+desses callbacks. Encaminhe comandos para o loop externo e mantenha o tempo de
+cada callback limitado.
+
+Os itens são provisórios até `commit`. Falhas de parsing, persistência ou do
+consumidor chamam `abort`, preservam a tarefa e impedem o recibo de confirmação.
+Uma exceção em `abort` não substitui a causa original. A aplicação deve descartar
+o staging incompleto. `commit` recebe também as contagens do bloco, roda depois
+da transação das projeções locais e precisa retornar com sucesso antes do
+checkpoint e do recibo `hist_sync`. Falha no recibo após esse checkpoint não
+reentrega os itens ao sink.
+
+O banco do SDK e o banco externo não compartilham uma transação: pode haver
+repetição após falha ou queda entre o commit externo e o checkpoint local.
+`item` e `commit` precisam tolerar replay. Uma falha de commit externo pode
+deixar projeções locais já gravadas; elas serão reaplicadas de forma idempotente.
+Ao parar/reconectar, o importador antigo não pode confirmar o bloco ou enviar
+recibos pela conexão substituta. Se `commit` retornou antes do encerramento,
+o SDK não chama `abort` para desfazer dados externos já publicados.
+
+O sink é configuração privada do processo. Registros podem incluir texto,
+identificadores e material criptográfico: proteja o armazenamento e não os
+publique em logs, webhooks ou ferramentas MCP. Não houve expansão automática
+da allowlist MCP. Os testes locais cobrem integridade, limites, falhas, replay e
+cancelamento; não demonstram recebimento de histórico de um aparelho real.
 
 Para solicitar mensagens anteriores, informe a mensagem mais antiga que já está na tela:
 

@@ -117,7 +117,7 @@ Salve como `worker.php` e execute `php worker.php`. Mantenha `storage` fora da r
 | Grupos e comunidades | Administração, participantes, convites e configurações | [Serviços](docs/SERVICOS.md) · [Comunidades](docs/COMUNIDADES.md) |
 | Business | Perfil comercial, catálogo, produtos e ferramentas de negócio | [Serviços](docs/SERVICOS.md) |
 | Status e canais | Publicações, consultas, interações e gerenciamento | [Status](docs/STATUS.md) · [Canais](docs/CANAIS.md) |
-| Persistência | SQLite e backends configuráveis para estado e histórico | [Armazenamento](docs/STORES.md) |
+| Persistência | SQLite e backends configuráveis; history.sink incremental para histórico externo com commit/abort | [Armazenamento](docs/STORES.md) · [Sink de histórico](docs/HISTORICO.md#consumir-registros-com-historysink) |
 | Extensões | Formulários, agendamentos, plugins, MCP e chamadas opcionais | [Formulários](docs/FORMULARIOS.md) · [Agendamentos](docs/AGENDAMENTOS.md) · [MCP](docs/MCP-WAM.md) · [VoIP](docs/VOIP.md) |
 
 ## Uma biblioteca, várias sessões

@@ -40,7 +40,8 @@ Fachadas e uploads pertencem à conexão de origem; após reconectar, obtenha os
 - [Comunidades](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/COMUNIDADES.md): comunidade, membros e subgrupos.
 - [Status](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/STATUS.md): publicações, audiência, respostas e leitura.
 - [Canais](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/CANAIS.md): serviço channels/newsletter.
-- [Histórico](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/HISTORICO.md): importação assíncrona e consultas locais.
+- [Histórico](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/HISTORICO.md): importação assíncrona, consultas locais e history.sink incremental com commit/abort, controle de fluxo e persistência externa opcional.
+- [Exemplo de history.sink](https://github.com/mmhospedagem/mvo-whats-php/blob/main/examples/history-sink.php): staging SQLite privado, confirmação idempotente e retomada; configurar historySink/historyPersist antes de conectar, sem reentrar no SDK pelos callbacks.
 - [App-state](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/APPSTATE.md): sincronização autenticada de conversas e configurações.
 - [Agendamentos](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/AGENDAMENTOS.md): publicação local persistente.
 

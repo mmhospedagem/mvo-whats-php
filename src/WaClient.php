@@ -136,6 +136,8 @@ final class WaClient
      * @param bool $markOnlineOnConnect Announce available after each authenticated login; false preserves manual presence control.
      * @param callable():float|null $wallClock Unix seconds for durable schedules and timestamped state; independent of clock deadlines.
      * @param bool $historyRequireFullSync Request full history in pairing DeviceProps; does not change an already-linked session.
+     * @param \MVO\History\HistorySyncSink|null $historySink Trusted in-process consumer of authenticated HistorySync records.
+     * @param bool $historyPersist Keep bulk sync projections locally; false requires a sink and retains protocol state.
      */
     public function __construct(
         public readonly string $sessionId = 'default',
@@ -162,7 +164,10 @@ final class WaClient
         private bool $markOnlineOnConnect = false,
         ?callable $wallClock = null,
         private readonly bool $historyRequireFullSync = false,
+        private readonly ?\MVO\History\HistorySyncSink $historySink = null,
+        private readonly bool $historyPersist = true,
     ) {
+        if (!$historyPersist && $historySink===null) throw new \InvalidArgumentException('Disabling history persistence requires a history sink');
         WaVersion::validate($version);
         if (!is_finite($reconnectMinSeconds) || !is_finite($reconnectMaxSeconds) || $reconnectMinSeconds <= 0 || $reconnectMaxSeconds < $reconnectMinSeconds) throw new \InvalidArgumentException('Invalid reconnect limits');
         if ($mediaMaxBytes<1 || $mediaMaxBytes>PHP_INT_MAX-1024) throw new \InvalidArgumentException('Invalid media size limit');
@@ -1026,6 +1031,8 @@ final class WaClient
                 $this->mediaTransfer,
                 $poll,
                 function(string $to)use($generation):string{$this->assertConnection($generation);$resolved=$this->resolveRecipient($to);$this->assertConnection($generation);return $resolved;},
+                $this->historySink,
+                $this->historyPersist,
             );
             $this->messages->setGroupStatusGuard(function()use($generation):void{$this->assertConnection($generation);($this->groupStatusGuard)?->__invoke();$this->assertConnection($generation);});
             $this->newsletterInbox=new NewsletterInbox($signalStore,$this->messages->history()->store,function(string $event,array $payload)use($generation):void { if($generation===$this->connectionGeneration)$this->emit($event,$payload); });
