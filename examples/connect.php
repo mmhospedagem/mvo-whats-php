@@ -7,7 +7,7 @@ use MVO\WaClient;
 use MVO\Console\PairingDisplay;
 use MVO\Console\CommandQueue;
 
-$options = getopt('', ['mode:','session:','phone:','timeout:','version:','verbose','no-terminal','to:','text:','text-file:','exit-after-send']);
+$options = getopt('', ['mode:','session:','phone:','timeout:','version:','verbose','no-terminal','full-history','to:','text:','text-file:','exit-after-send']);
 $mode = $options['mode'] ?? 'qr';
 if (!in_array($mode,['qr','code'],true)) { fwrite(STDERR,"Use --mode=qr ou --mode=code\n"); exit(2); }
 $phone = $options['phone'] ?? null;
@@ -23,7 +23,8 @@ $sendRequested=$to!==null || $text!==null || isset($options['exit-after-send']);
 if ($sendRequested && (!is_string($to) || $to==='' || !is_string($text) || trim($text)==='')) {
     fwrite(STDERR,"Para enviar, informe --to=NUMERO e --text=mensagem (ou --text-file=arquivo).\n"); exit(2);
 }
-$client = new WaClient((string)($options['session'] ?? 'default'),version:(string)($options['version'] ?? WaClient::VERSION));
+$client = new WaClient((string)($options['session'] ?? 'default'),version:(string)($options['version'] ?? WaClient::VERSION),
+    historyRequireFullSync:isset($options['full-history']));
 $commands = new CommandQueue($client->sessionDirectory().'/commands');
 $display = $mode === 'qr' && !isset($options['no-terminal'])
     ? new PairingDisplay(static function(string $output):void { echo $output; fflush(STDOUT); }) : null;

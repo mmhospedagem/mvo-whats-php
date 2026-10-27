@@ -26,7 +26,7 @@ final class IdentityResolutionTest extends TestCase
         $profile=$this->profile(static fn():array=>[self::user($other,'in','22@lid'),self::user($canonical,'in','11@lid','+551188888888')]);
         $result=$profile->getLidsByPhoneNumbers(['+55 (11) 8888-8888',$other]);
         self::assertCount(1,$this->queries);$usync=$this->queries[0]->child('usync');self::assertNotNull($usync->child('query')->child('contact'));self::assertNotNull($usync->child('query')->child('lid'));
-        self::assertSame(['queriedJid'=>$query,'phoneJid'=>$canonical,'lidJid'=>'11@lid','exists'=>true,'invalid'=>false,'jid'=>'11@lid','pn'=>$canonical,'lid'=>'11@lid'],$result[0]);
+        self::assertSame(['queriedJid'=>$query,'phoneJid'=>$canonical,'lidJid'=>'11@lid','exists'=>true,'invalid'=>false,'jid'=>'11@lid','pn'=>$canonical,'lid'=>'11@lid','status'=>'in'],$result[0]);
         self::assertSame($other,$result[1]['queriedJid']);self::assertSame('22@lid',$result[1]['lidJid']);
         $identities=new IdentityService($this->store);self::assertSame('11@lid',$identities->resolveLid($query));self::assertSame('11@lid',$identities->resolveLid($canonical));self::assertSame($canonical,$identities->resolvePhone('11@lid'));
     }

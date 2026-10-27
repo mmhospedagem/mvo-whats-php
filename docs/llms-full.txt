@@ -12,6 +12,38 @@ As extensões Facebook da branch de desenvolvimento para gerenciamento, fotos/v�
 
 ## Escolha a integração WhatsApp
 
+### Pareamento, histórico inicial e consulta PN/LID
+
+O construtor aceita `historyRequireFullSync: true`, por exemplo
+`new MVO\WaClient(sessionId: 'cliente-demo', authDirectory: __DIR__.'/var/whatsapp-auth', historyRequireFullSync: true)`.
+O padrão é `false`. O campo é enviado em `DeviceProps.requireFullSync` durante
+o registro de um novo companion; não altera o login de uma sessão já vinculada
+nem garante a quantidade de histórico que o telefone disponibilizará.
+
+Depois de validar ADV e persistir a identidade, `auth_paired` ainda não significa
+`connected`. O loop mantém a conexão de pareamento até `515`/fechamento
+transitório do servidor; há fallback de 15 segundos para a retomada. `stop()`
+cancela a espera e a geração original não pode substituir uma conexão nova.
+Continue executando `poll()`/`run()`; consultas e envios interrompidos não ganham
+replay por essa recuperação.
+
+Um código de pareamento pendente permanece em RAM no mesmo cliente e pode ser
+registrado novamente na conexão substituta após `pair-device`. O registro usa
+nova troca efêmera, não repete push nem estende os 180 segundos originais.
+Falha emite `auth_code_refresh` com `forceManual=true` e
+`reason=code_reregistration_failed`; solicite outro código pelo loop externo,
+após o callback. Encerrar o cliente descarta a tentativa em memória.
+
+`profile()->getLidsByPhoneNumbers()` retorna por entrada `status=in`, `out`,
+`invalid`, `error` ou `unanswered`, preservando os campos anteriores e
+`exists:?bool`. `in` exige confirmação de contatos; `out` confirma ausência de
+registro; erro ou ausência de veredito mantêm `exists=null`. Um LID sem veredito
+de contatos permanece `unanswered`. O campo opcional `error` contém
+`code`, `text` e/ou `backoffSeconds`, quando disponíveis. Correlacione pelo
+`queriedJid`, respeite o backoff e preserve PN/LID separados. Recusas globais de
+IQ/transporte continuam lançando exceção. A ferramenta MCP existente usa o
+mesmo resultado, sem ampliar a allowlist.
+
 | Objetivo | Integração |
 | --- | --- |
 | Pedir a um assistente que escreva ou revise código PHP | Forneça este guia, as assinaturas em `src/` e o exemplo da funcionalidade. Não exige conexão com WhatsApp. |

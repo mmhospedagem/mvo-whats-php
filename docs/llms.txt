@@ -59,6 +59,9 @@ Fachadas e uploads pertencem à conexão de origem; após reconectar, obtenha os
 
 ## Regras de interpretação
 
+- historyRequireFullSync: true no construtor só altera DeviceProps no novo pareamento, sem garantir o histórico enviado pelo telefone. Após ADV, o loop aguarda 515/fechamento transitório antes de retomar, com fallback de 15 segundos e cancelamento por stop(). Código pendente em RAM pode ser registrado novamente na reconexão, sem estender a validade nem repetir push; falha emite auth_code_refresh com forceManual=true e reason=code_reregistration_failed. Comandos de aplicação não são repetidos.
+- profile()->getLidsByPhoneNumbers() expõe status in/out/invalid/error/unanswered e error opcional com code/text/backoffSeconds. exists continua anulável; LID sem veredito de contatos permanece unanswered. Erros por entrada/lote não significam out; falhas globais de IQ/transporte continuam lançando exceção. O MCP não ganhou ferramentas ou parâmetros.
+
 - O encerramento de uma sessão ativa por stop()/disconnect() é idempotente, inclusive quando um plugin repete a chamada no cleanup. Sem conexão substituta o estado final é stopped; uma nova conexão realmente aberta deve ser preservada.
 
 - Nós, respostas e falhas são vinculados à geração da conexão. Se um callback encerrar/substituir o transporte, a tentativa antiga não pode autenticar, alterar credenciais ou derrubar a nova sessão; consultas interrompidas sinalizam MVO\Transport\SessionRestartRequired sem replay automático. Comandos continuam no loop externo.

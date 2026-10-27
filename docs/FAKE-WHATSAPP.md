@@ -53,6 +53,13 @@ php -c .dev/php.ini examples/fake-whatsapp.php client-code .cache/fake-code
 
 Receber um protobuf no peer falso não prova que o WhatsApp Web exibirá botões daquele conteúdo. O simulador não implementa chamadas/relays, MEX/business/newsletter, todas as operações administrativas de grupo, registro de número móvel, Shortcake ou passkeys. Essas operações precisam de rotas e verificações adicionais.
 
+As fixtures de pareamento também exercitam a espera por `515`/fechamento após
+ADV, o prazo alternativo de 15 segundos, o cancelamento por `stop()` e o
+registro do código pendente no transporte substituto. A suíte confere o prazo
+original do código, a ausência de push repetido e a rejeição de material da
+conexão antiga. Esses ensaios são locais; não representam aprovação de um
+vínculo por um celular real.
+
 ## APIs para cenários
 
 ```php

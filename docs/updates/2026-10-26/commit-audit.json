@@ -1,0 +1,150 @@
+{
+  "reviewDate": "2026-10-27",
+  "upstreamDate": "2026-10-26",
+  "timezone": "America/Sao_Paulo",
+  "selection": "Union of commit date 2026-10-26 in UTC and in America/Sao_Paulo, including two late-evening Brazilian commits dated 2026-10-27 UTC. Complete master history query was paginated.",
+  "sdkBaseCommit": "190b122e95407966da146373a079fad0248268ee",
+  "scope": "Public PHP SDK, local protocol tests, and documentation. No consumer API, production deployment, or operations on real accounts.",
+  "commitCount": 5,
+  "commits": [
+    {
+      "sha": "259cfc66ecaad53b186378d3efbe3dfb07eead40",
+      "url": "https://github.com/vinikjkkj/zapo/commit/259cfc66ecaad53b186378d3efbe3dfb07eead40",
+      "title": "fix(auth): wait for the server to restart the connection after pairing (#328)",
+      "committedAt": "2026-10-27T01:57:47Z",
+      "saoPauloDay": "2026-10-26",
+      "decision": "implemented",
+      "changes": [
+        "Wait for post-ADV server restart by 515 or transient close; bounded 15-second fallback; stop and replacement connections retain lifecycle ownership.",
+        "The shared read/query path enforces the 15-second deadline during a pending IQ and rejects late results before public node events or correlation."
+      ],
+      "phpFiles": [
+        "src/Auth/PairingFlow.php",
+        "src/WaClient.php"
+      ],
+      "tests": [
+        "WaClientPairingRecoveryTest",
+        "FakeWaClientPairingTest"
+      ]
+    },
+    {
+      "sha": "695984c93344ce49254287d6d8d749a6ecf262cf",
+      "url": "https://github.com/vinikjkkj/zapo/commit/695984c93344ce49254287d6d8d749a6ecf262cf",
+      "title": "fix(auth): register a pending pairing code again after a reconnect (#327)",
+      "committedAt": "2026-10-27T00:37:34Z",
+      "saoPauloDay": "2026-10-26",
+      "decision": "implemented",
+      "changes": [
+        "Re-register a pending pairing code on a replacement connection with new ephemeral exchange, original lifetime, no push, and manual-refresh event on failure."
+      ],
+      "phpFiles": [
+        "src/Auth/PairingFlow.php",
+        "src/WaClient.php"
+      ],
+      "tests": [
+        "WaClientPairingRecoveryTest",
+        "PairingCodeRearmTest"
+      ]
+    },
+    {
+      "sha": "091e58cdc49edf2689a97ddcde0178bbf732bad9",
+      "url": "https://github.com/vinikjkkj/zapo/commit/091e58cdc49edf2689a97ddcde0178bbf732bad9",
+      "title": "fix(client): send history.requireFullSync in the pairing DeviceProps (#326)",
+      "committedAt": "2026-10-26T21:54:44Z",
+      "saoPauloDay": "2026-10-26",
+      "decision": "implemented",
+      "changes": [
+        "historyRequireFullSync constructor option reaches DeviceProps during initial companion registration."
+      ],
+      "phpFiles": [
+        "src/Protocol/ClientPayload.php",
+        "src/WaClient.php"
+      ],
+      "tests": [
+        "ClientPayloadTest",
+        "WaClientPairingRecoveryTest"
+      ]
+    },
+    {
+      "sha": "8b04052bbf21e21b9d7ff74611a88566e72384b3",
+      "url": "https://github.com/vinikjkkj/zapo/commit/8b04052bbf21e21b9d7ff74611a88566e72384b3",
+      "title": "feat(signal): report a status for each phone number in the lid sync result (#325)",
+      "committedAt": "2026-10-26T21:29:53Z",
+      "saoPauloDay": "2026-10-26",
+      "decision": "implemented",
+      "changes": [
+        "Per-phone status in/out/invalid/error/unanswered; optional protocol diagnostics and backoff; exact input correlation and isolation across batches."
+      ],
+      "phpFiles": [
+        "src/Service/ServiceTransport.php",
+        "src/Service/ProfileService.php"
+      ],
+      "tests": [
+        "IdentityLookupStatusTest",
+        "IdentityResolutionTest",
+        "IdentityBookkeepingTest",
+        "ServiceProtocolTest"
+      ]
+    },
+    {
+      "sha": "b65cf9317f14217ca139b3c86a0cde53d9a3ce95",
+      "url": "https://github.com/vinikjkkj/zapo/commit/b65cf9317f14217ca139b3c86a0cde53d9a3ce95",
+      "title": "fix(transport): bind socket events and noise sessions to their connection (#323)",
+      "committedAt": "2026-10-26T00:17:19Z",
+      "saoPauloDay": "2026-10-25",
+      "decision": "already_covered",
+      "changes": [
+        "Connection-owned socket/Noise lifecycle, generation guards and cancellation of superseded queries. JavaScript Promise/Blob waiter details do not have a synchronous PHP equivalent."
+      ],
+      "phpFiles": [
+        "src/WaClient.php",
+        "src/Transport/NoiseSession.php",
+        "src/Transport/WebSocket.php",
+        "src/Mobile/TcpSocket.php"
+      ],
+      "tests": [
+        "WaClientConnectionGenerationTest",
+        "WaClientLifecycleTest",
+        "WaClientServiceGenerationTest",
+        "NoiseSessionTest",
+        "WebSocketTest",
+        "MobileTcpSocketTest"
+      ]
+    }
+  ],
+  "phpCompatibilityChoices": [
+    "PHP uses the named constructor option historyRequireFullSync rather than the TypeScript nested options object.",
+    "exists remains nullable; an LID without an explicit contact verdict remains unanswered. This preserves the documented PHP registration-verdict contract.",
+    "Pending pairing codes are memory-only and retain their original expiration across re-registration."
+  ],
+  "validation": {
+    "status": "passed",
+    "php": "8.4.25",
+    "phpunit": {
+      "command": "php -c <development-ini> vendor/bin/phpunit tests/phpunit --no-progress --do-not-cache-result",
+      "tests": 3291,
+      "assertions": 31405,
+      "skipped": 65,
+      "seconds": 76.578
+    },
+    "phpstan": {
+      "command": "php -c <development-ini> vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress",
+      "result": "passed"
+    },
+    "documentation": {
+      "command": "python -m unittest discover -s tools/tests",
+      "tests": 15,
+      "skipped": 1,
+      "result": "passed"
+    },
+    "independentReview": {
+      "identityStatus": "passed",
+      "pairing": "passed after adding pending-IQ deadline enforcement and regression tests"
+    },
+    "liveAccountsUsed": false,
+    "limitations": [
+      "Skipped cases were reported by the local suite; no claim that those environment-dependent cases executed.",
+      "Local protocol validation does not demonstrate new QR/code pairing or full history availability in real WhatsApp clients."
+    ]
+  }
+}

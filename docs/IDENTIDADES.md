@@ -17,6 +17,8 @@ foreach ($items as $item) {
     $requested = $item['queriedJid'];
     $canonicalPhone = $item['phoneJid'];
     $lid = $item['lidJid'];
+    $status = $item['status'];
+    $error = $item['error'] ?? null;
 }
 ```
 
@@ -27,9 +29,31 @@ foreach ($items as $item) {
 | `lidJid` | LID informado pelo WhatsApp, ou `null`. |
 | `exists` | `true` ou `false` quando confirmado pelo protocolo de contatos; `null` quando o servidor não fornece essa informação. Um LID em cache não comprova registro. |
 | `invalid` | Entrada inválida; as demais entradas do lote continuam sendo consultadas. |
+| `status` | Resultado individual: `in`, `out`, `invalid`, `error` ou `unanswered`, conforme a tabela abaixo. |
+| `error` | Diagnóstico opcional: `code`, `text` e `backoffSeconds`, quando informados. Não contém um resultado de cadastro implícito. |
 | `jid`, `pn`, `lid` | Campos de compatibilidade para integrações existentes. |
 
 Uma correção do número pelo servidor pode alterar `phoneJid`, inclusive para números brasileiros. Use `queriedJid` para localizar a solicitação original; não associe contatos pela posição em uma resposta de rede. A biblioteca só persiste associações confirmadas e rejeita vínculos conflitantes.
+
+| `status` | Interpretação |
+| --- | --- |
+| `in` | O protocolo de contatos confirmou o registro; `exists=true`. Pode haver erro separado na obtenção do LID. |
+| `out` | O protocolo confirmou que o número não está registrado; `exists=false`. |
+| `invalid` | Entrada rejeitada como inválida; `invalid=true`, sem interromper as demais entradas. |
+| `error` | A consulta individual falhou; `exists=null`. Consulte `error` quando disponível. |
+| `unanswered` | O servidor não forneceu veredito de cadastro; `exists=null`. |
+
+Um LID retornado sem confirmação do protocolo de contatos conserva
+`status=unanswered` e `exists=null`. Esse é o contrato conservador da MVO:
+um vínculo de identidade não substitui o veredito de registro. Respostas
+ausentes, erros e números não registrados têm resultados diferentes.
+
+Erros de protocolo `contact`/`lid` são associados às entradas do lote sem
+veredito, preservando os resultados confirmados; o erro próprio de uma entrada
+tem prioridade. Respeite `backoffSeconds` antes de uma nova consulta. Falhas
+globais de IQ ou transporte continuam lançando exceção; elas não são
+convertidas em `out`. A consulta de lote não altera o tratamento de recusas das
+operações de privacidade nem aprova mudanças de identidade Signal.
 
 ## Identificadores nas mensagens recebidas
 

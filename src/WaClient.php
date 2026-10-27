@@ -44,6 +44,10 @@ final class WaClient
     private bool $pairingReady = false;
     private bool $pairingCodeActive = false;
     private bool $pairingRefsExpired = false;
+    /** Monotonic deadline owned by the current post-ADV connection only. */
+    private ?float $pairingRestartAt = null;
+    /** @var array{code:string,phoneJid:string,createdAt:float}|null Memory-only registration input, never credentials. */
+    private ?array $pendingPairingCode = null;
     private bool $reconnectRequested = false;
     private bool $postLoginPending = false;
     private bool $loginReceived = false;
@@ -131,6 +135,7 @@ final class WaClient
      * @param callable(callable(BinaryNode):BinaryNode):MediaTransfer|null $mediaTransferFactory Explicit media transport configuration, e.g. isolated test HTTPS trust.
      * @param bool $markOnlineOnConnect Announce available after each authenticated login; false preserves manual presence control.
      * @param callable():float|null $wallClock Unix seconds for durable schedules and timestamped state; independent of clock deadlines.
+     * @param bool $historyRequireFullSync Request full history in pairing DeviceProps; does not change an already-linked session.
      */
     public function __construct(
         public readonly string $sessionId = 'default',
@@ -156,6 +161,7 @@ final class WaClient
         ?callable $mediaTransferFactory = null,
         private bool $markOnlineOnConnect = false,
         ?callable $wallClock = null,
+        private readonly bool $historyRequireFullSync = false,
     ) {
         WaVersion::validate($version);
         if (!is_finite($reconnectMinSeconds) || !is_finite($reconnectMaxSeconds) || $reconnectMinSeconds <= 0 || $reconnectMaxSeconds < $reconnectMinSeconds) throw new \InvalidArgumentException('Invalid reconnect limits');
@@ -705,11 +711,23 @@ final class WaClient
                 if ($event === 'auth_code') $this->pairingCodeActive = true;
                 if ($event === 'auth_code_expired' || $event === 'auth_code_refresh') $this->pairingCodeActive = false;
                 if ($event === 'auth_qr_expired') $this->pairingRefsExpired = true;
-                if ($event === 'auth_paired') { $this->pairingCodeActive = false; $this->pairingRefsExpired = false; }
+                if ($event === 'auth_paired') {
+                    $this->pairingCodeActive = false; $this->pairingRefsExpired = false;
+                    $restartAt=$this->now()+15.0;
+                    if (!$this->running || $generation!==$this->connectionGeneration) return;
+                    $this->pairingRestartAt=$restartAt;
+                }
                 if ($event === 'auth_paired' || $event === 'auth_qr_expired') { $this->pairingReady = false; $this->removeQr(); }
                 $this->emit($event,$payload);
-            }
+            },clock:$this->wallClock
         );
+        $pendingCode=$this->pendingPairingCode; $this->pendingPairingCode=null;
+        if ($pendingCode!==null && !$this->isRegistered()) {
+            $flow=$this->pairing;
+            $flow->restorePendingCode($pendingCode);
+            if (!$this->running || $generation!==$this->connectionGeneration) return;
+            $this->pairingCodeActive=$flow->pendingCodeForReconnect()!==null;
+        }
         $this->shortcake=new ShortcakeFlow($credentials,$save,$send,$query,
             function(string $event,array $payload)use($generation):void {
                 if ($generation!==$this->connectionGeneration) return;
@@ -721,7 +739,7 @@ final class WaClient
         // The protocol's connectAttemptCount counts successful logins by this
         // client instance. Only lc/loginCounter persists across PHP processes.
         $loginCredentials = [...$this->credentials,'connectAttemptCount'=>$this->successfulConnections];
-        $payload = $this->mobileDeviceInfo!==null ? \MVO\Mobile\ClientPayload::login($loginCredentials,$this->mobileDeviceInfo) : ($this->isRegistered() ? ClientPayload::login($loginCredentials,$this->activeVersion) : ClientPayload::registration($this->credentials,$this->activeVersion));
+        $payload = $this->mobileDeviceInfo!==null ? \MVO\Mobile\ClientPayload::login($loginCredentials,$this->mobileDeviceInfo) : ($this->isRegistered() ? ClientPayload::login($loginCredentials,$this->activeVersion) : ClientPayload::registration($this->credentials,$this->activeVersion,requireFullSync:$this->historyRequireFullSync));
         $key = $this->credentials['noiseKeyPair'];
         $serverStaticKey = $session->start($key['private'],$key['public'],$payload);
         if (!$this->running || $generation!==$this->connectionGeneration) return;
@@ -777,10 +795,12 @@ final class WaClient
         $this->pending[$id] = null; $this->pendingTags[$id] = $node->tag;
         $previousQueryState = $this->queryInFlight; $this->queryInFlight = true; $timedOut=false;
         try {
+            $this->pairingReadTimeout(0,$generation);
             $this->sendNode($node); $deadline = $this->now()+$timeoutSeconds;
             $this->assertConnection($generation);
             while (($this->pending[$id] ?? null) === null) {
                 $now=$this->now();$this->assertConnection($generation);
+                $this->pairingReadTimeout(0,$generation);
                 if ($now >= $deadline) break;
                 if (!$this->running || $this->session === null) throw new SessionRestartRequired('Connection stopped while waiting for response');
                 $this->read(min(0.5,max(0.001,$deadline-$now)));
@@ -790,6 +810,7 @@ final class WaClient
                 $this->assertConnection($generation);
             }
             $this->assertConnection($generation);
+            $this->pairingReadTimeout(0,$generation);
             $result = $this->pending[$id] ?? null;
             if ($result === null) { $timedOut=true; throw new \RuntimeException('WhatsApp IQ timeout: '.$id); }
             if (!$allowErrorResponse && (($result->attrs['type'] ?? '') === 'error' || isset($result->attrs['error']) || $result->child('error') !== null)) {
@@ -1123,8 +1144,9 @@ final class WaClient
         if ($this->session === null) { $this->resume($timeoutSeconds); return; }
         $generation=$this->connectionGeneration;
         try {
-            $this->read($timeoutSeconds);
+            if (!$this->reconnectRequested) $this->read($timeoutSeconds);
             if (!$this->running || $generation!==$this->connectionGeneration) return;
+            if (!$this->queryInFlight && !$this->reconnectRequested) { $this->pairing?->drainPending(); $this->assertConnection($generation); }
             if (!$this->queryInFlight) { $this->shortcake?->drainPending(); $this->assertConnection($generation); $this->offline?->tick(); }
             if (!$this->isRunning() || $generation!==$this->connectionGeneration) return;
             if (!$this->reconnectRequested && $this->postLoginPending && !$this->queryInFlight) {
@@ -1171,7 +1193,7 @@ final class WaClient
             }
             // Noise is already established while waiting for a QR/code or login
             // approval. Keep that socket alive without marking the account online.
-            if (!$this->reconnectRequested && !$this->needsPairingRefresh() && !$this->queryInFlight && $this->session!==null && in_array($this->state,['pairing','authenticating','connected'],true) && $this->now()-$this->lastPing>=20) {
+            if (!$this->reconnectRequested && $this->pairingRestartAt===null && !$this->needsPairingRefresh() && !$this->queryInFlight && $this->session!==null && in_array($this->state,['pairing','authenticating','connected'],true) && $this->now()-$this->lastPing>=20) {
                 $this->assertConnection($generation);
                 $this->query(new BinaryNode('iq',['type'=>'get','xmlns'=>'w:p','to'=>'s.whatsapp.net'],[new BinaryNode('ping')]),15);
                 if (!$this->running || $generation!==$this->connectionGeneration || $this->reconnectRequested || $this->session===null) return;
@@ -1230,16 +1252,33 @@ final class WaClient
         $this->voip?->tick(!$this->queryInFlight);
         return $this->running && $generation===$this->connectionGeneration && $this->state==='connected';
     }
+    /** The pairing wait also bounds nested IQs. A late response cannot settle an interrupted query. */
+    private function pairingReadTimeout(float $timeout,int $generation):float {
+        if ($this->pairingRestartAt===null) return $timeout;
+        $remaining=$this->pairingRestartAt-$this->now();
+        $this->assertConnection($generation);
+        if ($remaining<=0) {
+            // The outer poll owns the single 515 recovery, just as when the
+            // server requests a restart while an IQ is pending. No replay.
+            $this->reconnectRequested=true;
+            throw new SessionRestartRequired('Pairing restart wait expired while awaiting the server');
+        }
+        return min($timeout,$remaining);
+    }
     private function read(float $timeout): void {
         $generation=$this->connectionGeneration;$session=$this->session;
+        $timeout=$this->pairingReadTimeout($timeout,$generation);
         foreach($this->voip?->getCalls()??[] as $call)if(in_array($call['state'],['connecting','connected'],true)){$timeout=min($timeout,0.01);break;}
         // Pairing expiration uses wall-clock timestamps; lifecycle deadlines use monotonic time.
-        $this->pairing?->tick(microtime(true));
+        $this->pairing?->tick(($this->wallClock)());
         if ($generation!==$this->connectionGeneration) return;
         $this->shortcake?->tick();
         if ($generation!==$this->connectionGeneration) return;
+        $timeout=$this->pairingReadTimeout($timeout,$generation);
         $node = $session?->receiveNode($timeout);
-        if ($node === null || $generation!==$this->connectionGeneration) return;
+        if ($generation!==$this->connectionGeneration) return;
+        $this->pairingReadTimeout(0,$generation);
+        if ($node === null) return;
         // Authentication material stays on the internal query path. Public node
         // listeners, filters and business events receive a redacted projection.
         if($node->tag==='notification')$this->businessFormsAuthentication?->ingestServerNotification($node);
@@ -1263,6 +1302,7 @@ final class WaClient
             if (!$this->isRegistered()) throw new \RuntimeException('Server login success without a verified pairing identity');
             if ($this->loginReceived) return;
             $this->loginReceived = true;
+            $this->pairingRestartAt = null;
             $this->successfulConnections++;
             $this->credentials['loginCounter'] = ($this->credentials['loginCounter'] ?? 0)+1;
             $this->credentials['meLid'] = $node->attrs['lid'] ?? $this->credentials['meLid'];
@@ -1374,9 +1414,16 @@ final class WaClient
     /** Returns true when the failure is scheduled for automatic recovery. */
     private function handleFailure(\Throwable $error): bool {
         $generation=$this->connectionGeneration;
+        // The registration connection belongs to the server until its 515,
+        // close, or the bounded wait expires. Never reinterpret an explicit
+        // rejection/revocation as a successful pairing restart.
+        if ($this->pairingRestartAt!==null && $this->isRegistered() && !$this->loginReceived && $this->isTransient($error)) {
+            $error=new ConnectionFailure('WhatsApp closed the registration connection after pairing','515',true);
+            $this->reconnectAttempt=0;
+        }
         if ($error instanceof ConnectionFailure && $error->serverCode==='405' && !$error->revoked && $this->mobileDeviceInfo===null && !$this->versionRefreshed && $this->autoReconnect && $this->running) {
             $this->versionRefreshed=true;
-            $this->closeTransport();++$generation;
+            $this->closeTransport(true);++$generation;
             if ($generation!==$this->connectionGeneration) return true;
             $this->state('reconnecting');
             if(!$this->running || $generation!==$this->connectionGeneration)return true;
@@ -1402,7 +1449,7 @@ final class WaClient
         $retry = $this->autoReconnect && $this->running && $this->isTransient($error);
         $immediate = $error instanceof ConnectionFailure && $error->serverCode === '515' && $this->reconnectAttempt === 0;
         $revoked = $error instanceof ConnectionFailure && $error->revoked;
-        $this->closeTransport();++$generation;
+        $this->closeTransport($retry);++$generation;
         if ($generation!==$this->connectionGeneration) return true;
         if ($revoked && $this->credentials !== []) {
             $this->credentials['revoked'] = true;
@@ -1453,7 +1500,9 @@ final class WaClient
     }
     private function removeQr(): void { $path = $this->store->directory.'/qr.svg'; if (is_file($path)) unlink($path); }
     /** Close only the socket; retries retain the exclusive directory lock. */
-    private function closeTransport(): void {
+    private function closeTransport(bool $preservePairingCode=false): void {
+        $pendingCode=$preservePairingCode && !$this->isRegistered()
+            ? ($this->pairing?->pendingCodeForReconnect() ?? $this->pendingPairingCode) : null;
         ++$this->connectionGeneration;
         // Detach every old resource before close callbacks may open a new login.
         $session=$this->session;$voip=$this->voip;$pairing=$this->pairing;$messages=$this->messages;
@@ -1469,6 +1518,7 @@ final class WaClient
         $this->abprops=null;$this->maintenancePending=false;
         $this->pending = []; $this->pendingTags = []; $this->queryInFlight=false;
         $this->postLoginPending = false; $this->pairingReady = false; $this->pairingCodeActive = false; $this->pairingRefsExpired = false; $this->reconnectRequested = false;
+        $this->pairingRestartAt=null; $this->pendingPairingCode=$pendingCode;
         $this->connectedAt = null;
         if ($this->store->ownsLock()) $this->removeQr();
         $pairing?->clear();$shortcake?->clear();$offline?->reset();$authentication?->invalidate();$messages?->close();

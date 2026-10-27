@@ -4,6 +4,7 @@ namespace MVO\Service;
 use MVO\Protocol\BinaryNode;
 use MVO\AppState\AppStateService;
 
+/** @phpstan-import-type LidSyncResult from ServiceTransport */
 final class ProfileService
 {
     /** @var \Closure():AppStateService|null */
@@ -117,7 +118,8 @@ final class ProfileService
     public function getAboutStatus(string $jid): ?string { ServiceTransport::jid($jid); return $this->mex->run('FetchAboutStatus',['user'=>['user_id'=>explode('@',$jid)[0]]])['xwa2_users_updates_since'][0]['updates'][0]['text'] ?? null; }
     /**
      * @param list<string> $numbers
-     * @return list<array{queriedJid:string,phoneJid:?string,lidJid:?string,exists:?bool,invalid:bool,jid:?string,pn:?string,lid:?string}> */
+     * `status` distinguishes a confirmed absence from an unanswered/error lookup.
+     * @return list<LidSyncResult> */
     public function getLidsByPhoneNumbers(array $numbers): array { return $this->transport->userPairs($numbers); }
     /**
      * @param list<string> $jids

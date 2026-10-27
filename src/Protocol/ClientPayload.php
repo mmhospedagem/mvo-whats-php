@@ -9,7 +9,7 @@ use MVO\Crypto\Crypto;
 final class ClientPayload
 {
     /** @param array<string,mixed> $credentials */
-    public static function registration(array $credentials, string $version, string $browser = 'CHROME', string $os = 'Windows'): string
+    public static function registration(array $credentials, string $version, string $browser = 'CHROME', string $os = 'Windows', bool $requireFullSync = false): string
     {
         $registrationId = self::integer($credentials['registrationId'] ?? null, 1, 65535, 'registrationId');
         $identity = $credentials['identityKeyPair'] ?? null;
@@ -22,7 +22,7 @@ final class ClientPayload
         $pairing = self::encode([
             1 => pack('N', $registrationId), 2 => "\x05", 3 => $identityPublic,
             4 => substr(pack('N', $signedId), 1), 5 => $signedPublic, 6 => $signature,
-            7 => md5($version, true), 8 => self::deviceProps($browser, $os),
+            7 => md5($version, true), 8 => self::deviceProps($browser, $os, $requireFullSync),
         ]);
         return self::encode(self::common($version, false) + [19 => $pairing]);
     }
@@ -46,14 +46,14 @@ final class ClientPayload
     }
 
     /** Device metadata used both for Noise registration and link-code requests. */
-    public static function deviceProps(string $browser = 'CHROME', string $os = 'Windows'): string
+    public static function deviceProps(string $browser = 'CHROME', string $os = 'Windows', bool $requireFullSync = false): string
     {
         $platform = ['CHROME' => 1, 'FIREFOX' => 2, 'IE' => 3, 'OPERA' => 4, 'SAFARI' => 5,
             'EDGE' => 6, 'DESKTOP' => 7, 'ELECTRON' => 7, 'IPAD' => 8, 'ANDROID_TABLET' => 9,
             'ANDROID TABLET' => 9, 'OHANA' => 10, 'ALOHA' => 11, 'CATALINA' => 12][strtoupper(trim($browser))] ?? 0;
         $history = [3 => 114149, 4 => 1, 6 => 1, 7 => 1, 8 => 1, 9 => 1, 10 => 1,
             11 => 1, 12 => 1, 14 => 1, 15 => 1, 19 => 60, 21 => 1, 22 => 1];
-        return self::encode([1 => $os, 3 => $platform, 4 => 0, 5 => self::encode($history)]);
+        return self::encode([1 => $os, 3 => $platform, 4 => $requireFullSync ? 1 : 0, 5 => self::encode($history)]);
     }
 
     /** @return array<int,int|string> */

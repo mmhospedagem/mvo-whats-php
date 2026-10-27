@@ -19,6 +19,11 @@ final class PairingFlow
     /** @var array{code:string,phoneJid:string,ref:string,createdAt:float,ephemeral:array{private:string,public:string},attempts:int,finished:bool}|null */
     private ?array $session = null;
     private bool $pairSuccessInFlight = false;
+    /** @var array{code:string,phoneJid:string,createdAt:float}|null */
+    private ?array $pendingCode = null;
+    private bool $rearmPending = false;
+    private bool $rearmInFlight = false;
+    private int $operationGeneration = 0;
 
     /**
      * @param \Closure():array<string,mixed> $getCredentials
@@ -35,23 +40,87 @@ final class PairingFlow
         private readonly \Closure $emit,
         private readonly string $platform = '1',
         private readonly string $display = 'Chrome (Windows)',
+        private readonly ?\Closure $clock = null,
     ) {}
 
     public function clear(): void
     {
+        ++$this->operationGeneration;
         $this->qrRefs = [];
         $this->qrIndex = 0;
         $this->qrDeadline = 0;
         $this->session = null;
+        $this->pendingCode = null;
+        $this->rearmPending = false;
     }
 
     public function tick(float $now): void
     {
         if ($this->qrDeadline > 0 && $now >= $this->qrDeadline) $this->rotateQr($now);
-        if ($this->session !== null && $now - $this->session['createdAt'] > 180) {
+        $active = $this->session ?? $this->pendingCode;
+        if ($active !== null && $now - $active['createdAt'] > 180) {
+            ++$this->operationGeneration;
             $this->session = null;
+            $this->pendingCode = null;
+            $this->rearmPending = false;
             ($this->emit)('auth_code_expired', []);
         }
+    }
+
+    /** @internal Memory-only input for automatic reconnect; no old ref or private ephemeral key.
+     * @return array{code:string,phoneJid:string,createdAt:float}|null */
+    public function pendingCodeForReconnect(): ?array
+    {
+        $active = $this->session ?? $this->pendingCode;
+        if ($active === null) return null;
+        return ['code'=>$active['code'], 'phoneJid'=>$active['phoneJid'], 'createdAt'=>$active['createdAt']];
+    }
+
+    /** @internal Restore only the latest code in the same client lifecycle; never persist this record.
+     * @param array{code:string,phoneJid:string,createdAt:float} $code */
+    public function restorePendingCode(array $code): void
+    {
+        $generation=$this->operationGeneration;
+        $now=$this->now();
+        if ($generation!==$this->operationGeneration || (($this->getCredentials)()['registered'] ?? false)) return;
+        $code['code'] = PairingCodeCrypto::normalizeCode($code['code']);
+        if (preg_match('/^[1-9][0-9]{6,14}@s\.whatsapp\.net$/D', $code['phoneJid']) !== 1 || !is_finite($code['createdAt'])) throw new \InvalidArgumentException('Invalid pending pairing code');
+        if ($code['createdAt'] > $now || $now - $code['createdAt'] > 180) return;
+        ++$this->operationGeneration;
+        $this->session = null;
+        $this->pendingCode = $code;
+    }
+
+    /** Register a pending code only from the outer loop, after the new pair-device callback returns. */
+    public function drainPending(): void
+    {
+        if (!$this->rearmPending || $this->pendingCode === null || $this->rearmInFlight) return;
+        $this->tick($this->now());
+        if ($this->pendingCode === null) return;
+        $previous = $this->pendingCode;
+        $generation = ++$this->operationGeneration;
+        $this->rearmPending = false;
+        $this->rearmInFlight = true;
+        try {
+            // The new QR already carries its ADV secret. Re-registering a code
+            // rotates only the ephemeral exchange, without another push or TTL extension.
+            $hello = PairingCodeCrypto::createHello($previous['code']);
+            $session = $this->sendHello($previous['phoneJid'], $hello, false, $previous['createdAt']);
+            if ($generation !== $this->operationGeneration) return;
+            $this->tick($this->now());
+            if ($generation !== $this->operationGeneration) return;
+            $this->session = $session;
+            $this->pendingCode = null;
+        } catch (\Throwable $error) {
+            if ($generation !== $this->operationGeneration) return;
+            $this->session = null;
+            $this->pendingCode = null;
+            ($this->emit)('auth_code_refresh', ['forceManual'=>true, 'reason'=>'code_reregistration_failed']);
+            return;
+        } finally {
+            $this->rearmInFlight = false;
+        }
+        if ($generation === $this->operationGeneration) ($this->emit)('auth_code_progress', ['stage'=>'code_registered_after_reconnect']);
     }
 
     public function requestCode(string $phoneNumber, ?string $customCode = null): string
@@ -62,10 +131,29 @@ final class PairingFlow
         $digits = preg_replace('/[^0-9]/', '', $phone);
         if ($digits === null || !preg_match('/^[1-9][0-9]{6,14}$/D', $digits)) throw new \InvalidArgumentException('Phone number must have 7-15 digits including country code');
         $hello = PairingCodeCrypto::createHello($customCode);
-        $credentials = $this->rotateAdvSecret();
+        $generation = ++$this->operationGeneration;
+        $this->session = null;
+        $this->pendingCode = null;
+        $this->rearmPending = false;
+        $this->rotateAdvSecret();
         $phoneJid = $digits . '@s.whatsapp.net';
+        $session = $this->sendHello($phoneJid, $hello, true, $this->now());
+        if ($generation !== $this->operationGeneration) throw new \MVO\Transport\SessionRestartRequired('Pairing code request was superseded');
+        $this->session = $session;
+        // The fresh ADV secret invalidates any previously displayed QR.
+        if ($this->qrIndex > 0) $this->emitQr($this->qrRefs[$this->qrIndex - 1], $this->now());
+        if ($generation !== $this->operationGeneration) throw new \MVO\Transport\SessionRestartRequired('Pairing code request was superseded');
+        ($this->emit)('auth_code', ['code' => $hello['pairingCode']]);
+        return $hello['pairingCode'];
+    }
+
+    /** @param array{pairingCode:string,companionEphemeralKeyPair:array{private:string,public:string},wrappedCompanionEphemeralPub:string} $hello
+     * @return array{code:string,phoneJid:string,ref:string,createdAt:float,ephemeral:array{private:string,public:string},attempts:int,finished:bool} */
+    private function sendHello(string $phoneJid, array $hello, bool $push, float $createdAt): array
+    {
+        $credentials = ($this->getCredentials)();
         $response = ($this->query)(new BinaryNode('iq', ['to' => 's.whatsapp.net', 'type' => 'set', 'xmlns' => 'md'], [
-            new BinaryNode('link_code_companion_reg', ['jid' => $phoneJid, 'stage' => 'companion_hello', 'should_show_push_notification' => 'true'], [
+            new BinaryNode('link_code_companion_reg', ['jid' => $phoneJid, 'stage' => 'companion_hello', 'should_show_push_notification' => $push ? 'true' : 'false'], [
                 new BinaryNode('link_code_pairing_wrapped_companion_ephemeral_pub', [], $hello['wrappedCompanionEphemeralPub']),
                 new BinaryNode('companion_server_auth_key_pub', [], $credentials['noiseKeyPair']['public']),
                 new BinaryNode('companion_platform_id', [], $this->platform),
@@ -75,15 +163,11 @@ final class PairingFlow
         ]), 30.0);
         self::assertResult($response, 'companion_hello');
         $ref = self::content($response->child('link_code_companion_reg')?->child('link_code_pairing_ref'), 'companion hello pairing ref');
-        $this->session = [
+        return [
             'code' => $hello['pairingCode'], 'phoneJid' => $phoneJid, 'ref' => $ref,
-            'createdAt' => microtime(true), 'ephemeral' => $hello['companionEphemeralKeyPair'],
+            'createdAt' => $createdAt, 'ephemeral' => $hello['companionEphemeralKeyPair'],
             'attempts' => 0, 'finished' => false,
         ];
-        // The fresh ADV secret invalidates any previously displayed QR.
-        if ($this->qrIndex > 0) $this->emitQr($this->qrRefs[$this->qrIndex - 1], microtime(true));
-        ($this->emit)('auth_code', ['code' => $hello['pairingCode']]);
-        return $hello['pairingCode'];
     }
 
     public function handleNode(BinaryNode $node): bool
@@ -95,11 +179,16 @@ final class PairingFlow
                     if ($ref->tag === 'ref') $refs[] = self::content($ref, 'QR ref');
                 }
                 if ($refs === []) throw new \UnexpectedValueException('pair-device has no QR refs');
+                $pendingCode = $this->pendingCodeForReconnect();
+                ++$this->operationGeneration;
+                $this->session = null;
+                $this->pendingCode = $pendingCode;
+                $this->rearmPending = $pendingCode !== null;
                 $this->rotateAdvSecret();
                 ($this->sendNode)(self::iqResponse($node));
                 $this->qrRefs = $refs;
                 $this->qrIndex = 0;
-                $this->rotateQr(microtime(true));
+                $this->rotateQr($this->now());
                 return true;
             }
             if (($pair = $node->child('pair-success')) !== null) {
@@ -117,7 +206,7 @@ final class PairingFlow
         if ($node->child('companion_reg_refresh') !== null || $node->child('pair-device-rotate-qr') !== null) {
             $this->rotateAdvSecret();
             $this->ack($node, 'companion_reg_refresh');
-            if ($this->qrIndex > 0) $this->emitQr($this->qrRefs[$this->qrIndex - 1], microtime(true));
+            if ($this->qrIndex > 0) $this->emitQr($this->qrRefs[$this->qrIndex - 1], $this->now());
             return true;
         }
         $link = $node->child('link_code_companion_reg');
@@ -139,7 +228,7 @@ final class PairingFlow
         if ($this->session === null) return;
         $ref = self::content($link->child('link_code_pairing_ref'), 'primary_hello ref');
         if (!hash_equals($this->session['ref'], $ref)) return;
-        if (microtime(true) - $this->session['createdAt'] > 180) {
+        if ($this->now() - $this->session['createdAt'] > 180) {
             $this->session = null;
             throw new \UnexpectedValueException('Pairing code has expired');
         }
@@ -286,6 +375,8 @@ final class PairingFlow
         if (isset($node->attrs['id'])) $attrs['id'] = $node->attrs['id'];
         ($this->sendNode)(new BinaryNode('ack', $attrs));
     }
+
+    private function now(): float { return $this->clock === null ? microtime(true) : ($this->clock)(); }
 
     /** @param list<BinaryNode>|null $content */
     private static function iqResponse(BinaryNode $request, string $type = 'result', ?array $content = null): BinaryNode

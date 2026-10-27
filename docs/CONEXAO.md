@@ -96,6 +96,15 @@ Esse código é usado no fluxo de vinculação de aparelho. Não é o SMS de reg
 
 O código expira em até 180 segundos; o fluxo rejeita referências divergentes e mais de três tentativas de `primary_hello`. Execute novamente para solicitar outro código. Uma sessão já vinculada usa as credenciais salvas e não solicita novo código.
 
+Se o transporte cair durante um pareamento por código e a conexão for retomada
+pelo mesmo cliente, a biblioteca registra novamente o código pendente quando
+recebe o novo `pair-device`. O código permanece em RAM e conserva o prazo
+original; o registro usa outra troca efêmera e não repete a notificação push.
+Se o registro falhar, `auth_code_refresh` informa `forceManual=true` e
+`reason=code_reregistration_failed`. Solicite um novo código pelo loop externo
+da aplicação, após o retorno dos callbacks. `stop()`/`disconnect()` descartam
+essa tentativa; ela não é restaurada depois de encerrar o processo.
+
 ## Reutilizar a sessão
 
 Execute novamente o comando com o mesmo `--session`. As chaves e a identidade vinculada são carregadas de `.auth/<sessao>/state.sqlite` e o cliente tenta login autenticado. Existe um lock por sessão; um segundo processo concorrente é rejeitado sem remover o QR do primeiro.
@@ -138,7 +147,18 @@ try {
 
 `connect()` estabelece o transporte autenticado. `run()` mantém o loop PHP ativo; `poll(0.5)` permite integrá-lo ao seu próprio loop. O cliente usa I/O bloqueante com timeouts. Execute como processo CLI; não mantenha um request PHP-FPM/Apache esperando o usuário escanear.
 
-Estados: `connecting`, `pairing` ou `authenticating`, `reconnecting`, `connected` e `disconnected`. `auth_paired` significa que HMAC e assinatura da identidade do vínculo foram verificados e persistidos. `connected` somente é emitido após `success` do servidor e resposta ao IQ `active`. O erro `515` após pareamento provoca reconexão usando a identidade salva, inclusive quando chega durante uma consulta reentrante. Consultas antigas não são repetidas na nova sessão.
+Estados: `connecting`, `pairing` ou `authenticating`, `reconnecting`, `connected` e `disconnected`. `auth_paired` significa que HMAC e assinatura da identidade do vínculo foram verificados e persistidos. `connected` somente é emitido após `success` do servidor e resposta ao IQ `active`.
+
+Depois de confirmar a identidade ADV, a biblioteca mantém a conexão de
+pareamento aberta para o servidor reiniciá-la: `515` ou fechamento transitório
+inicia a retomada com a identidade salva. Se esse sinal não chegar, o loop usa
+um prazo de 15 segundos para iniciar a retomada. `stop()` cancela a espera;
+callbacks e consultas antigos não substituem uma conexão mais nova nem são
+repetidos nela. Continue executando `poll()`/`run()` durante essa etapa.
+
+Para pedir histórico completo durante um novo pareamento, configure
+`historyRequireFullSync: true` no construtor; veja [Histórico](HISTORICO.md).
+Essa configuração não altera uma sessão já vinculada.
 
 Outros eventos: `auth_qr_expired`, `auth_code_expired`, `auth_code_refresh`, `error` e `node`. `node` contém a stanza bruta e pode incluir dados sensíveis; o exemplo `--verbose` registra somente tag, tipo e código.
 

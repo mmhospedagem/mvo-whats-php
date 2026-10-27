@@ -4,6 +4,11 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Pareamento aguarda o reinício solicitado pelo servidor após a confirmação ADV, com retomada por `515`/fechamento transitório, fallback de 15 segundos e cancelamento vinculado ao ciclo de vida da conexão.
+- Código de pareamento pendente é registrado novamente após reconexão no mesmo cliente, sem persistir o código, estender sua validade ou repetir push; falhas solicitam renovação manual pelo evento existente.
+- Construtor aceita `historyRequireFullSync: true` para incluir o pedido de histórico completo nos `DeviceProps` de um novo pareamento. O padrão e o login de sessões existentes são preservados.
+- Consulta PN/LID informa `status` por número e diagnóstico opcional com código, texto e backoff. Ausência de resposta, erro e número não registrado ficam separados; `exists` anulável e os vínculos confirmados continuam preservados.
+
 - Encerramento de chamada finaliza localmente e usa uma escrita, sem espera indevida de 30 segundos por ACK; falha de notificação preserva o estado encerrado e não ganha replay automático.
 
 - Chamadas exigem MLow no perfil automático, sem fallback incompatível para Opus. Sessões expõem disponibilidade do transporte separada da recepção autenticada. Um último frame MLow agrupado é liberado por prazo limitado quando o transporte está pronto, preservando a ausência de replay após erro de escrita.

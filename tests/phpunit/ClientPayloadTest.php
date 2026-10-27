@@ -76,6 +76,17 @@ final class ClientPayloadTest extends TestCase
         self::assertSame(60, self::fields($props[5])[19]);
     }
 
+    public function testFullHistoryRequestIsExplicitAndDefaultsToRecentHistory(): void
+    {
+        foreach ([false, true] as $full) {
+            $payload=self::fields(ClientPayload::registration(self::credentials(),'2.3000.1',requireFullSync:$full));
+            $props=self::fields(self::fields($payload[19])[8]);
+            self::assertSame($full ? 1 : 0,$props[4]);
+            self::assertSame('Windows',$props[1]);
+            self::assertSame(114149,self::fields($props[5])[3]);
+        }
+    }
+
     /** @return iterable<string,array{string}> */
     public static function invalidVersion(): iterable
     {

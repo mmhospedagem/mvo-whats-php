@@ -2,6 +2,32 @@
 
 A biblioteca grava conversas, contatos e mensagens na mesma persistência da sessão. Uma mensagem recebida só entra no histórico depois da autenticação Signal; a gravação participa da transação da ratchet e da caixa de entrada. O envio grava o conteúdo, os destinatários elegíveis e o envelope criptografado antes de usar a rede.
 
+## Histórico inicial no pareamento
+
+Para pedir o histórico completo ao vincular um aparelho novo, configure a opção
+antes de `connect()`:
+
+```php
+$client = new MVO\WaClient(
+    sessionId: 'cliente-demo',
+    authDirectory: __DIR__.'/var/whatsapp-auth',
+    historyRequireFullSync: true,
+);
+```
+
+O padrão é `false`. A opção é serializada em `DeviceProps.requireFullSync` no
+registro do companion. Ela não altera uma sessão já vinculada, não solicita
+novamente o pareamento e não garante que o telefone fornecerá todo o histórico.
+Os arquivos recebidos continuam passando pela importação autenticada e pelos
+limites descritos abaixo. Para buscar mensagens anteriores em uma sessão
+existente, use `requestHistorySync()` com uma referência válida da conversa.
+
+O exemplo de conexão aceita a mesma configuração por `--full-history`:
+
+```sh
+php examples/connect.php --mode=qr --session=cliente-demo --full-history
+```
+
 ```php
 $client->on('history_sync_chunk', function (array $chunk): void {
     echo "Importadas {$chunk['messagesCount']} mensagens\n";

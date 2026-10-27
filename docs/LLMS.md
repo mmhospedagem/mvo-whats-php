@@ -61,6 +61,25 @@ Os registros bloqueados são removidos por uma varredura local limitada (até 16
 
 Fachadas de serviços e uploads também pertencem à conexão original: após reconectar, obtenha o serviço novamente. Um callback que substitui a conexão interrompe a continuação antiga com `SessionRestartRequired`; HTTP já iniciado pode ter ocorrido, sem replay automático. Inscrições de plugins têm ownership por contexto, incluindo `once`; cleanup antigo não remove handlers de outro contexto nem emite seu erro na conexão nova.
 
+No novo pareamento, `historyRequireFullSync: true` no construtor envia
+`DeviceProps.requireFullSync`; o padrão é `false` e o login de uma sessão já
+vinculada não muda. O telefone determina o histórico fornecido. Após confirmar
+ADV e persistir o vínculo, o loop aguarda `515`/fechamento transitório do servidor
+antes de retomar; há fallback de 15 segundos e `stop()` cancela a espera.
+
+Um código de pareamento pendente pode ser registrado novamente após uma queda
+no mesmo cliente. Permanece somente em RAM, conserva a validade original e não
+repete push. Falha emite `auth_code_refresh` com `forceManual=true` e
+`reason=code_reregistration_failed`; peça outro código no loop externo, nunca
+reentrando pelo callback. Isso não repete comandos ou mensagens de aplicação.
+
+`profile()->getLidsByPhoneNumbers()` retorna `status` por entrada: `in`, `out`,
+`invalid`, `error` ou `unanswered`, com `error` opcional
+(`code`, `text`, `backoffSeconds`). `exists` permanece anulável: erro, ausência
+de resposta ou LID sem veredito do protocolo de contatos não significam `out`.
+Erros do lote não apagam entradas confirmadas; recusas globais de IQ/transporte
+continuam sendo exceções. O MCP mantém a ferramenta e os parâmetros existentes.
+
 O loop confirma nós de transporte `<status>` com `ack class="status"`; isso não
 decodifica seu conteúdo nem registra visualização. Com `autoReconnect=true`, um
 erro de stream sem código explícito nem conflito, contendo `<ack class="status">`,

@@ -4,6 +4,23 @@ A conversão partiu do snapshot `caeace8d03cd22f24f224c4063edc537522ef936`, cujo
 
 Estar presente na referência não comprova que um comportamento foi portado. A revisão das implementações PHP, das diferenças encontradas e das regressões está no [registro de atualização por commit](updates/2026-10-14/commit-audit.json).
 
+## Revisão dos commits de 26/10/2026
+
+O [registro desta revisão](updates/2026-10-26/commit-audit.json) relaciona os cinco
+commits publicados em 26/10 na janela UTC/Brasil, os arquivos PHP e os testes
+correspondentes. Quatro mudanças exigiram implementação: histórico completo nos
+`DeviceProps` do pareamento, resultado PN/LID por número, registro do código
+pendente depois de uma reconexão e espera pelo reinício do servidor após ADV.
+O isolamento de socket/Noise já estava coberto pelas correções de geração da
+conexão da MVO.
+
+A validação desta revisão usa testes locais e fixtures de protocolo. Ela não
+comprova novo pareamento em contas reais nem disponibilidade de histórico no
+telefone. O contrato PHP mantém `exists=null` para uma consulta sem veredito de
+contatos, inclusive quando há LID; não transforma essa ausência em número fora
+do WhatsApp. Consulte [Conexão](CONEXAO.md), [Histórico](HISTORICO.md) e
+[Identidades](IDENTIDADES.md) para os contratos públicos.
+
 | Área | Implementação PHP | Evidência / limite |
 |---|---|---|
 | Login e retomada | QR, código, lock, persistência, keepalive, reconexão, XX/IK/XXfallback e routing-info | Retomada real da sessão `default` sem QR após estas mudanças; identidades preservadas |
