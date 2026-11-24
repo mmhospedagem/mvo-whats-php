@@ -46,6 +46,21 @@ final class AuthTest extends TestCase
         self::assertSame('',$jar->headerFor('https://www.messenger.com/'));
         self::assertStringNotContainsString('expired=',$jar->headerFor('https://www.facebook.com/'));
     }
+    public function testCookieFlagsSurvivePrivateSessionPersistenceAndRestore():void
+    {
+        $root=$this->root();
+        $jar=new CookieJar([
+            ['name'=>'c_user','value'=>'123','domain'=>'.facebook.com','httpOnly'=>true,'sameSite'=>'Strict'],
+            ['name'=>'xs','value'=>'SYNTHETIC','domain'=>'.facebook.com','HttpOnly'=>true,'SameSite'=>'Lax'],
+        ]);
+        $store=new SessionStore($root,'demo');$store->acquire();$store->saveCookies($jar);$store->release();unset($store);
+        $restored=(new SessionStore($root,'demo'))->loadCookies();
+        self::assertNotNull($restored);
+        $entries=json_decode($restored->exportPrivate(),true,16,JSON_THROW_ON_ERROR);
+        self::assertTrue($entries[0]['httpOnly']);self::assertSame('Strict',$entries[0]['sameSite']);
+        self::assertTrue($entries[1]['httpOnly']);self::assertSame('Lax',$entries[1]['sameSite']);
+        self::assertSame($jar->headerFor('https://www.facebook.com/'),$restored->headerFor('https://www.facebook.com/'));
+    }
     public function testSameAccountMayHaveDifferentAuthenticationTokensPerSsoDomain():void
     {
         $jar=new CookieJar([

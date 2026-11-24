@@ -45,12 +45,13 @@ final class EventProjector
                 switch($name){
                     case 'insertMessage': case 'upsertMessage':
                         // Upsert offsets corroborated in shipped Meta code; Insert compared to the pinned protocol reference.
-                        $thread=self::id($args[3]??null);$sender=self::id($args[10]??null);$id=$args[8]??null;
-                        if (!is_string($id)||$id===''||strlen($id)>512||!is_string($args[0]??null)) throw new MessengerException('invalid_message_row','Messenger returned an invalid message row');
+                        $thread=self::id($args[3]??null);$sender=self::id($args[10]??null);$id=$args[8]??null;$text=$args[0]??null;
+                        // Native nullable/undefined text does not identify a media subtype.
+                        if (!is_string($id)||$id===''||strlen($id)>512||($text!==null&&!is_string($text))) throw new MessengerException('invalid_message_row','Messenger returned an invalid message row');
                         $payload=['channel'=>'messenger','id'=>$id,'thread_id'=>$thread,'sender_id'=>$sender,'from_me'=>$sender===$this->accountId,
-                            'timestamp_ms'=>self::integer($args[5]??null),'type'=>'text','text'=>$args[0],'unsent'=>($args[17]??false)===true,
+                            'timestamp_ms'=>self::integer($args[5]??null),'type'=>$text===null?'unknown':'text','text'=>$text,'unsent'=>($args[17]??false)===true,
                             'is_admin_message'=>($args[12]??false)===true,'reply_to'=>is_string($args[23]??null)?$args[23]:null,'encrypted'=>false];
-                        $this->append($events,'message',$payload,'message:'.$thread.':'.$id.':'.hash('sha256',json_encode([$args[0],$args[17]??false],JSON_THROW_ON_ERROR)));
+                        $this->append($events,'message',$payload,'message:'.$thread.':'.$id.':'.hash('sha256',json_encode([$text,$args[17]??false],JSON_THROW_ON_ERROR)));
                         break;
                     case 'deleteThenInsertThread':
                         $id=self::id($args[7]??null);$type=self::integer($args[9]??null);

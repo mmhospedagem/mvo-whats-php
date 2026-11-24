@@ -15,6 +15,14 @@ Não use QR, JIDs ou ferramentas MCP WhatsApp como se fossem recursos Facebook. 
 
 As extensões Facebook da branch de desenvolvimento para gerenciamento, fotos/vídeo/álbuns, cargos/moderação, relatórios paginados, inbox Lightspeed e componentes de dispositivo E2EE estão descritas no contexto próprio. As releases Facebook 0.1.0/Messenger 0.1.1 ainda não as incluem. Registro do dispositivo não habilita mensagens E2EE. Nenhuma nova ferramenta foi adicionada ao MCP WhatsApp.
 
+O contexto Facebook separa autenticação Android nativa e a alternativa Web opcional. Somente esta última tem catálogo por `refreshLoginMethods()`/`requestLoginMethod()`. O 406 nativo conserva código/aprovação no mesmo dono; pedidos e testes locais não comprovam entrega real de SMS/e-mail.
+
+Nos eventos Messenger, uma linha sem texto preserva `text=null` e `type=unknown`. Não a trate como texto vazio, mídia decodificada ou mensagem E2EE; consulte o contexto Facebook para os limites dessa projeção.
+
+No checkout de 21/10/2026, `loginAndroid()` autentica somente por endpoints nativos JSON, sem HTML, WebView, browser ou fallback Web. A sequência é POST `/pwd_key_fetch` (`method=GET` no formulário), cifra `#PWD_MSGR`, POST `/auth/login`, continuação 406 por código ou aprovação e GET `/me` sem query/corpo com `Authorization: OAuth <token do usuário>` e friendly name `getMeUser`. O token existe somente em RAM, não é salvo/exposto e não usa `AndroidApplicationProfile::authorize()`. O perfil privado autoriza as chamadas de aplicativo; não é uma chave de integração pública do consumidor.
+
+A rota `/me`/`getMeUser` tem evidência estática no APK; o SDK exige JSON objeto com `id` decimal positivo coerente com UID/cookies/conta vinculada. Esse schema é uma validação por fixtures desta revisão, com teste real próprio ainda pendente; o parser `MCe.BSl` observado retorna `null` e não prova o schema. As autenticações 406 e restaurações reais de 20/10/2026 usavam a verificação Web anterior e não validam a nova etapa `/me` nem entrega de SMS. Em 21/10/2026, um único pedido SMS autorizado teve HTTP 400/erro nativo 3 e estado `rejected`, sem entrega confirmada ou reenvio; a causa exata permanece desconhecida. A confirmação 406 usa `confirmLogin()` ou `checkLoginApproval()`; `requestLoginSms()` é experimental, explícito, uma tentativa e `delivery_confirmed=false`. `methods=[]` não fornece catálogo. O 405 é recusado com `login_native_verification_unsupported` e browser indisponível. A compatibilidade de baixo nível `allowWebCheckpoint: true` e o método separado `login()` são opções Web explícitas, sem fallback pela fachada Android. Bootstrap/inbox/Fanpages continuam Web/DGW e `e2ee_ready=false`. Consulte `docs/facebook/llms-full.txt` e `docs/facebook/AUTENTICACAO-ANDROID.md`; isso não altera o MCP WhatsApp.
+
 ## Integrações WhatsApp
 
 | Objetivo | Integração |
@@ -39,6 +47,12 @@ composer require "mmhospedagem/mvo-whats-php:^1.0"
 
 Carregue `vendor/autoload.php` da aplicação. Não copie classes para outro namespace nem substitua o SDK por um serviço intermediário para executar estes exemplos.
 
+## Convites de grupo e MEX
+
+`group()->queryGroupInviteInfo($code)` indica uma solicitação pendente em `hasPendingMembershipRequest`. `group()->joinGroupViaLink($code)` retorna `status` (`joined` ou `pending`) e `groupJid`. Com `pending`, aguarde aprovação antes de tratar a conta como membro.
+
+`mex()->run()` lê Argo com tipos incluídos para `FetchReachoutTimelock` e `FetchNewChatMessageCappingInfo`. Use `MVO\Service\MexService::registerArgoWireType()` para fornecer o tipo de outra operação.
+
 ## Metadados em envios tipados
 
 `sendMessage()` aceita `messageContextInfo` no conteúdo tipado, incluindo o caminho que prepara upload de mídia. A mesclagem é na raiz de `Message`; campos já gerados pelo builder prevalecem. Não confunda esse envelope com `contextInfo`: citação, menções, encaminhamento e expiração permanecem na submensagem correspondente. Em `raw`, mantenha os metadados dentro de `message`; a opção externa não altera o payload bruto. O agrupador de álbum usa `enc.mediatype=collection`, mantendo o tipo externo de texto.
@@ -48,6 +62,10 @@ No recebimento, SKDM acompanhado somente de metadados é controle interno; conte
 Conflitos de identidade Signal em retries emitem `message_error` com `reason=recipient_retry_failed`, `code=signal_trusted_identity_changed`, `retryStatus=blocked`, `retryable=false`, `retryOutcome=not_executed` e `action=verify_recipient_identity`. O diagnóstico omite JIDs e chaves. O bloqueio persistente é por mensagem/aparelho, sem aceitar a nova chave nem apagar sessões. Não existe aprovação/reset automático. Um retry já preparado com resultado incerto conserva o ciphertext exato, inclusive diante de contador maior; esgotado o limite de quatro tentativas, fica bloqueado com `retryOutcome=unknown`. Isso não comprova entrega nem resolve automaticamente a mudança legítima de confiança.
 
 Os registros bloqueados são removidos por uma varredura local limitada (até 16 por minuto de loop) quando a outbox deixa de existir ou quando o timestamp original da mensagem ultrapassa sete dias. A limpeza não aprova identidades, não retoma envios e não remove ratchets, outbox ou outros pedidos pendentes.
+
+## Mensagens indisponíveis
+
+`message_unavailable` informa placeholders sem conteúdo cifrado. `kind` classifica `bot`, `hosted`, `view_once`, `sender_drop` ou `other`, nessa prioridade para bot/hosted antes do tipo. `sender_drop` e o subtipo `acp_unavailable_fanout` indicam conteúdo de conversa restrita ao celular principal. `type="hosted"` sozinho é `other`. O evento inclui chave, conversa, remetente e horário de roteamento. A confirmação é ACK, inclusive em grupos. Nesta revisão PHP, `resendRequested=false` para todos os tipos.
 
 ## Modelo de execução que o agente precisa respeitar
 
@@ -392,3 +410,15 @@ As fontes da integração MCP são [examples/mcp.php](../examples/mcp.php), [exa
 `terminate($id, $reason)` encerra a chamada local e transmite uma única notificação final, sem abrir uma consulta nem esperar ACK. No encerramento normal, `user_ended` é motivo local e não vai no stanza; durações só são enviadas se houve conexão. Escrita concluída não é `server_ack` nem confirmação do telefone remoto. Se a escrita falhar, o estado permanece encerrado e o erro é propagado; repetir `terminate()` não reenvia. Consumidores devem liberar buffers/capturas também no caminho de erro.
 
 Para chamadas WhatsApp, o engine automático exige MLow/SMPL (`MVO_MLOW_LIBRARY`); libopus comum não é fallback do formato histórico `enc=opus`. Opus fornecido explicitamente continua sendo opção de baixo nível. Mantenha `poll()`/`tick()` e PCM no frame/pacing negociados. `isTransportReady()` nas sessões de mídia informa disponibilidade de escrita, enquanto `isReady()` indica recepção autenticada; nenhum dos dois comprova som. O frame MLow isolado no agrupamento tem deadline de 120 ms e não ganha replay automático após falha de escrita. Meça amostras PCM/tom recebido, não apenas ACK, RTCP ou contadores decoded.
+
+## Meta Business Agent na sessão QR
+
+A revisão de desenvolvimento adiciona `WaClient::businessAgent(): MVO\Service\BusinessAgentService` e `setBusinessAgentGuard(?callable $guard): void`. Use `run(string $operation, array $variables = []): array` no loop externo da sessão conectada. Comece com `run('status')`, `run('knowledge-get')` ou `run('response-settings-get')`; `BusinessAgentService::operations()` lista os 39 nomes curtos e variáveis, e `source()` informa o snapshot fixado de 12/07/2026. Não invente métodos, campos obrigatórios, enums ou objetos internos: os tipos de entrada não foram recuperados. A validação verifica só nomes observados, JSON/profundidade/tamanho; não homologa o payload completo.
+
+HTTPS GraphQL com allowlist explícita e autenticação nativa Business 118/nonce/104. Compartilha token em RAM e cooldown com formulários no mesmo cliente, limpa token e expira fachada ao desconectar. Reobtenha a fachada após reconectar; autorização pode ser retirada entre fases. Não exige token Meta manual. Até 96 segundos de autenticação mais HTTP de 30 segundos, sem retry automático. `supportVerified` marca os contratos com teste remoto registrado no snapshot; não confirma a execução atual nem elegibilidade universal. Resultado `observed` é consulta com raiz esperada, `accepted`/`rejected` exigem `success` booleano, `partial` é confirmação mista e `unknown` exige reconciliação. Só campos nativos selecionados são retornados, preservando null. Contratos locais testados não comprovam aceitação no servidor.
+
+O catálogo cobre consultas, controle por conversa, conhecimento, produtos, regras, leads e configurações recuperadas. Não implementa todos os recursos do produto: criação/exclusão global, integrações OAuth Google, compromissos, checkout e treinamento completo ainda não têm contrato QR verificado. Leia `docs/BUSINESS.md` para alcance e pré-condições; essas chamadas não foram adicionadas à allowlist MCP.
+
+A revisão acrescenta `response-settings-v2-get`, `response-settings-v2-update` e `response-settings-v2-availability`. O fetch V2 tem `kind: mutation` nativo e efeito de leitura, devolvendo `observed`. Pausa global usa `input.status=MUTED`, retomada `ENABLED`; não exclui o agente. A gravação de `input.audience_rules` substitui a lista completa. Os esquemas de entrada suportados ficam em `inputContract`, com origem em `inputContractReferences`; a ausência desse campo mantém o contrato opaco. Reengajamento só confirma quando os campos retornados coincidem com os enviados. Erros de website conservam `website_statuses`.
+
+Validação posterior em 24/11/2026: 17 operações nativas confirmadas em uma conta Business por QR, incluindo os fetches V2 e gravações de estado/audiência/reengajamento e controle de conversa. As configurações gerais foram preservadas; uma conversa de teste foi explicitamente habilitada e apresentou resposta automática após 15 segundos, com recibos de entrega e sem comando de envio pela API. O snapshot de `validation` no catálogo precede essa última rodada; indicadores conservadores não equivalem a falha da execução. Outras contas, ações destrutivas e integrações externas mantêm seu escopo de validação próprio.

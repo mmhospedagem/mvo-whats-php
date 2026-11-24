@@ -26,6 +26,11 @@ final class ArgoReader
         }
         throw new \UnexpectedValueException('Unterminated Argo label');
     }
+    public function peekLabel():int|string {
+        $position=$this->position;
+        try { return $this->label(); }
+        finally { $this->position=$position; }
+    }
     public function count(int $maximum=100000):int {
         $value=$this->label();
         if (!is_int($value) || $value<0 || $value>$maximum) throw new \LengthException('Invalid Argo element count'); return $value;

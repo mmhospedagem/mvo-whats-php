@@ -195,6 +195,150 @@ final class MessageServiceTest extends TestCase
         self::assertSame('1', $this->sent[0]->child('retry')->attrs['count']);
     }
 
+    public static function unavailablePlaceholders():iterable
+    {
+        $cases=[
+            'restricted chat'=>[[new BinaryNode('unavailable',['type'=>'sender_drop'])],[],'sender_drop'],
+            'bot takes priority'=>[[new BinaryNode('unavailable',['type'=>'sender_drop','hosted'=>'true']),new BinaryNode('bot')],[],'bot'],
+            'hosted takes priority'=>[[new BinaryNode('unavailable',['type'=>'sender_drop','hosted'=>'true'])],[],'hosted'],
+            'view once'=>[[new BinaryNode('unavailable',['type'=>'view_once'])],[],'view_once'],
+            'bot'=>[[new BinaryNode('unavailable'),new BinaryNode('bot')],[],'bot'],
+            'hosted'=>[[new BinaryNode('unavailable',['hosted'=>'true'])],[],'hosted'],
+            'hosted type alone'=>[[new BinaryNode('unavailable',['type'=>'hosted'])],[],'other'],
+            'plain fanout'=>[[new BinaryNode('unavailable')],[],'other'],
+            'hosted false'=>[[new BinaryNode('unavailable',['type'=>'sender_drop','hosted'=>'false'])],[],'sender_drop'],
+            'restricted subtype'=>[[],['subtype'=>'acp_unavailable_fanout'],'sender_drop'],
+            'bot subtype'=>[[],['subtype'=>'bot_unavailable_fanout'],'bot'],
+            'hosted subtype'=>[[],['subtype'=>'hosted_unavailable_fanout'],'hosted'],
+            'view once subtype'=>[[],['subtype'=>'view_once_unavailable_fanout'],'view_once'],
+        ];
+        foreach ($cases as $name=>[$children,$attrs,$kind]) {
+            yield $name.' direct'=>[$children,$attrs,$kind,false];
+            yield $name.' group'=>[$children,$attrs,$kind,true];
+        }
+    }
+
+    #[DataProvider('unavailablePlaceholders')]
+    public function testUnavailablePlaceholderIsClassifiedAndAcknowledgedWithoutRetry(array $children,array $attrs,string $kind,bool $group):void
+    {
+        $sender='5522000000000:2@lid';
+        $chat=$group ? '100-200@g.us' : '5522000000000@lid';
+        $routing=$group ? ['from'=>$chat,'participant'=>$sender] : ['from'=>$sender];
+        $node=new BinaryNode('message',[
+            'id'=>'unavailable-1','type'=>'text','t'=>'1760000000','notify'=>'Contato','offline'=>'1',
+            ...$routing,...$attrs,
+        ],$children);
+        $queries=0;
+        $query=static function() use(&$queries):BinaryNode {
+            ++$queries;
+            throw new \LogicException('An unavailable placeholder must not request content');
+        };
+        $service=$this->service($query);
+        $codec=new BinaryCodec();
+        self::assertTrue($service->handleNode($codec->decode($codec->encode($node))));
+        $service->drainPending();
+        // A new service must not resume a retry queued by the placeholder.
+        $this->service($query)->drainPending();
+
+        self::assertSame(0,$queries);
+        self::assertSame(['message_unavailable'],array_column($this->events,0));
+        $event=$this->events[0][1];
+        self::assertSame($kind,$event['kind']);
+        self::assertFalse($event['resendRequested']);
+        self::assertSame('unavailable-1',$event['id']);
+        self::assertSame('5522000000000@lid',$event['from']);
+        self::assertSame($chat,$event['chat']);
+        self::assertSame(1760000000,$event['timestamp']);
+        self::assertSame('Contato',$event['pushName']);
+        self::assertTrue($event['offline']);
+        self::assertSame(2,$event['senderDevice']);
+        $key=['id'=>'unavailable-1','remoteJid'=>$chat,'fromMe'=>false];
+        if ($group) $key['participant']='5522000000000@lid';
+        self::assertSame($key,$event['key']);
+        self::assertArrayNotHasKey('text',$event);
+        self::assertArrayNotHasKey('authenticatedSender',$event);
+        self::assertArrayNotHasKey('authenticatedOwnDevice',$event);
+        self::assertCount(1,$this->sent);
+        self::assertSame('ack',$this->sent[0]->tag);
+        self::assertSame('message',$this->sent[0]->attrs['class']);
+        self::assertSame($node->attrs['from'],$this->sent[0]->attrs['to']);
+        self::assertSame('unavailable-1',$this->sent[0]->attrs['id']);
+        if ($group) self::assertSame($sender,$this->sent[0]->attrs['participant']);
+        foreach (['message-inbox','message-retries','receipt-queue','recipient-retry-pending'] as $namespace)
+            self::assertSame([],$this->store->entries($namespace));
+    }
+
+    public function testUnavailableOwnDevicePlaceholderPreservesRecipientConversation():void
+    {
+        $node=new BinaryNode('message',[
+            'id'=>'own-unavailable','from'=>'5511000000000:0@s.whatsapp.net','recipient'=>'77770000000@lid',
+        ],[new BinaryNode('unavailable',['type'=>'sender_drop'])]);
+        $this->service(static fn():BinaryNode=>throw new \LogicException('No query'))->handleNode($node);
+        self::assertSame(['message_unavailable'],array_column($this->events,0));
+        self::assertSame(['id'=>'own-unavailable','remoteJid'=>'77770000000@lid','fromMe'=>true],$this->events[0][1]['key']);
+        self::assertArrayNotHasKey('authenticatedOwnDevice',$this->events[0][1]);
+        self::assertSame('77770000000@lid',$this->sent[0]->attrs['recipient']);
+    }
+
+    public function testUnavailableMarkerDoesNotReplaceAuthenticatedContent():void
+    {
+        $peerJid='5522000000000:2@s.whatsapp.net';
+        $peer=$this->peers([$peerJid])[$peerJid];
+        $localKey=$this->store->generatePreKeys(1)[0];
+        $peer['signal']->ensureSession($this->credentials['meJid'],self::bundle($this->credentials,$localKey));
+        $encrypted=$peer['signal']->encrypt($this->credentials['meJid'],MessageCodec::pad(MessageCodec::text('authenticated')));
+        $node=new BinaryNode('message',['id'=>'content-and-marker','from'=>$peerJid,'type'=>'text'],[
+            new BinaryNode('unavailable',['type'=>'sender_drop']),
+            new BinaryNode('enc',['type'=>$encrypted['type'],'v'=>'2'],$encrypted['ciphertext']),
+        ]);
+        $this->service(static fn():BinaryNode=>throw new \LogicException('No query'))->handleNode($node);
+        self::assertSame(['message'],array_column($this->events,0));
+        self::assertSame('authenticated',$this->events[0][1]['text']);
+        self::assertSame('receipt',$this->sent[0]->tag);
+    }
+
+    public function testUnavailablePlaceholderAllowsLaterAuthenticatedContentWithTheSameId():void
+    {
+        $peerJid='5522000000000:2@s.whatsapp.net';
+        $peer=$this->peers([$peerJid])[$peerJid];
+        $localKey=$this->store->generatePreKeys(1)[0];
+        $peer['signal']->ensureSession($this->credentials['meJid'],self::bundle($this->credentials,$localKey));
+        $encrypted=$peer['signal']->encrypt($this->credentials['meJid'],MessageCodec::pad(MessageCodec::text('later content')));
+        $attrs=['id'=>'later-content','from'=>$peerJid,'type'=>'text'];
+        $query=static fn():BinaryNode=>throw new \LogicException('No query');
+        $this->service($query)->handleNode(new BinaryNode('message',$attrs,[new BinaryNode('unavailable')]));
+        $this->service($query)->handleNode(new BinaryNode('message',$attrs,[
+            new BinaryNode('enc',['type'=>$encrypted['type'],'v'=>'2'],$encrypted['ciphertext']),
+        ]));
+
+        self::assertSame(['message_unavailable','message'],array_column($this->events,0));
+        self::assertSame('other',$this->events[0][1]['kind']);
+        self::assertSame('later content',$this->events[1][1]['text']);
+        $placeholderKey=$this->events[0][1]['key'];
+        self::assertSame($placeholderKey,array_intersect_key($this->events[1][1]['key'],$placeholderKey));
+        self::assertSame(['ack','receipt'],array_map(static fn(BinaryNode $node):string=>$node->tag,$this->sent));
+    }
+
+    public function testUnavailableMarkerDoesNotHideCiphertextAuthenticationFailure():void
+    {
+        $node=new BinaryNode('message',['id'=>'bad-and-marker','from'=>'5522000000000:2@s.whatsapp.net'],[
+            new BinaryNode('unavailable',['type'=>'sender_drop']),
+            new BinaryNode('enc',['type'=>'pkmsg','v'=>'2'],"\x33bad"),
+        ]);
+        $this->service(static fn():BinaryNode=>throw new \LogicException('No query'))->handleNode($node);
+        self::assertSame(['message_error'],array_column($this->events,0));
+        self::assertSame('decrypt_failed',$this->events[0][1]['reason']);
+        self::assertSame('retry',$this->sent[0]->attrs['type']);
+    }
+
+    public function testUnknownContentlessMessageKeepsUnsupportedEvent():void
+    {
+        $node=new BinaryNode('message',['id'=>'future-format','from'=>'5522000000000:2@s.whatsapp.net'],[new BinaryNode('future')]);
+        $this->service(static fn():BinaryNode=>throw new \LogicException('No query'))->handleNode($node);
+        self::assertSame(['message_unsupported'],array_column($this->events,0));
+        self::assertSame('ack',$this->sent[0]->tag);
+    }
+
     public function testAuthenticatedNativePhoneShareDecodesAfterStanzaAliasAndPersistsBeforeCallback():void
     {
         $pn='5522000000000@s.whatsapp.net';$lid='77770000000@lid';$peer=$this->peers([$pn])[$pn];
@@ -836,20 +980,34 @@ final class MessageServiceTest extends TestCase
         self::assertSame([],$this->store->entries('recipient-retry-pending'));
     }
 
-    public function testReadReceiptQueueSurvivesRepeatedUncertainWritesAndCanAcceptLateAck():void
+    public static function receiptBatches():iterable
+    {
+        yield 'one ID'=>[['one']];
+        yield 'two IDs'=>[['one','two']];
+        yield 'three IDs'=>[['one','two','three']];
+    }
+
+    #[DataProvider('receiptBatches')]
+    public function testReadReceiptQueueSurvivesRepeatedUncertainWritesAndCanAcceptLateAck(array $ids):void
     {
         $service=new MessageService($this->signal,$this->store,fn():array=>$this->credentials,static function():void{},
             static fn():BinaryNode=>throw new \LogicException('No query'),static function():void{throw new \RuntimeException('Offline');},static function():void{});
-        $keys=[['id'=>'one','remoteJid'=>'100-200@g.us','participant'=>'5522000000000:2@s.whatsapp.net'],
-            ['id'=>'two','remoteJid'=>'100-200@g.us','participant'=>'5522000000000:2@s.whatsapp.net']];
+        $keys=array_map(static fn(string $id):array=>[
+            'id'=>$id,'remoteJid'=>'100-200@g.us','participant'=>'5522000000000:2@s.whatsapp.net',
+        ],$ids);
         $service->sendReceipt($keys,'read'); $entries=$this->store->entries('receipt-queue'); self::assertCount(1,$entries);
         $record=BinaryData::decode(reset($entries)); $node=(new BinaryCodec())->decode($record['node']);
-        self::assertSame('read',$node->attrs['type']); self::assertSame('two',$node->child('list')->content[0]->attrs['id']);
+        self::assertSame('read',$node->attrs['type']);
+        self::assertSame($ids[0],$node->attrs['id']);
+        $list=$node->child('list');
+        if (count($ids)===1) self::assertNull($list);
+        else self::assertSame(array_slice($ids,1),array_map(static fn(BinaryNode $item):string=>$item->attrs['id'],$list->content));
         $record['nextAttempt']=0; $this->store->set('receipt-queue',array_key_first($entries),BinaryData::encode($record));
         $service=new MessageService($this->signal,$this->store,fn():array=>$this->credentials,static function():void{},
             static fn():BinaryNode=>throw new \LogicException('No query'),
             function(BinaryNode $receipt):void{$this->sent[]=$receipt;throw new \RuntimeException('Synthetic partial write');},static function():void{});
         $service->drainPending(); self::assertCount(1,$this->sent);
+        self::assertSame($record['node'],(new BinaryCodec())->encode($this->sent[0]));
         self::assertCount(1,$this->store->entries('receipt-queue'));
         $service->handleNode(new BinaryNode('ack',['class'=>'receipt','id'=>'one','from'=>'100-200@g.us','type'=>'read','participant'=>'5522000000000:2@s.whatsapp.net']));
         self::assertSame([],$this->store->entries('receipt-queue'));

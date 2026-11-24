@@ -11,6 +11,12 @@ use MVO\Service\{IdentityService,PassiveTasksService,TrustedContactTokenService}
 /** Durable native PHP direct/group messaging and encrypted media transfer. */
 final class MessageService
 {
+    private const UNAVAILABLE_SUBTYPE_BY_KIND=[
+        'bot'=>'bot_unavailable_fanout',
+        'hosted'=>'hosted_unavailable_fanout',
+        'view_once'=>'view_once_unavailable_fanout',
+        'sender_drop'=>'acp_unavailable_fanout',
+    ];
     private const OUTGOING_PROJECTION_PENDING='message-outgoing-projection-pending-v1';
     private const OUTGOING_PROJECTION_DONE='message-outgoing-projection-done-v1';
     private const OUTGOING_PROJECTION_BATCH=16;
@@ -1604,6 +1610,49 @@ final class MessageService
         return $bundle;
     }
 
+    /**
+     * A content-less placeholder carries server routing metadata, not authenticated message content.
+     * @param array<string,mixed> $credentials
+     */
+    private function handleUnavailableMessage(BinaryNode $node,Jid $address,Jid $sender,array $credentials):bool
+    {
+        if (self::children($node,'enc')!==[]) return false;
+        $unavailable=$node->child('unavailable');
+        $kind=match (true) {
+            $unavailable===null=>array_search($node->attrs['subtype'] ?? '',self::UNAVAILABLE_SUBTYPE_BY_KIND,true),
+            $node->child('bot')!==null=>'bot',
+            ($unavailable->attrs['hosted'] ?? '')==='true'=>'hosted',
+            default=>match ($unavailable->attrs['type'] ?? '') {
+                'view_once'=>'view_once',
+                'sender_drop'=>'sender_drop',
+                default=>'other',
+            },
+        };
+        if ($kind===false) return false;
+
+        $fromMe=$this->isOwn((string)$sender,$credentials);
+        $multi=in_array($address->server,['g.us','broadcast'],true);
+        $chat=$fromMe && !$multi ? ($node->attrs['recipient'] ?? $node->attrs['from']) : $node->attrs['from'];
+        try { $chat=Jid::parse($chat)->canonical()->bare(); }
+        catch (\InvalidArgumentException) { $chat=$address->bare(); }
+        $event=[
+            'id'=>$node->attrs['id'],'from'=>$sender->bare(),'chat'=>$chat,'fromMe'=>$fromMe,
+            'kind'=>$kind,'resendRequested'=>false,
+            'timestamp'=>isset($node->attrs['t']) && ctype_digit($node->attrs['t']) ? (int)$node->attrs['t'] : time(),
+            'pushName'=>$node->attrs['notify'] ?? null,'senderDevice'=>$sender->device,
+            'offline'=>isset($node->attrs['offline']),'category'=>$node->attrs['category'] ?? null,
+            'stanzaType'=>$node->attrs['type'] ?? null,
+            'key'=>['id'=>$node->attrs['id'],'remoteJid'=>$chat,'fromMe'=>$fromMe],
+        ];
+        if ($multi) {
+            $event['participant']=$sender->bare();
+            $event['key']['participant']=$sender->bare();
+        }
+        $this->ack($node,'message');
+        ($this->emit)('message_unavailable',$event);
+        return true;
+    }
+
     private function incoming(BinaryNode $node): void
     {
         $id = $node->attrs['id'] ?? ''; $from = $node->attrs['from'] ?? '';
@@ -1634,6 +1683,7 @@ final class MessageService
             ($this->emit)('message_error',['id'=>$id,'from'=>$from,'reason'=>'invalid_message_sender']);
             return;
         }
+        if ($this->handleUnavailableMessage($node,$address,$senderAddress,$credentials)) return;
         $sender = $this->sessionJid((string) $senderAddress, $credentials);
         $senderAlias = $this->incomingAlias($node, $senderAddress);
         // Old PN-addressed sessions may receive their first reply in LID form.

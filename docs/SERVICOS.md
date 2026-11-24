@@ -23,7 +23,17 @@ foreach ($results as $result) {
 
 O serviço dedicado `$client->community()` reúne o gerenciamento de comunidades, membros/admins, foto, configurações, convites, subgrupos, solicitações, propriedade e recursos de suspensão. Veja o [guia de comunidades](COMUNIDADES.md) para exemplos, respostas parciais e limites. Ele reutiliza a conexão existente e conserva a compatibilidade de `group()`.
 
-`group()` oferece `queryGroupMetadata`, `queryAllGroups`, `queryGroupInviteInfo`, `createGroup`, `setSubject`, `setDescription`, `setSetting`, `setMemberAddMode`, `setMemberLinkMode`, `setMemberShareGroupHistoryMode`, `setEphemeralDuration`, `addParticipants`, `removeParticipants`, `promoteParticipants`, `demoteParticipants`, `leaveGroup`, `queryInviteCode`, `revokeInvite` e `joinGroupViaInvite`.
+`group()` oferece `queryGroupMetadata`, `queryAllGroups`, `queryGroupInviteInfo`, `createGroup`, `setSubject`, `setDescription`, `setSetting`, `setMemberAddMode`, `setMemberLinkMode`, `setMemberShareGroupHistoryMode`, `setEphemeralDuration`, `addParticipants`, `removeParticipants`, `promoteParticipants`, `demoteParticipants`, `leaveGroup`, `queryInviteCode`, `revokeInvite` e os métodos de entrada por convite.
+
+`queryGroupInviteInfo($code)` indica em `hasPendingMembershipRequest` se a conta já solicitou entrada. `joinGroupViaLink($code)` recebe o código do link e retorna `status` (`joined` ou `pending`) e `groupJid`. Um resultado `pending` ainda aguarda aprovação do administrador. Consulte `queryGroupMetadata($groupJid)` para obter os dados do grupo após entrar. O método legado `joinGroupViaInvite($code)` conserva seu retorno anterior.
+
+```php
+$groupService = $client->group();
+$invite = $groupService->queryGroupInviteInfo($code);
+if (!$invite['hasPendingMembershipRequest']) {
+    $join = $groupService->joinGroupViaLink($code);
+}
+```
 
 Comunidades: `createCommunity`, `deactivateCommunity`, `linkSubGroups`, `unlinkSubGroups`, `queryLinkedGroupsParticipants`, `queryMembershipApprovalRequests`, `approveMembershipRequests`, `rejectMembershipRequests`, `cancelMembershipRequests` e `joinLinkedGroup`. As consultas MEX são `fetchSubGroups`, `isInternalGroup`, `fetchSubgroupSuggestions`, `submitGroupSuspensionAppeal` e `transferCommunityOwnership`.
 
@@ -98,7 +108,7 @@ $client->newsletter()->subscribeLiveUpdates('123456789@newsletter');
 
 As publicações são protobuf plaintext, conforme o protocolo público de canais. Texto, enquetes e descritores de mídia já carregada em plaintext são aceitos. Mídia cifrada de conversa direta é recusada; reaproveitar sua URL e `mediaKey` geraria uma publicação inválida. Envio/edição/exclusão aguarda ACK; reação/voto/view retorna `status=sent`, sem declarar entrega ao destinatário.
 
-`mex()->operations()` lista as 129 operações persistidas do snapshot do projeto de referência. `mex()->run($operation, $variables)` faz IQ MEX real, valida a resposta e propaga erros GraphQL. JSON e Argo self-describing são decodificados nativamente, incluindo strings/backreferences, valores binários, inteiros/floats, arrays/objetos e erros GraphQL com paths. Formatos desconhecidos ou payloads truncados geram erro explícito. Os IDs do snapshot podem expirar com atualizações do servidor.
+`mex()->operations()` lista as operações persistidas no snapshot. `mex()->run($operation, $variables)` faz IQ MEX, valida a resposta e propaga erros GraphQL. O leitor aceita JSON, Argo autodescritivo e Argo com tipos por operação. Os tipos incluídos cobrem `FetchReachoutTimelock` e `FetchNewChatMessageCappingInfo`. Para outra operação, registre o tipo de resposta com `MVO\Service\MexService::registerArgoWireType($operation, $wire)` antes de consultar. Use um registro PHP com `type => 'RECORD'` e `fields` em ordem de protocolo, conforme `MVO\Protocol\MexArgoWireTypes`. `MVO\Service\MexService::argoWireTypeNames()` lista as operações com tipo registrado. Payloads truncados e tipos incompatíveis geram erro explícito. Os IDs do snapshot podem expirar com atualizações do servidor.
 
 ## Bots, email e eventos
 

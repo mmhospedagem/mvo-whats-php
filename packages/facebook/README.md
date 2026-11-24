@@ -50,7 +50,7 @@ As extensões deste checkout exigem Messenger `^0.1.2`. Até a publicação coor
 
 ## Conectar e guardar a sessão
 
-Use `FacebookConnection` como entrada principal. Escolha um ID por conta e duas pastas privadas: autenticação e dados dos serviços. No primeiro acesso, `login()` confirma a identidade e salva somente a sessão; `connect()` inicia/restaura o transporte. Se o Facebook solicitar uma verificação, conclua o fluxo descrito abaixo antes de conectar.
+Use `FacebookConnection` como entrada principal. Escolha um ID por conta e duas pastas privadas: autenticação e dados dos serviços. No checkout em desenvolvimento, `loginAndroid()` usa a política nativa sem fallback Web e salva somente a sessão confirmada; `connect()` inicia/restaura o transporte. Se o Facebook solicitar uma verificação, conclua o fluxo descrito abaixo antes de conectar.
 
 ```php
 <?php
@@ -68,7 +68,8 @@ $facebook = new FacebookConnection(
 
 // $email e $password vêm da entrada privada da sua aplicação.
 // Não use credenciais em código, logs ou argumentos da linha de comando.
-$facebook->login($email, $password);
+/** @var \MVO\Messenger\Auth\AndroidLoginProfile $nativeProfile Configuração privada da aplicação. */
+$facebook->loginAndroid($email, $password, $nativeProfile);
 
 try {
     $facebook->connect();
@@ -111,34 +112,30 @@ try {
 }
 ```
 
-Não chame `login()` a cada inicialização. Se a sessão expirar ou for revogada, faça novo login da mesma conta. Outra conta exige outro ID. Apenas um processo pode manter o lock de cada sessão. `stop()` libera o lock e fecha os armazenamentos dos serviços; não revoga a conta nem apaga a sessão, escolhas e comandos persistidos.
+Não chame `loginAndroid()` ou `login()` a cada inicialização. Se a sessão expirar ou for revogada, faça novo login da mesma conta. Outra conta exige outro ID. Apenas um processo pode manter o lock de cada sessão. `stop()` libera o lock e fecha os armazenamentos dos serviços; não revoga a conta nem apaga a sessão, escolhas e comandos persistidos.
 
 Os cookies confirmados e o estado ficam no SQLite privado em `<authDirectory>/messenger/<sessionId>/state.sqlite`. O nome interno da pasta corresponde ao runtime compartilhado; não exige um segundo cliente. Dados dos serviços ficam em `<privateStorageDirectory>/<accountId>/`. Não coloque essas pastas na raiz HTTP, no Git ou em logs. Senha e código do autenticador não são persistidos como credenciais de sessão.
 
 ### Autenticador, CAPTCHA e confirmação
 
-`login()` pode lançar `MVO\Messenger\MessengerException` com uma verificação pendente. Consulte `loginChallenge()`, que retorna somente `type`, `expires_at` e `ready`. O contexto fica no mesmo processo, em memória, por até dez minutos, conservando seu lock.
+`loginAndroid()` autentica somente por endpoints nativos JSON: chave dinâmica, `/auth/login`, código/aprovação 406 e `GET /me` com autorização pelo token do usuário mantido somente em RAM. Não consulta HTML nem abre ou exporta navegador durante a autenticação. O 405 retorna `login_native_verification_unsupported`, com `browser_continuation_available=false`; não existe conversão para 406. A nova verificação JSON de identidade tem fixtures e ainda precisa de validação real própria. Bootstrap, metadados, inbox e serviços de Fanpage continuam no protocolo Web/DGW, com `e2ee_ready=false`.
 
-```php
-// Execute no processo que iniciou login(), depois de tratar a exceção de desafio.
-$challenge = $facebook->loginChallenge();
-if ($challenge !== null && $challenge['type'] === 'two_factor' && $challenge['ready']) {
-    // $code é uma string recebida por entrada privada; preserve zeros iniciais.
-    $facebook->confirmLogin($code);
-    $facebook->connect();
-}
-```
+No 406, conserve o mesmo objeto/processo e lock. `ready=true` e `requires_code=true` permitem `confirmLogin($code)`, com código recebido somente na entrada privada, preservando zeros iniciais. Depois da aprovação pessoal no aplicativo, `checkLoginApproval()` pode ser consultado quando `can_check=true`; respeite cinco segundos entre consultas e o prazo original. Resultado incerto não autoriza reenviar código/token/senha.
 
-Um CAPTCHA não aceita código TOTP. `ready=false` impede a confirmação de um formato ainda desconhecido; não repita códigos ou login automaticamente. Expiração, reinício ou `stop()` descartam o desafio pendente. O aplicativo precisa manter esse processo durante a verificação.
+`requestLoginSms()` pode fazer um pedido experimental explícito quando `can_request_sms=true`, sem catálogo de métodos, destinatário escolhido ou prova de disponibilidade. Uma tentativa termina `submitted`, `rejected` ou `uncertain`; não é repetida. O resultado `request_submitted` conserva `experimental=true` e `delivery_confirmed=false`. Um código realmente recebido continua no mesmo `confirmLogin()`; o pedido não conecta a conta.
 
-CAPTCHA/checkpoints exigem a ação humana no Facebook. Para um bridge privado opcional da aplicação, `exportPrivateLoginChallenge()` entrega URL/cookies/expiração **secretos**; não os devolva por HTTP, eventos, ferramentas ou logs. Após a verificação no mesmo contexto isolado, `completeBrowserLogin(CookieJar $cookies)` verifica a identidade por HTTPS antes de salvar. O pacote não abre um navegador automaticamente nem resolve CAPTCHA. Consulte o [contrato de autenticação compartilhado](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FACEBOOK-MESSENGER.md).
+Veja [autenticação Android](../../docs/facebook/AUTENTICACAO-ANDROID.md) para a configuração privada e os limites. A aprovação/código e restauração de 20/10/2026 usavam verificação Web posterior: não demonstram o novo `GET /me` ou entrega de SMS. O método separado `login()` continua uma opção Web explícita com `WebLoginService`; seu catálogo e bridge humano não integram `loginAndroid()`. A compatibilidade de baixo nível `allowWebCheckpoint: true` não é habilitada pelas fachadas nem pela política nativa da API consumidora.
 
 ### Métodos de conexão
 
 | Método de `FacebookConnection` | Comportamento |
 | --- | --- |
-| `login($email, $password)` | Autentica e salva somente a sessão confirmada; não conecta automaticamente. |
-| `loginChallenge()`, `confirmLogin($code)` | Consulta o desafio seguro e continua um autenticador reconhecido. |
+| `loginAndroid($email, $password, $nativeProfile)` | Autenticação nativa com perfil privado e verificação `GET /me`; sem fallback Web ou conexão automática. |
+| `login($email, $password)` | Alternativa Web opcional, escolhida explicitamente pela aplicação. |
+| `requestLoginSms()` | Pedido experimental explícito no 406 atual; não confirma entrega nem autenticação. |
+| `loginChallenge()` | Projeção segura de métodos e próximo passo, sem tokens. |
+| `refreshLoginMethods()`, `requestLoginMethod($methodId)` | Catálogo/seleção do fluxo Web opcional; não inventam meios Android. |
+| `confirmLogin($code)`, `checkLoginApproval()` | Confirma código ou consulta aprovação, conforme `requires_code`/`can_check`. |
 | `connect()`, `poll($timeoutSeconds = 0.5)` | Restaura a sessão e mantém o transporte/cursores. |
 | `on($event, $handler)`, `events($after = 0, $limit = 100)` | Recebe callbacks e consulta eventos persistidos; comandos ficam no loop externo. |
 | `isConnected()`, `getState()`, `accountInfo()` | Consulta transporte, estado e projeção da conta; sessão salva não comprova validade remota. |
@@ -158,6 +155,8 @@ Para aplicações que já mantêm um `MessengerClient` conectado, a entrada avan
 Os comandos abaixo partem da raiz do monorepo `mvo-whats-php`. No repositório de distribuição `mvo-facebook-php`, execute `composer install` e use `examples/...` no lugar de `packages/facebook/examples/...`.
 
 O exemplo [session.php](examples/session.php) autentica com `--login` ou restaura sem essa opção; recebe credenciais somente pelas variáveis privadas `MVO_FACEBOOK_EMAIL` e `MVO_FACEBOOK_PASSWORD`, não por argumentos CLI. Consulte a ajuda para os diretórios e tempo de observação. Ele diagnostica desafios, mas a continuação do autenticador/bridge pertence à integração PHP acima.
+
+O exemplo [login-methods.php](examples/login-methods.php) fornece uma função de integração com callbacks privados para escolha de método, código e consulta explícita de aprovação, mantendo o dono vivo. `--help` descreve seu contrato sem conectar; incluir o arquivo não inicia login nem extrai cookies de perfis existentes.
 
 O exemplo [discover.php](examples/discover.php) restaura uma sessão salva e lista Páginas sem publicar nem enviar mensagens:
 
@@ -206,7 +205,7 @@ Métodos específicos presentes nesta revisão:
 | Publicações | `list($profileId, $variables, $actorId)`, `next($profileId, $cursor, $variables, $actorId)`, `createText($actorId, $text, $idempotencyKey, $context, $variables)` | Timeline com providers atuais. Criação exige contexto real do composer, audiência, tracking e sessão; não há preparação automática desse contexto. |
 | Comentários | `list($feedbackId, $variables = [], $actorId = null)`; `next($feedbackId, $cursor, $intentToken, $count = 20, $variables = [], $actorId = null)`; `previous($feedbackId, $cursor, $intentToken, $count = 20, $variables = [], $actorId = null)`; `create($actorId, $feedbackId, $text, $idempotencyKey, $context, $variables = [])` | Leituras exigem providers e `feedLocation` reais. Escrita exige `session_id` e enum `feedback_source`; não derive feedback ID de post ID. |
 | Reações | `summary($feedbackId, $scale = 1.0, $actorId = null)`; `list($feedbackId, $reactionId = null, $scale = 1.0, $actorId = null)`; `next($feedbackId, $cursor, $reactionId = null, $count = 10, $scale = 1.0, $actorId = null)`; `set($actorId, $feedbackId, $reactionId, $idempotencyKey, $context, $variables = [])`; `remove($actorId, $feedbackId, $idempotencyKey, $context, $variables = [])` | Reação/feedback exatos, filtro preservado na paginação; escrita exige contexto e providers. `remove()` usa o valor de remoção estabelecido pelo documento. |
-| Inbox | `threads(...)`, `messages(...)`, `lightspeedContext(...)`, `sendTextLightspeed(...)`, `sendText(...)` | Actor e Página separados; `selection_id` observado. Lightspeed usa gateway próprio; `sendText` é o contrato Mercury legado separado. `has_more=null` não significa lista esgotada. |
+| Inbox | `snapshot(...)`, `threads(...)`, `messages(...)`, `lightspeedContext(...)`, `sendTextLightspeed(...)`, `sendText(...)` | `snapshot()` lê os dados carregados pelo documento nativo atual com conta/Página confirmadas. Consultas unificadas, envio Lightspeed e Mercury têm contratos separados. `has_more=null` não significa lista esgotada. |
 | Anúncios | `accounts()`, `account($id)`, `campaigns($ids)`, `adsets($ids)`, `ads($ids)`, `previews($ids)`, `insights($ids, $datePreset, $metrics)`, `insightsRange($ids, $since, $until, $metrics)`, `availability()` | Leituras Web parciais; objetos por IDs já conhecidos. Não há enumeração completa ou mutations comerciais. |
 
 Na descoberta de anúncios, o documento observado fixa `first=2`: `accounts()` retorna no máximo duas opções do contexto, com `partial=true` e `exhaustive=false`, sem paginação estabelecida. A consulta não usa a ramificação que criaria uma conta automaticamente. `campaigns()`, `adsets()` e `ads()` recebem IDs conhecidos, não listam toda uma conta. Insights são agregados com `first=1` e `filter_zero_delivery=true`; não representam relatórios completos nem breakdowns arbitrários. Valores monetários/métricas conservam o formato retornado, sem conversões presumidas.
@@ -258,5 +257,7 @@ Esse exemplo, executado a partir do checkout, usa dados sintéticos e nenhuma co
 Os testes deste pacote exercitam projeções sintéticas, parsing de bootstrap, contratos de documentos, transporte falso, seleção isolada por conta, ledger e monitor SQLite. Análise de artefatos públicos comprova formatos específicos observados; não substitui uma chamada autenticada bem-sucedida.
 
 A validação real de autenticação/metadados Messenger está documentada separadamente. Ela não comprova publicação de posts, comentários, reações, inbox comercial ou administração de anúncios por este pacote. Não declare compatibilidade total ou resultado real com base em fixture, doc ID, classe existente ou contador local.
+
+Uma validação separada, em 19/10/2026, confirmou a leitura de `inbox()->snapshot()` em uma Página autorizada: 8 conversas, 8 mensagens carregadas e filtro de uma thread retornando 1 mensagem. O alcance é o documento atual, com histórico incompleto; nenhum envio, publicação ou mudança de estado foi executado. Veja [o guia do inbox](../../docs/facebook/INBOX.md) e o [helper de integração](examples/page-inbox-snapshot.php).
 
 Guia completo: [Facebook PHP](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FACEBOOK.md). Estado de instalação e extensões: [composer.json](composer.json). Os recursos ainda experimentais e as operações não implementadas permanecem identificados no guia de limites.

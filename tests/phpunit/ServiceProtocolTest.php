@@ -6,7 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use MVO\Crypto\Crypto;
 use MVO\Protocol\{BinaryNode,SchemaCodec};
-use MVO\Service\{Services,ServiceTransport,ServiceException,BotService};
+use MVO\Service\{Services,ServiceTransport,ServiceException,BotService,MexService};
 
 final class ServiceProtocolTest extends TestCase
 {
@@ -38,6 +38,26 @@ final class ServiceProtocolTest extends TestCase
         $g=$this->services()->group()->createGroup('Equipe',['9@lid'],['description'=>'Descrição']);
         self::assertSame('123-456@g.us',$g['jid']);self::assertSame('Descrição',$g['desc']);self::assertTrue($g['announce']);self::assertTrue($g['restrict']);self::assertSame(86400,$g['ephemeral']);self::assertTrue($g['participants'][0]['isSuperAdmin']);
         $n=$this->last();self::assertSame(['type'=>'set','to'=>'g.us','xmlns'=>'w:g2'],$n->attrs);self::assertSame(['subject'=>'Equipe'],$n->child('create')->attrs);self::assertSame('9@lid',$n->child('create')->child('participant')->attrs['jid']);self::assertMatchesRegularExpression('/^\d+$/',$n->child('create')->child('description')->attrs['id']);
+    }
+    public function testJoiningViaLinkReportsTheServerOutcomeAndPreviewPendingFlag():void
+    {
+        $groups=$this->services()->group();
+        $pending=new BinaryNode('membership_approval_request',['jid'=>'123-456@g.us']);
+        $this->responses[]=self::iqResult([new BinaryNode('group',['jid'=>'123-456@g.us'],[$pending])]);
+        self::assertTrue($groups->queryGroupInviteInfo('INVITE')['hasPendingMembershipRequest']);
+        self::assertSame('get',$this->last()->attrs['type']);
+        $group=new BinaryNode('group',['jid'=>'123-456@g.us']);
+        $this->responses[]=self::iqResult([$group]);
+        self::assertFalse($groups->queryGroupInviteInfo('INVITE')['hasPendingMembershipRequest']);
+        $this->responses[]=self::iqResult([$group]);
+        self::assertSame(['status'=>'joined','groupJid'=>'123-456@g.us'],$groups->joinGroupViaLink('INVITE'));
+        self::assertSame(['type'=>'set','to'=>'g.us','xmlns'=>'w:g2'],$this->last()->attrs);
+        self::assertSame('INVITE',$this->last()->child('invite')->attrs['code']);
+        $this->responses[]=self::iqResult([$pending]);
+        self::assertSame(['status'=>'pending','groupJid'=>'123-456@g.us'],$groups->joinGroupViaLink('INVITE'));
+        $this->responses[]=self::iqResult([new BinaryNode('group')]);
+        $this->expectExceptionMessage('Invite join response missing group JID');
+        $groups->joinGroupViaLink('INVITE');
     }
     public function testCommunityCreationPreservesMembershipAndSubgroupOptions(): void
     {
@@ -139,6 +159,29 @@ final class ServiceProtocolTest extends TestCase
         $this->responses[]=self::iqResult([new BinaryNode('result',['format'=>'argo'],$capture)]);
         try { $this->services()->mex()->dispatch('25094190163544446','16428758503015954638431529919',['use_case'=>'CANONICAL','request_time'=>'17'],'WWWGetCertificates');self::fail('Expected GraphQL error'); }
         catch(ServiceException $e) { self::assertSame('null_value,400',$e->serverCode);self::assertStringContainsString('Bad Request',$e->getMessage());self::assertStringContainsString('CRITICAL',$e->getMessage()); }
+    }
+    public function testMexRunDecodesCapturedSchemaDrivenResultWithBundledWireType():void
+    {
+        $capture=base64_decode('BBQxNzg4MTMyNzYzDkRFRkFVTFQMAAIUDgMD',true);
+        $this->responses[]=self::iqResult([new BinaryNode('result',['format'=>'argo'],$capture)]);
+        self::assertSame(['xwa2_fetch_account_reachout_timelock'=>[
+            'is_active'=>true,
+            'time_enforcement_ends'=>'1788132763',
+            'enforcement_type'=>'DEFAULT',
+        ]],$this->services()->mex()->run('FetchReachoutTimelock'));
+    }
+
+    public function testMexDispatchUsesRegisteredTypeForCustomResult():void
+    {
+        MexService::registerArgoWireType('FixtureBoolean',['type'=>'RECORD','fields'=>[
+            'data'=>['type'=>'RECORD','fields'=>['enabled'=>['type'=>'BOOLEAN']]],
+        ]]);
+        $names=MexService::argoWireTypeNames();
+        self::assertContains('FetchNewChatMessageCappingInfo',$names);
+        self::assertContains('FetchReachoutTimelock',$names);
+        self::assertContains('FixtureBoolean',$names);
+        $this->responses[]=self::iqResult([new BinaryNode('result',['format'=>'argo'],"\x04\x02\x02")]);
+        self::assertSame(['enabled'=>true],$this->services()->mex()->dispatch('1','1',[],'FixtureBoolean'));
     }
     public function testNewsletterUsesPlaintextAndWaitsForAck(): void
     {

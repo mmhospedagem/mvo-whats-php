@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace MVO\Messenger;
 
 use MVO\Messenger\Auth\CookieJar;
+use MVO\Messenger\Auth\LoginService;
 use MVO\Messenger\Auth\SessionStore;
 use MVO\Messenger\Auth\WebLoginService;
 use MVO\Messenger\Protocol\{BootstrapConfig,BootstrapParser,EventProjector,LightspeedDecoder,LightspeedSyncGuard,TaskBuilder};
@@ -20,7 +21,7 @@ final class MessengerClient
     private string $state='stopped';
     private bool $inCallback=false;
     private bool $running=false;
-    private ?WebLoginService $loginService=null;
+    private ?LoginService $loginService=null;
     private bool $loginOwnsLock=false;
     private int $requestId=0;
     private int $taskId=0;
@@ -163,19 +164,43 @@ final class MessengerClient
             'lightspeed_version'=>$this->bootstrap?->versionId,'e2ee_ready'=>false,'has_saved_session'=>$this->store->get('account_id')!==null,
             'capabilities'=>$this->capabilities(),'login_challenge'=>$challenge];
     }
+    private int $browserLoginExpiresAt=0;
+
+    /** Starts an explicit, credential-free browser attempt owned by this session.
+     * @return array{url:string,cookies:list<array<string,mixed>>,expires_at:int}
+     */
+    public function beginBrowserLogin():array
+    {
+        $this->outsideCallback();
+        if($this->isConnected()||$this->loginChallenge()!==null||$this->browserLoginExpiresAt>time())throw new MessengerException('login_verification_pending','Complete or cancel the current login before starting another browser');
+        if(!$this->store->ownsLock()){$this->store->acquire();$this->loginOwnsLock=true;}
+        $this->browserLoginExpiresAt=time()+600;$this->state='awaiting_login';
+        return ['url'=>'https://www.facebook.com/login/','cookies'=>[],'expires_at'=>$this->browserLoginExpiresAt];
+    }
+
+    public function cancelBrowserLogin():void
+    {
+        $this->outsideCallback();
+        if($this->browserLoginExpiresAt===0)return;
+        $this->browserLoginExpiresAt=0;
+        if($this->loginOwnsLock){$this->store->release();$this->loginOwnsLock=false;}
+    }
+
     public function importCookies(#[\SensitiveParameter] CookieJar $cookies):void
     {
         $this->outsideCallback();
         if($this->isConnected())throw new \LogicException('Stop the Messenger client before importing a session');
-        if($this->loginChallenge()!==null)throw new MessengerException('login_verification_pending','Complete or cancel the pending login before importing another session');
+        if($this->loginChallenge()!==null||$this->browserLoginExpiresAt>time())throw new MessengerException('login_verification_pending','Complete or cancel the pending login before importing another session');
         $owner=$this->store->ownsLock();if(!$owner)$this->store->acquire();
         try{$this->store->saveCookies($cookies);$this->state='session_imported';}finally{if(!$owner)$this->store->release();}
     }
     /** Browser-password login runs in PHP. Only the resulting session is persisted. */
-    public function login(#[\SensitiveParameter] string $email,#[\SensitiveParameter] string $password,?WebLoginService $service=null):void
+    public function login(#[\SensitiveParameter] string $email,#[\SensitiveParameter] string $password,?LoginService $service=null):void
     {
         $this->outsideCallback();
         if($this->isConnected())throw new \LogicException('Stop the Messenger client before signing in again');
+        if($this->browserLoginExpiresAt>time())throw new MessengerException('login_verification_pending','Complete or cancel the current browser login');
+        if($this->loginChallenge()!==null)throw new MessengerException('login_verification_pending','Complete or cancel the current authentication before starting another login');
         $owner=$this->store->ownsLock();$release=$this->loginOwnsLock||!$owner;$keep=false;
         try{
             // A conflicting owner must reject this operation before remote
@@ -185,22 +210,106 @@ final class MessengerClient
             $cookies=$this->loginService->login($email,$password);$this->importCookies($cookies);
         }catch(MessengerException $error){
             $challenge=$this->loginService?->challenge();
-            if($challenge!==null){$keep=true;$this->loginOwnsLock=$release;$this->changeState($challenge['type']==='captcha'?'awaiting_captcha':'awaiting_two_factor');}
+            if($challenge!==null){$keep=true;$this->loginOwnsLock=$release;$this->changeState(self::pendingLoginState($challenge['type']));}
             throw $error;
         }finally{
             if($password!=='')sodium_memzero($password);
             if(!$keep){$this->loginService?->cancel();$this->loginService=null;$this->loginOwnsLock=false;if($release)$this->store->release();}
         }
     }
-    /** @return array{type:string,expires_at:int,ready:bool}|null */
+    /** Experimental native authentication; the same owner verifies and saves its cookies.
+     * A native application profile is private operator configuration, not another
+     * public connection ID or consumer API credential. No automatic Web fallback.
+     */
+    public function loginAndroid(
+        #[\SensitiveParameter] string $email,
+        #[\SensitiveParameter] string $password,
+        #[\SensitiveParameter] \MVO\Messenger\Auth\AndroidLoginProfile $profile,
+        ?\MVO\Messenger\Transport\AndroidLoginTransport $transport=null,
+    ):void {
+        try{$this->login($email,$password,new \MVO\Messenger\Auth\AndroidLoginService($this->store,$profile,$transport,$this->http));}
+        finally{if($password!=='')sodium_memzero($password);}
+    }
+    /** Safe challenge metadata only; never includes protocol context or cookies.
+     * @return array<string,mixed>|null
+     */
     public function loginChallenge():?array
     {
         $challenge=$this->loginService?->challenge();
-        if($this->loginService!==null&&$challenge===null&&in_array($this->state,['awaiting_two_factor','awaiting_captcha'],true)){
+        if($this->loginService!==null&&$challenge===null&&in_array($this->state,['awaiting_two_factor','awaiting_captcha','awaiting_login'],true)){
             $this->state='login_challenge_expired';$this->loginService=null;
             if($this->loginOwnsLock){$this->store->release();$this->loginOwnsLock=false;}
         }
         return $challenge;
+    }
+    /** Explicit discovery; never automatically sends a code or approves a login.
+     * @return array<string,mixed>
+     */
+    public function refreshLoginMethods():array
+    {
+        $service=$this->pendingLoginService();
+        try{
+            $result=$service->refreshMethods();
+            if($service instanceof \MVO\Messenger\Auth\AndroidLoginService){
+                $cookies=$service->takeCompletedLogin();
+                if($cookies!==null){$this->importCookies($cookies);return ['authenticated'=>true];}
+            }
+            return $result;
+        }finally{$this->syncPendingLogin($service);}
+    }
+    /** Selects one method ID from this attempt; delivery is an explicit operation.
+     * @return array<string,mixed>
+     */
+    public function requestLoginMethod(string $methodId):array
+    {
+        $service=$this->pendingLoginService();
+        try{return $service->requestMethod($methodId);}finally{$this->syncPendingLogin($service);}
+    }
+    /** Explicit experimental native406 SMS resend; does not confirm delivery.
+     * No catalogue or availability of SMS is inferred for this account.
+     * @return array<string,mixed>
+     */
+    public function requestLoginSms():array
+    {
+        $service=$this->pendingLoginService();
+        if(!$service instanceof \MVO\Messenger\Auth\AndroidLoginService)throw new MessengerException('login_method_unavailable','Native SMS requires a current Android verification attempt');
+        try{return $service->requestSms();}finally{$this->syncPendingLogin($service);}
+    }
+    /** Checks approval on an already connected app; true means identity verified and saved.
+     * Does not accept/approve on behalf of the account owner.
+     */
+    public function checkLoginApproval():bool
+    {
+        $service=$this->pendingLoginService();
+        try{
+            $cookies=$service->checkApproval();
+            if($cookies===null)return false;
+            $this->importCookies($cookies);return true;
+        }finally{$this->syncPendingLogin($service);}
+    }
+    private function pendingLoginService():LoginService
+    {
+        $this->outsideCallback();
+        if($this->isConnected())throw new \LogicException('Stop the connection before continuing another login');
+        if($this->loginChallenge()===null||$this->loginService===null)throw new MessengerException('login_challenge_expired','Start a new login through the local form');
+        if(!$this->store->ownsLock())throw new \LogicException('The pending login no longer owns its session');
+        return $this->loginService;
+    }
+    private function syncPendingLogin(LoginService $service):void
+    {
+        $pending=$service->challenge();
+        if($pending===null){
+            $service->cancel();$this->loginService=null;
+            if($this->loginOwnsLock)$this->store->release();$this->loginOwnsLock=false;
+            if(in_array($this->state,['awaiting_two_factor','awaiting_captcha','awaiting_login'],true))$this->state='login_challenge_expired';
+        }else{
+            $nextState=self::pendingLoginState($pending['type']);
+            if($nextState!==$this->state)$this->changeState($nextState);
+        }
+    }
+    private static function pendingLoginState(string $type):string
+    {
+        return match($type){'captcha'=>'awaiting_captcha','two_factor'=>'awaiting_two_factor',default=>'awaiting_login'};
     }
     public function confirmLogin(#[\SensitiveParameter] string $code):void
     {
@@ -213,11 +322,7 @@ final class MessengerClient
             $service=$this->loginService;
             if(!$this->store->ownsLock()){$this->store->acquire();$this->loginOwnsLock=true;}
             try{$this->importCookies($service->confirm($code));}
-            finally{
-                $pending=$service->challenge();
-                if($pending===null){$service->cancel();$this->loginService=null;if($this->loginOwnsLock)$this->store->release();$this->loginOwnsLock=false;if(in_array($this->state,['awaiting_two_factor','awaiting_captcha'],true))$this->state='login_challenge_expired';}
-                else{$nextState=$pending['type']==='captcha'?'awaiting_captcha':'awaiting_two_factor';if($nextState!==$this->state)$this->changeState($nextState);}
-            }
+            finally{$this->syncPendingLogin($service);}
         }finally{if($code!=='')sodium_memzero($code);}
     }
     /** Explicit private application handoff; never serialize into a public response.
@@ -235,21 +340,27 @@ final class MessengerClient
     {
         $this->outsideCallback();
         if($this->isConnected())throw new \LogicException('Stop the connection before completing another login');
-        if($this->loginChallenge()===null||$this->loginService===null)throw new MessengerException('login_challenge_expired','The pending browser verification has expired');
+        if($this->browserLoginExpiresAt>0&&$this->browserLoginExpiresAt<=time()){
+            $this->browserLoginExpiresAt=0;
+            if($this->loginOwnsLock){$this->store->release();$this->loginOwnsLock=false;}
+            throw new MessengerException('login_challenge_expired','The browser login has expired');
+        }
+        if($this->browserLoginExpiresAt===0&&($this->loginChallenge()===null||$this->loginService===null))throw new MessengerException('login_challenge_expired','The pending browser verification has expired');
         if(!$this->store->ownsLock())throw new \LogicException('The pending login no longer owns its session');
-        $html=$this->loadBootstrap($cookies,$this->sessionOrigin($cookies));
+        if($this->loginService instanceof \MVO\Messenger\Auth\BrowserIdentityBoundLoginService)$this->loginService->assertBrowserIdentity($cookies->accountId());
+        $html=$this->loadBootstrap($cookies,$this->sessionOrigin($cookies),true);
         $identity=(new \MVO\Messenger\Auth\WebLoginPageParser())->userId($html);
         if($identity===null)throw new MessengerException('login_unconfirmed','Facebook has not confirmed this browser session yet');
         if($identity!==$cookies->accountId())throw new MessengerException('login_identity_mismatch','The browser session identity does not match the Facebook response');
         $this->store->saveCookies($cookies);
-        $this->loginService->cancel();$this->loginService=null;
+        $this->loginService?->cancel();$this->loginService=null;$this->browserLoginExpiresAt=0;
         $this->state='session_imported';
         if($this->loginOwnsLock)$this->store->release();$this->loginOwnsLock=false;
     }
     public function connect():void
     {
         $this->outsideCallback();if($this->isConnected())return;
-        if($this->loginChallenge()!==null)throw new MessengerException('login_verification_pending','Complete or cancel the pending login before restoring a saved session');
+        if($this->loginChallenge()!==null||$this->browserLoginExpiresAt>time())throw new MessengerException('login_verification_pending','Complete or cancel the pending login before restoring a saved session');
         $this->store->acquire();$this->running=true;$this->syncStreams=[];$this->synced=[];$this->pendingSync=[];$this->requestedCursors=[];
         try{
             (new EventProjector($this->store,$this->store->get('account_id')??''))->restoreRouting();
@@ -308,7 +419,7 @@ final class MessengerClient
     }
     public function stop():void
     {
-        $this->loginService?->cancel();$this->loginService=null;$this->loginOwnsLock=false;
+        $this->loginService?->cancel();$this->loginService=null;$this->loginOwnsLock=false;$this->browserLoginExpiresAt=0;
         $this->running=false;$this->closePageMailboxes();$this->connection?->close();$this->connection=null;$this->state='stopped';
         if($this->store->ownsLock()){try{$this->store->event('connection',['state'=>'stopped','e2ee_ready'=>false]);}finally{$this->store->release();}}
     }
@@ -435,7 +546,7 @@ final class MessengerClient
             $this->requestedCursors[$database]=$cursor;$this->connection?->sendOnStream($stream,$this->syncRequest($database,$cursor,$sync),$this->timeoutSeconds);
         }
     }
-    private function loadBootstrap(CookieJar $cookies,string $origin):string
+    private function loadBootstrap(CookieJar $cookies,string $origin,bool $verifyingBrowserIdentity=false):string
     {
         $url=$origin.($origin==='https://www.facebook.com'?'/messages/':'/');
         for($attempt=0;$attempt<4;$attempt++){
@@ -443,15 +554,18 @@ final class MessengerClient
             if($response->status===429)throw new MessengerException('rate_limited','Facebook temporarily limited this session',true);
             if(in_array($response->status,[301,302,303,307,308],true)){
                 $location=$response->header('location')??'';
-                if(str_contains($location,'/checkpoint')||str_contains($location,'/two_step_verification')||str_contains($location,'/consent'))throw new MessengerException('auth_challenge_required','Complete the Facebook security or consent challenge in your browser');
-                if(str_contains($location,'/login'))throw new MessengerException('session_expired','Facebook requires a new authenticated Web session');
                 if(str_starts_with($location,'/')&&!str_starts_with($location,'//'))$location=$origin.$location;
                 $parts=parse_url($location);
                 $expectedHost=parse_url($origin,PHP_URL_HOST);
-                if(($parts['scheme']??null)!=='https'||($parts['host']??null)!==$expectedHost||($origin==='https://www.facebook.com'&&!str_starts_with($parts['path']??'','/messages'))||isset($parts['user'])||isset($parts['pass'])||(isset($parts['port'])&&$parts['port']!==443))throw new MessengerException('unexpected_auth_redirect','Facebook redirected outside the selected messages page');
+                if(($parts['scheme']??null)!=='https'||!in_array($parts['host']??null,['www.facebook.com','facebook.com','www.messenger.com','messenger.com'],true)||isset($parts['user'])||isset($parts['pass'])||(isset($parts['port'])&&$parts['port']!==443))throw new MessengerException('unexpected_auth_redirect','Facebook redirected outside the supported authentication origins');
+                $path=$parts['path']??'/';
+                if(preg_match('~/(?:checkpoint(?:\.php)?|challenge(?:\.php)?|(?:re)?captcha(?:\.php)?|two_step[^/]*|two_factor[^/]*|(?:privacy/)?consent(?:\.php)?)(?:/|$)~i',$path))throw new MessengerException('auth_challenge_required','Complete the Facebook security or consent challenge in your browser');
+                if(preg_match('~/login(?:\.php)?(?:/|$)~i',$path))throw new MessengerException($verifyingBrowserIdentity?'auth_challenge_required':'session_expired',$verifyingBrowserIdentity?'Facebook has not confirmed this browser session yet':'Facebook requires a new authenticated Web session');
+                if($parts['host']!==$expectedHost||($origin==='https://www.facebook.com'&&!str_starts_with($path,'/messages')))throw new MessengerException('unexpected_auth_redirect','Facebook redirected outside the selected messages page');
                 $url=$location;continue;
             }
             if($response->status!==200)throw new MessengerException('bootstrap_http_failed','Facebook did not return an authenticated messages page',in_array($response->status,[500,502,503,504],true));
+            if($verifyingBrowserIdentity)WebLoginService::assertIdentityPage($response->body);
             return $response->body;
         }
         throw new MessengerException('bootstrap_redirect_limit','Facebook bootstrap exceeded the redirect limit');

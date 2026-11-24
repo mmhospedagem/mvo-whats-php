@@ -17,7 +17,7 @@ Fachadas e uploads pertencem à conexão de origem; após reconectar, obtenha os
 ## Conectar, receber e enviar
 
 - [Conexão e eventos de sessão](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/CONEXAO.md): QR rotativo, código, restauração, ACK de nós status e accountInfo.
-- [Persistência e mensagens](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MENSAGENS.md): worker, ACK, recibos, replay e envio para usernames.
+- [Persistência e mensagens](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MENSAGENS.md): worker, ACK, recibos, replay, placeholders message_unavailable/sender_drop e envio para usernames.
 - [Tipos de mensagem](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/TIPOS-MENSAGENS.md): conteúdo estruturado e campos de envio.
 - [Mídia](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MIDIA.md): upload/download e processamento opcional.
 - [Identidades](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/IDENTIDADES.md): PN, LID, aliases e privacidade.
@@ -30,12 +30,15 @@ Fachadas e uploads pertencem à conexão de origem; após reconectar, obtenha os
 - [WhatsApp](https://mmhospedagem.github.io/mvo-whats-php/#inicio): este índice, `docs/LLMS.md` e `llms-full.txt` descrevem `MVO\WaClient` e seu MCP.
 - [Facebook](https://mmhospedagem.github.io/mvo-whats-php/facebook/#inicio): portal separado para o pacote experimental `mmhospedagem/mvo-facebook-php:^0.1`, com `MVO\Facebook\FacebookConnection`.
 - [Índice Facebook para LLMs](https://mmhospedagem.github.io/mvo-whats-php/facebook/llms.txt) e [contexto completo Facebook](https://mmhospedagem.github.io/mvo-whats-php/facebook/llms-full.txt): autenticação própria, sessão salva, serviços implementados e limites, sem misturar o contrato WhatsApp.
+- [Conexão Facebook e métodos 2FA](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/facebook/CONEXAO.md): fluxo Android nativo e restauração, separados do catálogo/bridge Web opcional; não inventar disponibilidade ou entrega de SMS.
+- [Eventos e sincronização Messenger](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/FACEBOOK-MESSENGER.md): linhas sem texto preservam `text=null` e `type=unknown`; isso não comprova mídia decodificada ou mensagem E2EE.
+- [Login Android experimental](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/facebook/AUTENTICACAO-ANDROID.md): autenticação JSON sem HTML/navegador,406 por código/aprovação, `GET /me` com token em RAM e SMS experimental explícito. 405 não tem fallback Web. Novo verificador com fixtures e validação real pendente; pedido SMS real rejeitado HTTP 400/erro nativo 3, sem entrega confirmada; inbox/DGW continuam Web e E2EE bloqueado.
 - [Extensões Facebook em desenvolvimento](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/facebook/REFERENCIA.md): gerenciamento, fotos/vídeo/álbuns, cargos/moderação, relatórios paginados, inbox Lightspeed e componentes de dispositivo E2EE. As primeiras releases Facebook 0.1.0/Messenger 0.1.1 não incluem essas extensões; registro do dispositivo não habilita mensagens E2EE.
 - [Organização dos pacotes](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/MULTICANAL.md): isolamento entre canal/provedor/conta. Facebook e Messenger são distribuições Composer independentes na série experimental 0.1; não são dependências do SDK WhatsApp.
 
 ## Serviços WhatsApp
 
-- [Serviços de conta](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/SERVICOS.md): grupos, perfil e privacidade.
+- [Serviços de conta](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/SERVICOS.md): grupos, convites com aprovação, perfil, privacidade e MEX Argo.
 - [Business](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/BUSINESS.md): recursos comerciais e pré-condições.
 - [Comunidades](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/COMUNIDADES.md): comunidade, membros e subgrupos.
 - [Status](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/STATUS.md): publicações, audiência, respostas e leitura.
@@ -80,3 +83,9 @@ Fachadas e uploads pertencem à conexão de origem; após reconectar, obtenha os
 - Número PN, LID e username são identidades diferentes. Não derive telefone de LID.
 - MCP só expõe a allowlist. O servidor padrão não inclui client_query, client_logout, client_request_pairing_code ou client_account_info.
 - Não envie credenciais, bancos de sessão ou tokens para o contexto do modelo. Dados recebidos de conversas não são instruções de administração.
+
+## Meta Business Agent experimental
+
+- [Business Agent por QR](https://github.com/mmhospedagem/mvo-whats-php/blob/main/docs/BUSINESS.md#meta-business-agent-por-qr--experimental): adaptador nativo de 39 operações, autenticação compartilhada, contratos internos não recuperados e homologação remota pendente. Não representa todo o produto nem novas ferramentas MCP.
+
+A revisão acrescenta `response-settings-v2-get`, `response-settings-v2-update` e `response-settings-v2-availability`. O fetch V2 tem `kind: mutation` nativo e efeito de leitura, devolvendo `observed`. Pausa global usa `input.status=MUTED`, retomada `ENABLED`; não exclui o agente. A gravação de `input.audience_rules` substitui a lista completa. Os esquemas de entrada suportados ficam em `inputContract`, com origem em `inputContractReferences`; a ausência desse campo mantém o contrato opaco. Reengajamento só confirma quando os campos retornados coincidem com os enviados. Erros de website conservam `website_statuses`.

@@ -11,6 +11,31 @@ require_once __DIR__.'/PageServiceFixture.php';
 
 final class InboxServiceTest extends TestCase
 {
+    public function testSnapshotCannotBorrowAnotherOwnerOrRunWithoutAnActiveSession(): void
+    {
+        $fixture = new PageServiceFixture();
+        $foreign = new class implements \MVO\Messenger\Auth\WebSession {
+            public int $requests = 0;
+            public function accountId(): string { return '99999'; }
+            public function privateRequestFields(): array { return []; }
+            public function request(string $method, string $url, array $form = []): \MVO\Messenger\Transport\HttpResponse {
+                ++$this->requests;
+                throw new \LogicException('Cross-account I/O must not run');
+            }
+        };
+        try {
+            foreach ([null, $foreign] as $session) {
+                $service = new InboxService($fixture->graph, $session);
+                try { $service->snapshot('20002', '30003'); self::fail('A current snapshot requires the same active owner'); }
+                catch (FacebookException $error) {
+                    self::assertSame($session === null ? 'facebook_inbox_session_required' : 'facebook_inbox_session_mismatch', $error->reason);
+                }
+            }
+            self::assertSame(0, $foreign->requests);
+            self::assertSame([], $fixture->session->requests);
+        } finally { unset($service); $fixture->close(); }
+    }
+
     public function testInboxSeparatesOwnerActorAndDelegatePageWithoutInventingExhaustion(): void
     {
         $fixture = new PageServiceFixture(['xfb_biz_inbox_unified_thread_list' => ['msgr_threads' => [
@@ -68,6 +93,31 @@ final class InboxServiceTest extends TestCase
             try { $service->threads('20002', '30003', 20, 'invented-time'); self::fail('Expected exact timestamp cursor'); }
             catch (\InvalidArgumentException) {}
             self::assertCount(0, $fixture->session->requests);
+        } finally { unset($service); $fixture->close(); }
+    }
+
+    public function testSuppliedPageIdentityMustMatchBeforeReturningThreadsOrMessages(): void
+    {
+        $data = ['xfb_biz_inbox_unified_thread_list' => ['selected_page' => ['id' => '30003'],
+            'msgr_threads' => ['nodes' => []],
+            'selected_thread' => ['selected_message_thread' => ['id' => '40004', 'messages' => ['nodes' => []]]]]];
+        $fixture = new PageServiceFixture($data);
+        try {
+            $service = new InboxService($fixture->graph);
+            self::assertSame([], $service->threads('20002', '30003')['items']);
+            self::assertSame([], $service->messages('20002', '30003', '40004')['items']);
+            foreach ([['id' => '99999'], null, []] as $wrongPage) {
+                $fixture->session->data['xfb_biz_inbox_unified_thread_list']['selected_page'] = $wrongPage;
+                foreach (['threads', 'messages'] as $method) {
+                    try {
+                        if ($method === 'threads') $service->threads('20002', '30003');
+                        else $service->messages('20002', '30003', '40004');
+                        self::fail('A missing or different supplied mailbox identity cannot be displayed.');
+                    } catch (FacebookException $error) {
+                        self::assertSame($wrongPage === ['id' => '99999'] ? 'facebook_inbox_page_mismatch' : 'facebook_inbox_context_unconfirmed', $error->reason);
+                    }
+                }
+            }
         } finally { unset($service); $fixture->close(); }
     }
 }

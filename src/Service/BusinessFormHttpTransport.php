@@ -9,10 +9,13 @@ final class BusinessFormHttpTransport
     public const MAX_BYTES=2097152;
     private \Closure $tokenProvider;
     private ?\Closure $authorizationGuard;
+    /** @var list<string> */
+    private readonly array $documents;
     /** @param callable():string $accessTokenProvider
      * @param (\Closure(string,list<string>,string,float):array{status:int,body:string})|null $exchange
-     * @param callable():void|null $authorizationGuard Fresh local authorization before auth and HTTP; throws on withdrawal. */
-    public function __construct(callable $accessTokenProvider,private readonly string $language='pt_BR',private readonly ?string $proxy=null,private readonly ?\Closure $exchange=null,private readonly float $timeout=30.0,?callable $authorizationGuard=null)
+     * @param callable():void|null $authorizationGuard Fresh local authorization before auth and HTTP; throws on withdrawal.
+     * @param list<string>|null $documents Explicit native document allowlist. Defaults to Business forms. */
+    public function __construct(callable $accessTokenProvider,private readonly string $language='pt_BR',private readonly ?string $proxy=null,private readonly ?\Closure $exchange=null,private readonly float $timeout=30.0,?callable $authorizationGuard=null,?array $documents=null)
     {
         if(PHP_INT_SIZE<8)throw new \LogicException('Business GraphQL requires 64-bit PHP');
         if(preg_match('/^[a-z]{2,3}(?:_[A-Z]{2})?$/D',$language)!==1)throw new \InvalidArgumentException('Invalid Business GraphQL language');
@@ -20,6 +23,9 @@ final class BusinessFormHttpTransport
         if($proxy!==null){$parts=parse_url($proxy);if($proxy===''||preg_match('/[\x00-\x20\x7f]/',$proxy)||!is_array($parts)||!in_array(strtolower($parts['scheme']??''),['http','https','socks5','socks5h'],true)||!is_string($parts['host']??null)||$parts['host']===''||isset($parts['query'])||isset($parts['fragment']))throw new \InvalidArgumentException('Invalid explicit Business GraphQL proxy');}
         $this->tokenProvider=\Closure::fromCallable($accessTokenProvider);
         $this->authorizationGuard=$authorizationGuard===null?null:\Closure::fromCallable($authorizationGuard);
+        $this->documents=$documents??[BusinessFormGraphqlService::PUBLISH_DOC_ID,BusinessFormGraphqlService::GENERATE_DOC_ID];
+        foreach ($this->documents as $document) if (!is_string($document) || preg_match('/^[1-9][0-9]{0,17}$/D',$document)!==1)
+            throw new \InvalidArgumentException('Invalid Business GraphQL document allowlist');
     }
 
     /** Returns GraphQL data; errors, partial outcomes and HTTP refusals never become success.
@@ -27,7 +33,7 @@ final class BusinessFormHttpTransport
      * @return array<string,mixed> */
     public function request(string $docId,array $variables):array
     {
-        if(!in_array($docId,[BusinessFormGraphqlService::PUBLISH_DOC_ID,BusinessFormGraphqlService::GENERATE_DOC_ID],true))throw new \InvalidArgumentException('Unsupported Business form GraphQL document');
+        if(!in_array($docId,$this->documents,true))throw new \InvalidArgumentException('Unsupported Business form GraphQL document');
         if($variables!==[]&&array_is_list($variables))throw new \InvalidArgumentException('GraphQL variables must be an object');
         foreach(array_keys($variables)as$key)if(!is_string($key)||preg_match('/^[_A-Za-z][_0-9A-Za-z]*$/D',$key)!==1)throw new \InvalidArgumentException('Invalid GraphQL variable name');
         try{$encodedVariables=json_encode($variables===[]?new \stdClass():$variables,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES,128);}catch(\JsonException $error){throw new \InvalidArgumentException('Invalid Business GraphQL variables',0,$error);}

@@ -6,7 +6,7 @@ namespace MVO\Messenger\Auth;
 /** Server-issued cookies with their original scopes; private persistence boundary. */
 final class CookieJar
 {
-    /** @var list<array{name:string,value:string,domain:string,path:string,secure:bool,expires:?int,hostOnly:bool}> */
+    /** @var list<array{name:string,value:string,domain:string,path:string,secure:bool,expires:?int,hostOnly:bool,httpOnly?:bool,sameSite?:string}> */
     private array $cookies;
     private readonly string $account;
 
@@ -35,8 +35,29 @@ final class CookieJar
             $key = $domain . "\0" . $path . "\0" . $name;
             if (isset($seen[$key])) throw new \InvalidArgumentException('Duplicate Facebook session cookie');
             $seen[$key] = true;
-            $this->cookies[] = ['name'=>$name, 'value'=>$value, 'domain'=>$domain, 'path'=>$path,
+            $normalized = ['name'=>$name, 'value'=>$value, 'domain'=>$domain, 'path'=>$path,
                 'secure'=>($cookie['secure'] ?? true) !== false, 'expires'=>$expires, 'hostOnly'=>($cookie['hostOnly'] ?? false) === true];
+            // Native SessionCookie uses HttpOnly/SameSite; browser exports use
+            // lower camel case. Retain supplied attributes across persistence
+            // and private handoffs, rather than silently dropping them.
+            foreach (['httpOnly'=>'HttpOnly','sameSite'=>'SameSite'] as $canonical=>$native) {
+                if (isset($cookie[$canonical], $cookie[$native]) && $cookie[$canonical] !== $cookie[$native]) {
+                    throw new \InvalidArgumentException('Ambiguous Facebook cookie attribute');
+                }
+            }
+            $httpOnly = $cookie['httpOnly'] ?? $cookie['HttpOnly'] ?? null;
+            if ($httpOnly !== null) {
+                if (!is_bool($httpOnly)) throw new \InvalidArgumentException('Invalid Facebook cookie HttpOnly attribute');
+                $normalized['httpOnly'] = $httpOnly;
+            }
+            $sameSite = $cookie['sameSite'] ?? $cookie['SameSite'] ?? null;
+            if ($sameSite !== null) {
+                if (!is_string($sameSite) || !in_array(strtolower($sameSite), ['strict','lax','none'], true)) {
+                    throw new \InvalidArgumentException('Invalid Facebook cookie SameSite attribute');
+                }
+                $normalized['sameSite'] = ucfirst(strtolower($sameSite));
+            }
+            $this->cookies[] = $normalized;
         }
         $user = $this->value('c_user');
         if ($user === null || !preg_match('/^[1-9][0-9]{0,24}$/D', $user) || $this->value('xs', false) === null) {

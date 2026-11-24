@@ -8,8 +8,8 @@ A biblioteca Facebook é experimental. Cobertura implementada, teste com transpo
 
 | Recurso | Contrato implementado | Evidência e limite |
 | --- | --- | --- |
-| Login e sessão | E-mail/senha, confirmação de identidade, persistência e restauração. | Login real confirmado com continuação humana e restauração; sem garantia de todos os desafios. |
-| 2FA | Desafio reconhecido em memória e confirmação de autenticador. | Testes locais; conclusão completa desse caminho em conta real não demonstrada. |
+| Login e sessão | Android JSON sem HTML/navegador; opção Web separada, cookies confirmados e restauração. | Código/aprovação 406 e restauração demonstrados em 20/10/2026 com identidade Web posterior. Novo `/me` com fixtures e validação real pendente. |
+| 2FA | Código/aprovação 406 nativos; SMS experimental explícito, uma tentativa. Catálogo Web somente na opção separada `login()`. | `methods=[]` no Android; um pedido real em 21/10/2026 foi rejeitado com HTTP 400/erro nativo 3, sem comprovar disponibilidade/entrega. 405 retorna `login_native_verification_unsupported`, browser indisponível. |
 | CAPTCHA | Handoff privado opcional e confirmação independente da identidade. | Exige ação humana; pacote não abre navegador nem resolve desafio automaticamente. |
 | Metadados Messenger | DGW/Lightspeed, cursores e loop PHP. | Conta real chegou a `metadata_connected`, com 13 conversas e observações curtas; não comprova estabilidade prolongada. |
 | Dispositivo e componentes E2EE | Chaves próprias, ICDC/registro explícito, Noise, Signal e journal de texto persistente. | Testes locais; nenhum registro/envio real. A integração de produto ainda não está habilitada; `e2ee_ready=false`. |
@@ -22,7 +22,7 @@ A biblioteca Facebook é experimental. Cobertura implementada, teste com transpo
 | Anúncios | Consultas Web parciais, objetos por IDs conhecidos e métricas agregadas. | Contratos/fixtures; queries comerciais não validadas em conta real. Sem mutations comerciais. |
 | Monitor | SQLite, snapshots, cursores, deduplicação e diferenças. | Testes locais; não coleta rede ou prova eventos reais. |
 
-As observações reais acima foram feitas em 18/10/2026. Não houve envio de mensagens, publicação, comentário, reação ou alteração publicitária nesses testes Facebook. A validação de autenticação/metadados não se estende automaticamente aos serviços comerciais.
+As observações reais de Web/bootstrap/metadados acima foram feitas em18/10/2026; código/aprovação Android e restauração foram demonstrados em 20/10/2026 com verificação Web de identidade. O novo `/me` JSON tem testes locais, sem validação real própria. Um pedido SMS em 21/10/2026 teve resposta real rejeitada HTTP 400/erro nativo 3, sem entrega confirmada. Não houve envio de mensagens, publicação, comentário, reação ou alteração publicitária nesses testes Facebook. A validação de autenticação/metadados não se estende aos serviços comerciais.
 
 ## Recursos ainda ausentes
 
@@ -36,7 +36,10 @@ Erros do runtime usam `MVO\Messenger\MessengerException`, com `reason` e `retrya
 
 | Motivo | Tratamento |
 | --- | --- |
-| `login_two_factor_required` | Consulte `loginChallenge()`; somente `two_factor` com `ready=true` aceita `confirmLogin()`. |
+| `login_two_factor_required` | No Android, use capacidades 406 atuais para código/aprovação; SMS é experimental explícito. Catálogo/seleção pertencem somente ao fluxo Web opcional. |
+| `login_native_verification_unsupported` | Checkpoint 405/CAPTCHA/Google sem continuação nativa estabelecida; sem HTML, browser ou conversão para 406. |
+| `login_native_identity_unconfirmed` | O JSON/status de `/me` não confirmou o UID; não salvar nem repetir confirmação consumida. |
+| `login_sms_outcome_uncertain`, `login_sms_already_requested`, `login_native_sms_rejected` | Não repetir o pedido experimental na tentativa; não declarar entrega ou autenticação. |
 | `login_code_invalid` | Solicite decisão do operador; não repita o código automaticamente. |
 | `login_captcha_required`, `login_challenge_required` | Verificação humana no mesmo contexto; sem resolução automática. |
 | `login_challenge_expired` | O contexto foi descartado; outra tentativa explícita pode ser necessária. |

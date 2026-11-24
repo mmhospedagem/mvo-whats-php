@@ -226,3 +226,32 @@ Os testes verificam produtos, coleções, carrinho e perfil com fixtures de requ
 O [relatório de evidências de protocolo](BUSINESS-PROTOCOL-EVIDENCE.json) registra URLs públicas, hashes SHA-256, módulos, IDs de análise estática, arquivos PHP e limites da verificação. Ele contém somente metadados, sem bundles nem dados de conta. Os artefatos de coleções/carrinho representam um protocolo histórico de 2024; a inspeção dos artefatos públicos observados em 14/10/2026 foi parcial.
 
 Na parte atual inspecionada, as mutações de gerenciamento de produtos usam Facebook GraphQL com outro contexto de autenticação. Esses IDs não foram tratados como consultas WhatsApp MEX na biblioteca. Essa observação não demonstra que todo cliente usa o mesmo caminho nem confirma a disponibilidade ou remoção dos endpoints IQ anteriores. A compatibilidade comercial atual precisa ser homologada com a conta e o servidor que executarão a aplicação.
+
+## Meta Business Agent por QR — experimental
+
+`WaClient::businessAgent()` oferece um adaptador para 39 operações nativas recuperadas do WhatsApp Web. A instância precisa estar conectada e ser elegível ao agente. Execute chamadas no loop externo, fora de listeners, usando o mesmo dono da sessão.
+
+```php
+$agent = $client->businessAgent();
+$result = $agent->run('status');
+$knowledge = $agent->run('knowledge-get');
+$settings = $agent->run('response-settings-get');
+$catalog = \MVO\Service\BusinessAgentService::operations();
+$reference = \MVO\Service\BusinessAgentService::source();
+```
+
+`run(string $operation, array $variables = []): array` recebe o nome curto do catálogo e as variáveis nativas. O catálogo inclui consultas de status/elegibilidade/conhecimento/configurações, controle de respostas por conversa, conhecimento, produtos, regras, leads, audiência, horários e reengajamento. A lista fechada preserva documentos, nomes e seleções de resposta do snapshot de 12/07/2026, com origem e SHA-256 em `resources/business-agent-operations.json`. IDs podem expirar. Não aceita IDs de documento arbitrários, variáveis extras nem tokens fornecidos no payload.
+
+Os tipos completos foram removidos da referência compilada; seis operações já têm um subconjunto de entrada tipado recuperado dos chamadores Web. Portanto, os nomes em `operations()` não são um schema completo: objetos `input`/`request`, enums e referências de mídia exigem contrato nativo homologado. A validação local verifica envelope JSON, nomes observados, profundidade 64 e limite de 2 MiB; não declara os objetos internos corretos. Para pausar respostas V2, use `run('response-settings-v2-update', ['input'=>['status'=>'MUTED']])`; `ENABLED` retoma. Consulte `response-settings-v2-get` antes de gravar. Não use `DISABLED`: exclusão não faz parte desse contrato.
+
+O transporte usa HTTPS fixo `https://graph.facebook.com/graphql`, TLS verificado, sem redirects, com allowlist explícita de documentos do agente. A autenticação Business reutiliza o mecanismo nativo IQ 118 → nonce → IQ 104 dos formulários. Token, nonces usados, exclusão mútua e cooldown são compartilhados entre formulários e agente no mesmo cliente; não há token manual, persistência de token ou leitura de segredo do ambiente. Uma autenticação inicial pode levar até 96 segundos, além dos 30 segundos de HTTP. A autenticação e as dez consultas originais foram aceitas em uma conta Business por QR em 24/11/2026, assim como a gravação de audiência sem mudança do valor. Isso não garante disponibilidade em outras contas. Não use retries automáticos.
+
+`setBusinessAgentGuard(?callable $guard)` configura uma função sem argumentos que lança quando o acesso for retirado. É reavaliada antes das fases de autenticação e do HTTP, inclusive em fachadas já obtidas. Após desconectar/reconectar, obtenha outra fachada. O token é limpo e o cooldown da conta é conservado no mesmo cliente; reconectar não contorna restrições remotas. A perda de autorização após HTTP deixa resultado incerto.
+
+O retorno contém `operation` curto, `kind: query|mutation`, `outcome`, `data`, `source: native_graphql` e `supportVerified` por operação. Consultas retornam `observed` ao receber a raiz esperada, preservando nulls; isso não comprova elegibilidade/ativação. Mutações usam `accepted`/`rejected` com booleano `success` explícito, ou confirmação de valores aplicados no caso do reengajamento, `partial` para itens mistos e `unknown` quando não há confirmação suficiente. Os dados são projetados pelas seleções nativas; campos extras do servidor são descartados. Erros GraphQL, HTTP e transporte não viram sucesso nem replay. Consulte o estado antes de repetir um resultado incerto.
+
+Essa entrega não implementa todo o produto Meta Business Agent. Faltam contratos QR verificados para criação/exclusão global, conexão Google Drive/Calendar, compromissos, checkout e treinamento completo. Controle por conversa não pausa o agente globalmente. As operações têm testes locais de transporte e ciclo de vida; as dez consultas originais e a gravação de audiência têm validação em uma conta; outros payloads e comportamentos no aplicativo conservam seu escopo específico de validação.
+
+A revisão acrescenta `response-settings-v2-get`, `response-settings-v2-update` e `response-settings-v2-availability`. O fetch V2 tem `kind: mutation` nativo e efeito de leitura, devolvendo `observed`. Pausa global usa `input.status=MUTED`, retomada `ENABLED`; não exclui o agente. A gravação de `input.audience_rules` substitui a lista completa. Os esquemas de entrada suportados ficam em `inputContract`, com origem em `inputContractReferences`; a ausência desse campo mantém o contrato opaco. Reengajamento só confirma quando os campos retornados coincidem com os enviados. Erros de website conservam `website_statuses`.
+
+Validação posterior em 24/11/2026: 17 operações nativas confirmadas em uma conta Business por QR, incluindo os fetches V2 e gravações de estado/audiência/reengajamento e controle de conversa. As configurações gerais foram preservadas; uma conversa de teste foi explicitamente habilitada e apresentou resposta automática após 15 segundos, com recibos de entrega e sem comando de envio pela API. O snapshot de `validation` no catálogo precede essa última rodada; indicadores conservadores não equivalem a falha da execução. Outras contas, ações destrutivas e integrações externas mantêm seu escopo de validação próprio.

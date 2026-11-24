@@ -6,7 +6,7 @@ O conector implementa uma parte do **protocolo Web de conversas do Facebook Mess
 
 **O envio Messenger E2EE integrado ainda não está habilitado.** O [componente experimental](facebook/DISPOSITIVO-E2EE.md) oferece provisionamento explícito, Noise, Signal e journal de texto no mesmo dono, com testes locais. Esses componentes não comprovam autenticação/interoperabilidade atual da conta. O cliente pode chegar a `metadata_connected` após sincronizar metadados; `e2ee_ready` continua `false`. O envio comum aceita apenas threads conhecidas cujo tipo sem criptografia esteja explicitamente suportado. Conversas criptografadas falham com `messenger_e2ee_not_ready`, sem fallback.
 
-O fluxo principal de autenticação recebe **e-mail e senha**, obtém a sessão pelo formulário Web e preserva somente os cookies resultantes. Em 18/10/2026, a autenticação real foi confirmada com verificação humana no navegador isolado e confirmação independente da identidade por HTTPS. O PHP depois abriu DGW, sincronizou 13 conversas e manteve `metadata_connected` durante uma observação de 12 segundos; uma segunda execução restaurou os próprios cursores persistidos e repetiu essa observação sem novo login. Nenhuma mensagem foi enviada. Essa validação de metadados não demonstra troca de mensagens, E2EE ou estabilidade prolongada.
+O checkout em desenvolvimento oferece autenticação nativa `loginAndroid()` sem fallback Web, descrita abaixo. O método separado `login()` mantém a alternativa Web. A observação histórica a seguir foi feita nesse caminho Web: em 18/10/2026, a autenticação real foi confirmada com verificação humana no navegador isolado e confirmação independente da identidade por HTTPS. O PHP depois abriu DGW, sincronizou 13 conversas e manteve `metadata_connected` durante uma observação de 12 segundos; uma segunda execução restaurou os próprios cursores persistidos e repetiu essa observação sem novo login. Nenhuma mensagem foi enviada. Essa validação de metadados não demonstra troca de mensagens, E2EE ou estabilidade prolongada.
 
 ## Pacotes e isolamento
 
@@ -16,12 +16,26 @@ O [adaptador Messenger](../packages/messenger-adapter/README.md) acrescenta os c
 
 Este pacote continua focado nas conversas Messenger. A biblioteca separada `packages/facebook` oferece `MVO\Facebook\FacebookConnection` como entrada direta para login e-mail/senha, persistência e restauração da sessão Facebook, sem exigir outro cliente na aplicação. Ela reutiliza internamente o mesmo runtime e acrescenta serviços Web parciais de Páginas, publicações, comentários, reações, inbox, consultas de anúncios e monitoramento SQLite. Uma aplicação que já tem um Messenger ativo pode compartilhar `MessengerClient::webSession()` com `FacebookClient`; não abra outro dono no mesmo ID/pasta. Consulte [Facebook PHP](FACEBOOK.md) para exemplos e limites; isso não representa suporte completo a Marketplace, grupos ou administração geral de Páginas. Também não há conector Instagram nesta alteração.
 
+## Autenticação Android em desenvolvimento
+
+`loginAndroid()` usa somente endpoints nativos JSON durante a autenticação: chave dinâmica, `/auth/login`, código/aprovação 406 e `GET /me` com token de usuário somente em RAM, sem HTML ou navegador. O 405 retorna `login_native_verification_unsupported` e `browser_continuation_available=false`; não há conversão para 406. O schema JSON de identidade exigido pelo novo verificador tem fixtures e ainda precisa de validação real própria. Bootstrap, metadados, inbox e serviços de Fanpage continuam no protocolo Web/DGW; `e2ee_ready=false`.
+
+`MessengerClient` e `FacebookConnection` oferecem `loginAndroid($email, $password, AndroidLoginProfile $profile, ?AndroidLoginTransport $transport = null)`, com o mesmo ID, armazenamento e dono de lock. A configuração do aplicativo é privada e não está embutida no SDK. O token de usuário do resultado nativo autoriza somente a verificação `/me`, nunca entra no perfil de aplicativo e não é persistido com cookies/dispositivo.
+
+Código já recebido continua em `confirmLogin()`; aprovação feita pelo dono no aplicativo pode ser consultada quando `can_check=true`, com cinco segundos entre consultas, prazo original e nenhuma repetição de token incerto. `requestLoginSms()` faz um pedido experimental explícito do 406, uma tentativa, com `delivery_confirmed=false`. Ele não é catálogo (`methods=[]`), não confirma disponibilidade nem autentica. O pedido não converte 405 para 406.
+
+Em20/10/2026, código/aprovação 406 e restauração foram demonstrados em uma conta, seguidos do antigo verificador Web. Essa prova não valida o novo schema de identidade `/me` nem entrega de SMS. As rotas/métodos/friendly names têm evidência APK; o novo verificador e solicitador SMS têm fixtures. Leia [Autenticação Android experimental](facebook/AUTENTICACAO-ANDROID.md).
+
+A opção de baixo nível `AndroidLoginService(..., allowWebCheckpoint: true)` conserva compatibilidade HTTP 405 legada por decisão explícita da aplicação/testes. `loginAndroid()` não a habilita. Os detalhes Web abaixo pertencem à alternativa opcional `login()`, não à política nativa da API consumidora.
+
 ## Autenticação atual
+
+**Alternativa Web explícita do SDK:** esta seção descreve `login()`/`WebLoginService`. A autenticação Android acima não executa estes formulários ou o bridge de navegador.
 
 1. O operador informa e-mail e senha de sua conta Facebook em uma entrada privada da aplicação.
 2. `MessengerClient::login()` usa `WebLoginService` para carregar o formulário atual de `www.messenger.com` por HTTPS, com cookie jar anônimo somente em memória.
 3. O parser obtém o action, os campos e a chave pública dinâmica fornecidos pelo servidor. A senha é cifrada em `#PWD_BROWSER:5` com AES-256-GCM e chave protegida por Sodium sealed-box.
-4. A sessão só é aceita depois de `c_user`/`xs` válidos e uma página autenticada confirmar a mesma identidade. Os cookies finais mantêm domínio, caminho e expiração reais.
+4. A sessão só é aceita depois de `c_user`/`xs` válidos e uma página autenticada confirmar a mesma identidade. Os cookies finais mantêm domínio, caminho e expiração reais, além de `HttpOnly` e `SameSite` quando fornecidos. Esses atributos são preservados no armazenamento e na continuação privada pelo navegador; não pertencem ao cabeçalho `Cookie` das requisições PHP.
 5. O cliente persiste a sessão confirmada, sem persistir a senha. `connect()` depois escolhe o domínio coberto pelos cookies, descobre a versão/configuração Lightspeed, abre DGW e aguarda o sync inicial.
 
 ```php
@@ -48,35 +62,43 @@ O bridge PHP recebe `exportPrivateLoginChallenge()` diretamente do cliente que m
 
 Depois da ação humana, somente os cookies Facebook/Messenger daquele contexto são candidatos a `completeBrowserLogin(CookieJar $cookies)`. O SDK faz uma nova requisição HTTPS e exige `CurrentUserInitialData.USER_ID` positivo, igual ao `c_user`, antes de salvar a sessão atomicamente. CAPTCHA concluído, mudança de URL ou cookies aparentes não bastam. A conta salva no mesmo ID continua imutável. Erros de verificação preservam o desafio enquanto estiver válido; `stop()` ou expiração o cancelam.
 
+Desafios diretos de CAPTCHA, checkpoint ou consentimento preservam o contexto original, mesmo fora da rota 2FA. `loginChallenge()['type']` distingue `captcha`, `checkpoint`, `consent` e `two_factor`. Checkpoint/consentimento usam o estado `awaiting_login` e não habilitam código ou aprovação. A consulta HTTP de um Android 405 pertence somente ao construtor legado com `allowWebCheckpoint: true`; ela não é oferecida por `loginAndroid()`. Não reinicie `login()` para continuar a verificação humana.
+
+Na confirmação pelo navegador, `auth_challenge_required` significa **identidade ainda pendente**: o HTTPS voltou ao login, à segurança/consentimento ou retornou HTTP 200 com controles desse intersticial, mesmo contendo o ID correto. `login_unconfirmed` indica ausência de identidade positiva. Nenhum desses retornos salva os cookies; a aplicação mantém a mesma tentativa até a ação humana e uma nova confirmação explícita. Na restauração comum por `connect()`, um retorno ao login continua sendo `session_expired`. Links de configurações e trechos inertes de scripts não são tratados como formulário de verificação.
+
 Esse auxiliar de autenticação é opcional e exige integração privada da aplicação; não é distribuído como painel. O protocolo e o loop Messenger continuam em PHP; o pacote não depende de navegador para restaurar sessões ou manter DGW. Em 18/10/2026, o operador concluiu a verificação na janela isolada e o PHP confirmou a identidade por HTTPS, salvou a sessão e carregou o bootstrap autenticado. Isso comprova o handoff nessa conta e tentativa, sem demonstrar compatibilidade de todos os desafios. O laboratório utilizado nessa validação é privado e não faz parte da biblioteca distribuída.
 
 Autenticação e conexão são resultados separados. Se a sessão foi salva, mas o sync seguinte falhar, o laboratório retorna `partial`, com `authenticated=true`, `imported=true`, `connected=false` e um `connection_error` seguro. O operador pode restaurar com “Conectar sessão salva”; não precisa repetir e-mail/senha apenas por uma falha posterior de protocolo.
 
 ### Continuação por aplicativo autenticador
 
-Quando o Facebook retorna `login_two_factor_required`, o cliente conserva o cookie jar, a página e o contexto do desafio **somente em memória**, por até dez minutos, com o lock exclusivo da sessão. A senha já foi descartada. `loginChallenge()` e `accountInfo()['login_challenge']` expõem somente `type`, `expires_at` e `ready`; não expõem contexto, HTML ou tokens.
+Quando o Facebook retorna `login_two_factor_required`, o cliente conserva o cookie jar, a página e o contexto do desafio **somente em memória**, por até dez minutos, com o lock exclusivo da sessão. A senha já foi descartada. No checkout em desenvolvimento, `loginChallenge()` e `accountInfo()['login_challenge']` expõem a projeção segura `type`, `expires_at`, `ready`, `methods`, `selected_method`, `requires_code` e `can_check`; não expõem contexto, HTML ou tokens. A aquisição/persistência dos cookies é responsabilidade do SDK, sem extração manual de perfil do navegador.
 
-`ready=true` indica que os campos e a operação de confirmação necessários foram reconhecidos no desafio atual. O operador informa o código no formulário privado e a aplicação chama `confirmLogin($code)`, fora dos callbacks. O código deve permanecer uma string para preservar zeros iniciais; não deve entrar em logs, argumentos CLI ou filas em texto claro. `ready=false` bloqueia o envio do código para um formato ainda desconhecido.
+`refreshLoginMethods()` consulta os métodos reconhecidos oferecidos naquela tentativa. A aplicação apresenta as opções ao dono e passa o ID escolhido para `requestLoginMethod($methodId)`. Essa chamada pode solicitar SMS/e-mail ou aprovação em outro aplicativo; não deve ocorrer por descoberta automática ou em um loop de reenvio. Autenticador, SMS, e-mail e aprovação só ficam disponíveis quando há alternativa e binding atuais reconhecidos. Não invente IDs, destinatários de recuperação, endpoints ou fallbacks para outro método.
 
-Uma resposta indicando código válido não confirma a conexão. O conector precisa concluir a continuação permitida e verificar novamente cookies e identidade antes de salvar a sessão. Só depois a aplicação chama `connect()` para abrir DGW e sincronizar metadados. `stop()` cancela o desafio; expiração e reinício do processo descartam esse contexto e exigem nova tentativa de login. Não há repetição automática de códigos.
+`ready=true` indica uma operação reconhecida no desafio atual, não necessariamente entrada de código. Se `requires_code=true`, o operador informa o código no formulário privado e a aplicação chama `confirmLogin($code)`, fora dos callbacks. O código deve permanecer uma string para preservar zeros iniciais; não deve entrar em logs, argumentos CLI ou filas em texto claro. Se `can_check=true`, o operador aprova o acesso no aplicativo já conectado, e `checkLoginApproval()` consulta o resultado: `false` mantém a espera; `true` significa que o SDK verificou a identidade e salvou a sessão. Não execute confirmação por código nesse estado. `ready=false` bloqueia operações cujo formato ainda não foi reconhecido.
 
-A compatibilidade desse caminho com a conta real continua pendente de confirmação completa; não confunda testes locais do formato com autenticação finalizada.
+Uma resposta indicando código válido ou aprovação não confirma a conexão. O conector precisa concluir a continuação permitida e verificar novamente cookies e identidade antes de salvar a sessão. Só depois a aplicação chama `connect()` para abrir DGW e sincronizar metadados. A seleção de um método não prolonga indefinidamente a tentativa. `stop()` cancela o desafio; expiração e reinício do processo descartam esse contexto e exigem nova tentativa de login. Não há repetição automática de códigos ou envios.
+
+A seleção e continuação dos métodos têm validação local com respostas simuladas, sem prova de envio real de SMS/e-mail ou aprovação em aplicativo. A compatibilidade desse caminho com a conta real continua pendente de confirmação completa; não confunda testes locais do formato com autenticação finalizada. Esses métodos da branch de desenvolvimento não integram as primeiras releases Messenger 0.1.1/Facebook 0.1.0. Consulte [conexão Facebook](facebook/CONEXAO.md) e o [exemplo de integração](../packages/facebook/examples/login-methods.php).
 
 | Motivo | Ação/limite |
 | --- | --- |
 | `login_rejected` | O servidor não confirmou credenciais/sessão; não há repetição automática. |
-| `login_two_factor_required` | Consulte `loginChallenge()`; com `ready=true`, informe o código do autenticador no formulário privado. |
-| `login_code_invalid` | Confira o código do autenticador; nenhuma repetição automática. |
+| `login_two_factor_required` | Consulte os métodos do desafio, escolha uma alternativa oferecida e siga `requires_code`/`can_check`. |
+| `login_code_invalid` | Confira o código do método selecionado; nenhuma repetição automática. |
 | `login_challenge_expired` | Inicie outra tentativa de login; o contexto anterior foi descartado. |
 | `login_challenge_unavailable` | O desafio atual não forneceu um formato de confirmação reconhecido. |
 | `login_verification_pending` | Conclua ou cancele a verificação antes de restaurar/importar uma sessão. |
 | `login_captcha_required` / `login_challenge_required` | No laboratório, continue a tentativa pendente em “Concluir verificação no Facebook”; uma verificação em outro contexto pode não liberá-la. |
 | `login_consent_required` | Resolva a decisão de consentimento solicitada pelo Facebook. |
+| `auth_challenge_required` em `completeBrowserLogin()` | A confirmação HTTPS da identidade ainda está pendente; continue o mesmo contexto humano, sem repetir credenciais. |
+| `session_expired` em `connect()` | A sessão salva voltou ao login; autentique novamente a mesma conta. |
 | `login_rate_limited` | Aguarde; não existe loop automático de tentativas. |
 | `login_flow_unavailable` / `login_encryption_unavailable` | O formato/chave necessário não foi fornecido; a biblioteca não tenta senha sem criptografia. |
 | `login_unconfirmed` / `login_identity_mismatch` | Cookies e identidade não foram confirmados de forma consistente. |
 
-As mensagens públicas de erro não incluem senha, código, cookies, corpo HTTP ou chave privada. Não registre objetos/payloads/stack traces brutos da autenticação; use uma projeção explícita de `reason` e mensagem. O contexto temporário é descartado depois de sucesso, falha terminal, cancelamento ou expiração; a etapa pendente de 2FA é preservada somente pelo processo que a iniciou.
+As mensagens públicas de erro não incluem senha, código, cookies, corpo HTTP ou chave privada. Não registre objetos/payloads/stack traces brutos da autenticação; use uma projeção explícita de `reason` e mensagem. O contexto temporário é descartado depois de sucesso, falha terminal, cancelamento ou expiração; os desafios pendentes são preservados somente pelo processo que os iniciou. Os testes locais dessas fronteiras não demonstram compatibilidade com todos os provedores de login ou remoção de uma rejeição de segurança do Google.
 
 ### Importação avançada e exemplo CLI
 
@@ -122,6 +144,8 @@ Os estados intermediários incluem `awaiting_two_factor`, `login_challenge_expir
 Esse JSON é **ilustrativo**, com IDs/versão fictícios; não é resultado de uma conexão real. A implementação extrai os valores atuais da sessão e não usa esse número de versão como fallback.
 
 Listeners recebem projeções de `connection`, `message`, `thread`, `message_ack`, `message_failed` ou `protocol_notice`, conforme o conteúdo realmente processado. Execute comandos no loop externo depois dos callbacks. O método `events($after, $limit)` consulta o histórico local persistido; não consulta o servidor por conta própria.
+
+Uma linha nativa de mensagem pode não conter texto. Nesse caso, o evento preserva `text=null` e `type=unknown`, sem inventar texto vazio ou classificar mídia/figurinha sem evidência de anexo. A sincronização conserva os IDs, timestamp e controles transacionais da linha; um tipo de texto inválido continua causando rollback. Essa projeção não implementa download de mídia nem mensagens E2EE.
 
 Projeções, deduplicação do batch e avanço do cursor são gravados na mesma transação SQLite. Uma falha de interpretação/projeção preserva o cursor anterior. Procedimentos desconhecidos que foram decodificados ficam em batches privados para investigação; isso não significa que já tenham sido projetados em eventos públicos. Opcodes Lightspeed fora do subconjunto implementado geram erro explícito.
 
@@ -190,7 +214,7 @@ Os testes e o [exemplo CLI](../packages/messenger/examples/connect.php) permitem
 
 Depois da correção dos parâmetros de restauração, o daemon do laboratório também retomou a sessão salva e manteve `metadata_connected` em sete amostras durante 31 segundos, com 13 conversas projetadas. Isso confirma a integração local HTTP/fila/cliente PHP naquele intervalo; não é ensaio de estabilidade prolongada ou validação de entrega de mensagens.
 
-**Preflight anônimo desta máquina em 18/10/2026:** o perfil anterior de cabeçalhos retornou HTTP200 com um interstitial de erro de 875 bytes. Remover apenas `Origin` não resolveu. Com cabeçalhos de navegação de documento, o `WebLoginCurlTransport` retornou HTTP200 com 111.157 bytes; o parser reconheceu `/login/password/`, o campo `pass`, os campos ocultos e a chave pública dinâmica. Esse GET público comprovou a obtenção do formulário nativo antes da autenticação real descrita acima; não foi, por si, evidência de login ou mensagens.
+**Preflight anônimo desta máquina em 18/10/2026:** o perfil anterior de cabeçalhos retornou HTTP 200 com um interstitial de erro de 875 bytes. Remover apenas `Origin` não resolveu. Com cabeçalhos de navegação de documento, o `WebLoginCurlTransport` retornou HTTP 200 com 111.157 bytes; o parser reconheceu `/login/password/`, o campo `pass`, os campos ocultos e a chave pública dinâmica. Esse GET público comprovou a obtenção do formulário nativo antes da autenticação real descrita acima; não foi, por si, evidência de login ou mensagens.
 
 ## Provisionamento do dispositivo no checkout em desenvolvimento
 

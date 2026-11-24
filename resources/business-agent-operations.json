@@ -1,0 +1,2242 @@
+{
+  "source": {
+    "repository": "https://github.com/Auties00/Cobalt",
+    "path": "tools/web/graphql-extractor/schemas.json",
+    "extractedAt": "2026-07-12T23:44:46.221Z",
+    "sha256": "5c5defaee5f53f9c89d22c98cc84391ea81892a6ff0af8ebbe05963451fb5379",
+    "transport": "http_relay/http_comet",
+    "environment": "facebook",
+    "inputTypesRecovered": false,
+    "liveValidated": false,
+    "liveReadValidation": {
+      "date": "2026-11-24",
+      "operations": 10,
+      "authentication": "accepted",
+      "scope": "one_eligible_business_qr_account"
+    },
+    "supplementalReference": {
+      "resourceUrl": "https://static.whatsapp.net/rsrc.php/v4iC6b4/yF/l/en_US-j/dlmcmg1qjGG.js",
+      "retrievedDate": "2026-11-24",
+      "scope": "native_web_callers",
+      "inputTypes": "supported_subset"
+    }
+  },
+  "operations": {
+    "conversation-replies": {
+      "documentId": "27338647792432014",
+      "nativeName": "WAWebAiAgentAutoReplyControlMutation",
+      "kind": "mutation",
+      "variables": [
+        "consumer_lid",
+        "phone_number",
+        "thread_status"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_whatsapp_smb_maiba_status_update",
+          "type": "XFBWhatsAppSMBBotSyncResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "scalar",
+              "name": "update_timestamp_ms"
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/conversations/replies",
+      "summary": "Controlar respostas da IA em uma conversa",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "status": {
+      "documentId": "27855405457379489",
+      "nativeName": "WAWebBizAIAbilityStatusQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_ai_home",
+          "type": "XFBMetaAIBizAgentWAAIHome",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "abilities",
+              "type": "XFBMetaAIBizAgentWAAbility",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "status"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/status",
+      "summary": "Consultar habilidades do agente",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "bestsellers-get": {
+      "documentId": "28087310950870102",
+      "nativeName": "WAWebBizAIBestsellersDrawerQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_ai_home",
+          "type": "XFBMetaAIBizAgentWAAIHome",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "knowledge",
+              "type": "XFBMetaAIBizAgentWAAbilityKnowledgeData",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "linked",
+                  "name": "bestsellers",
+                  "type": "ProductItem",
+                  "plural": true,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "id"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/knowledge/bestsellers",
+      "summary": "Consultar produtos recomendados",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "business-info-get": {
+      "documentId": "27955028940751325",
+      "nativeName": "WAWebBizAIBusinessInfoDrawerQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_ai_home",
+          "type": "XFBMetaAIBizAgentWAAIHome",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "ordered_knowledge",
+              "type": "XFBMetaAIBizAgentWAKnowlegeEntry",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "knowledge_type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "string_data"
+                }
+              ]
+            },
+            {
+              "kind": "linked",
+              "name": "knowledge",
+              "type": "XFBMetaAIBizAgentWAAbilityKnowledgeData",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "linked",
+                  "name": "websites",
+                  "type": "XFBMetaAIBizAgentWAWebsiteInfoOutput",
+                  "plural": true,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "website_type"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "website_url"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/knowledge/business-information",
+      "summary": "Consultar informações da empresa",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "history-import": {
+      "documentId": "27499829029619003",
+      "nativeName": "WAWebBizAiChatHistoryCreateMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_create_chat_history",
+          "type": "XFBMetaAIBizAgentWACreateChatHistoryReturn",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/knowledge/chat-history",
+      "summary": "Solicitar aprendizado com histórico",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "example-delete": {
+      "documentId": "25766734919668692",
+      "nativeName": "WAWebBizAiExampleResponseDeleteMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_delete_knowledge",
+          "type": "XFBMetaAIBizAgentWAKnowledgeUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/knowledge/examples",
+      "summary": "Excluir resposta de exemplo",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "examples-get": {
+      "documentId": "35817813771200593",
+      "nativeName": "WAWebBizAIExampleResponsesDrawerQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_ai_home",
+          "type": "XFBMetaAIBizAgentWAAIHome",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "ordered_knowledge",
+              "type": "XFBMetaAIBizAgentWAKnowlegeEntry",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "knowledge_type"
+                },
+                {
+                  "kind": "linked",
+                  "name": "faq_data",
+                  "type": "XFBMetaAIBizAgentWAAbilityKnowledgeFAQ",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "id"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "question"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "answer"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "linked",
+              "name": "knowledge",
+              "type": "XFBMetaAIBizAgentWAAbilityKnowledgeData",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "linked",
+                  "name": "websites",
+                  "type": "XFBMetaAIBizAgentWAWebsiteInfoOutput",
+                  "plural": true,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "website_type"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "website_url"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/knowledge/examples",
+      "summary": "Consultar respostas de exemplo",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "knowledge-update": {
+      "documentId": "36542743545312870",
+      "nativeName": "WAWebBizAiExampleResponseUpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_update_knowledge",
+          "type": "XFBMetaAIBizAgentWAKnowledgeUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "linked",
+              "name": "website_statuses",
+              "type": "MetaAIBizAgentWAWebsiteStatuses",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "is_valid"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "website_url"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "error_code"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/knowledge",
+      "summary": "Atualizar conhecimento do agente",
+      "inputContract": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "business_hours": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "discount_policy": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "payment_methods": {
+                "type": "string"
+              },
+              "purchase_info": {
+                "type": "string"
+              },
+              "return_policy": {
+                "type": "string"
+              },
+              "shipping_policy": {
+                "type": "string"
+              },
+              "websites": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "website_url": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "website_url"
+                  ]
+                }
+              },
+              "faq": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "question": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "question",
+                    "answer"
+                  ]
+                }
+              },
+              "bestsellers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "input"
+        ]
+      },
+      "example": {
+        "input": {
+          "description": "Informações da empresa para o agente."
+        }
+      },
+      "inputContractScope": "native_caller_supported_subset",
+      "inputContractReferences": [
+        {
+          "module": "WAWebBizAiKnowledgeUtils",
+          "sha256": "719282d5a99862d54435f57016cfbfe5af38b40b822429fbc8344bc179d3d872"
+        },
+        {
+          "module": "WAWebBizAiExampleResponseUpdateMutation",
+          "sha256": "0a49cb3d1d2a09fd389fe1bf5ce0c43a90348486ddb17a69224cdde81efa8e17"
+        }
+      ],
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "knowledge-get": {
+      "documentId": "27046558284963667",
+      "nativeName": "WAWebBizAIKnowledgeDrawerQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_ai_home",
+          "type": "XFBMetaAIBizAgentWAAIHome",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "ordered_knowledge",
+              "type": "XFBMetaAIBizAgentWAKnowlegeEntry",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "knowledge_type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "string_data"
+                },
+                {
+                  "kind": "linked",
+                  "name": "faq_data",
+                  "type": "XFBMetaAIBizAgentWAAbilityKnowledgeFAQ",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "id"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "question"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "answer"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "linked",
+              "name": "knowledge",
+              "type": "XFBMetaAIBizAgentWAAbilityKnowledgeData",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "linked",
+                  "name": "websites",
+                  "type": "XFBMetaAIBizAgentWAWebsiteInfoOutput",
+                  "plural": true,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "website_type"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "website_url"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "linked",
+              "name": "product_info_knowledge",
+              "type": "XFBMetaAIBizAgentWAProductInfoKnowledgeEntry",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "product_id"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "title"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "description"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "price"
+                },
+                {
+                  "kind": "linked",
+                  "name": "images",
+                  "type": "XFBMetaAIBizAgentWAProductInfoKnowledgeImageEntry",
+                  "plural": true,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "image_id"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "original_url"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "thumbnail_url"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "linked",
+              "name": "product_info_eligibility",
+              "type": "XFBMAIBAProductInfoEligibilityResponse",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "eligible"
+                }
+              ]
+            },
+            {
+              "kind": "scalar",
+              "name": "chat_history_export_status"
+            },
+            {
+              "kind": "linked",
+              "name": "knowledge_sources",
+              "type": null,
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "__typename"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "source_type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "id"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "update_time"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "label"
+                },
+                {
+                  "kind": "inlineFragment",
+                  "onType": "XFBMetaAIBizAgentFileUploadKnowledgeSource",
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "user_provided_file_name"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "cdn_url"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "thumbnail_url"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "file_type"
+                    },
+                    {
+                      "kind": "scalar",
+                      "name": "mime_type"
+                    }
+                  ]
+                },
+                {
+                  "kind": "inlineFragment",
+                  "onType": "XFBMetaAIBizAgentChatHistoryKnowledgeSource",
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "creation_time"
+                    }
+                  ]
+                },
+                {
+                  "kind": "inlineFragment",
+                  "onType": "MetaAIBizAgentWebsiteKnowledgeSource",
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "creation_time"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/knowledge",
+      "summary": "Consultar conhecimento e fontes",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "review-approve": {
+      "documentId": "24096216066682686",
+      "nativeName": "WAWebBizAiKnowledgeReviewCommitMutation",
+      "kind": "mutation",
+      "variables": [
+        "ids"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_approve_potential_knowledge",
+          "type": "XFBMAIBAPotentialKnowledgeMutationResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/knowledge/review/approve",
+      "summary": "Aprovar conhecimento aprendido",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "review-delete": {
+      "documentId": "26733698232996680",
+      "nativeName": "WAWebBizAiKnowledgeReviewDeleteMutation",
+      "kind": "mutation",
+      "variables": [
+        "id",
+        "source"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_delete_potential_knowledge_mutation",
+          "type": "XFBMAIBAPotentialKnowledgeMutationResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/knowledge/review",
+      "summary": "Excluir conhecimento em revisão",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "review-query": {
+      "documentId": "27195779110043143",
+      "nativeName": "WAWebBizAiKnowledgeReviewDrawerQuery",
+      "kind": "query",
+      "variables": [
+        "timestamp",
+        "source"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_load_potential_knowledge_for_review",
+          "type": "XFBMAIBALoadKnowledgeForReviewResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "items",
+              "type": "XFBMAIBAPotentialKnowlege",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "id"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "faq_question"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "faq_answer"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "biz_info_attribute"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "biz_info_value"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/knowledge/review/query",
+      "summary": "Consultar conhecimento para revisão",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "file-delete": {
+      "documentId": "26730550573239991",
+      "nativeName": "WAWebBizAiKnowledgeSourceDeleteMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_trigger_file_deletion",
+          "type": "XFBMetaAIBizAgentWATriggerFileDeletionReturn",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/knowledge/files",
+      "summary": "Excluir fonte de conhecimento",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "history-delete": {
+      "documentId": "26634033512955259",
+      "nativeName": "WAWebBizAiKnowledgeSourceDeleteMutationChatHistoryMutation",
+      "kind": "mutation",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_delete_chat_history",
+          "type": "XFBMetaAIBizAgentWADeleteChatHistoryReturn",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/knowledge/chat-history",
+      "summary": "Excluir histórico usado no aprendizado",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "website-delete": {
+      "documentId": "26239208135750680",
+      "nativeName": "WAWebBizAiKnowledgeSourceDeleteMutationWebsiteMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "maiba_trigger_website_deletion",
+          "type": "MetaAIBizAgentWATriggerWebsiteDeletionReturn",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/knowledge/websites",
+      "summary": "Excluir site do conhecimento",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "file-extract": {
+      "documentId": "26994916406807814",
+      "nativeName": "WAWebBizAiKnowledgeSourceUploadMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_trigger_file_knowledge_extraction",
+          "type": "XFBMetaAIBizAgentWATriggerFileKnowledgeExtractionReturn",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "scalar",
+              "name": "uploaded_file_data_source_id"
+            },
+            {
+              "kind": "scalar",
+              "name": "error"
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/knowledge/files/extract",
+      "summary": "Solicitar extração de arquivo já carregado",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "lead-form-create": {
+      "documentId": "25741990895475954",
+      "nativeName": "WAWebBizAiLeadGenCreateMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_create_lead_gen_flow",
+          "type": "XFBMetaAIBizAgentWALeadGenFlowUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/lead-forms",
+      "summary": "Criar solicitação de dados de clientes",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "lead-form-delete": {
+      "documentId": "26426132383680154",
+      "nativeName": "WAWebBizAiLeadGenDeleteMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_delete_lead_gen_flow",
+          "type": "XFBMetaAIBizAgentWALeadGenFlowUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/lead-forms",
+      "summary": "Excluir solicitação de dados de clientes",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "lead-forms-get": {
+      "documentId": "26924948820481142",
+      "nativeName": "WAWebBizAILeadGenListDrawerQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_gen_lead_gen_flow",
+          "type": "XFBMetaAIBusinessAgentWhatsAppLeadGenFlow",
+          "plural": true,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "id"
+            },
+            {
+              "kind": "scalar",
+              "name": "custom_moment"
+            },
+            {
+              "kind": "scalar",
+              "name": "moment_type"
+            },
+            {
+              "kind": "scalar",
+              "name": "has_unseen_lead_data"
+            },
+            {
+              "kind": "scalar",
+              "name": "num_of_lead_data"
+            },
+            {
+              "kind": "linked",
+              "name": "fields",
+              "type": "XFBMetaAIBusinessAgentWhatsAppLeadGenFlowFields",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "label"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "is_enabled"
+                }
+              ]
+            },
+            {
+              "kind": "linked",
+              "name": "lead_data",
+              "type": "XFBMetaAIBusinessAgentWhatsAppLeadGenFlowLeadDataConnection",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "linked",
+                  "name": "edges",
+                  "type": "XFBMetaAIBusinessAgentWhatsAppLeadGenFlowLeadDataEdge",
+                  "plural": true,
+                  "selections": [
+                    {
+                      "kind": "linked",
+                      "name": "node",
+                      "type": "XFBMetaAIBusinessAgentWhatsAppLeadGenData",
+                      "plural": false,
+                      "selections": [
+                        {
+                          "kind": "scalar",
+                          "name": "id"
+                        },
+                        {
+                          "kind": "scalar",
+                          "name": "has_seen"
+                        },
+                        {
+                          "kind": "linked",
+                          "name": "consumer_uid",
+                          "type": "XFBMaibaAiBizAgentWAConsumerUIDOutput",
+                          "plural": false,
+                          "selections": [
+                            {
+                              "kind": "scalar",
+                              "name": "pn"
+                            },
+                            {
+                              "kind": "scalar",
+                              "name": "lid"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "scalar",
+                          "name": "creation_time"
+                        },
+                        {
+                          "kind": "scalar",
+                          "name": "customer_info"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/lead-forms",
+      "summary": "Consultar formulários e dados coletados",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "lead-form-seen": {
+      "documentId": "27447561748164034",
+      "nativeName": "WAWebBizAiLeadGenMarkAllSeenMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "meta_ai_biz_agent_wa_mark_all_lead_gen_data_as_seen_for_flow",
+          "type": "XFBMetaAIBizAgentWALeadGenDataMutationResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/lead-forms/seen",
+      "summary": "Marcar respostas de formulário como vistas",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "lead-seen": {
+      "documentId": "27560975943534036",
+      "nativeName": "WAWebBizAILeadGenResponseDetailDrawerMarkSeenMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_mark_lead_gen_data_as_seen",
+          "type": "XFBMetaAIBizAgentWALeadGenDataMutationResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/leads/seen",
+      "summary": "Marcar resposta de cliente como vista",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "lead-form-update": {
+      "documentId": "26449028471447289",
+      "nativeName": "WAWebBizAiLeadGenUpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_update_lead_gen_flow",
+          "type": "XFBMetaAIBizAgentWALeadGenFlowUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/lead-forms",
+      "summary": "Atualizar solicitação de dados de clientes",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "product-create": {
+      "documentId": "26665182546499350",
+      "nativeName": "WAWebBizAiProductInfoMutation",
+      "kind": "mutation",
+      "variables": [
+        "input",
+        "media_options"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_create_product_info_knowledge",
+          "type": "XFBMaibaCreateProductInfoKnowledgeResponsePayload",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "linked",
+              "name": "product_items",
+              "type": "XFBMetaAIBizAgentWAProductInfoKnowledgeEntry",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "product_id"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "title"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "description"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "price"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/products",
+      "summary": "Adicionar produto ao conhecimento",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "products-delete": {
+      "documentId": "35049091691406061",
+      "nativeName": "WAWebBizAiProductInfoMutationDeleteMutation",
+      "kind": "mutation",
+      "variables": [
+        "product_ids"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_multi_delete_product_info_knowledge",
+          "type": "XFBMAIBAProductInfoMultiDeleteResponse",
+          "plural": true,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "product_id"
+            },
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/products",
+      "summary": "Excluir produtos do conhecimento",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "product-update": {
+      "documentId": "26619965944279430",
+      "nativeName": "WAWebBizAiProductInfoMutationUpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "id",
+        "product_params",
+        "media_options"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_maiba_update_product_info_knowledge",
+          "type": "XFBMaibaUpdateProductInfoKnowledgeResponsePayload",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/products",
+      "summary": "Atualizar produto do conhecimento",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "purchase-info-get": {
+      "documentId": "26971463405821153",
+      "nativeName": "WAWebBizAIPurchaseInfoDrawerQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_ai_home",
+          "type": "XFBMetaAIBizAgentWAAIHome",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "ordered_knowledge",
+              "type": "XFBMetaAIBizAgentWAKnowlegeEntry",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "knowledge_type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "string_data"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/knowledge/purchasing-information",
+      "summary": "Consultar informações de compra",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "reengagement-update": {
+      "documentId": "27136574649299744",
+      "nativeName": "WAWebBizAiReengagementUpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_update_reengagement",
+          "type": "XFBMetaAIBizAgentWAReengagementResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "enabled"
+            },
+            {
+              "kind": "scalar",
+              "name": "amount"
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/response-settings/reengagement",
+      "summary": "Atualizar retomada de conversas",
+      "inputContract": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "amount": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "enabled"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "request"
+        ]
+      },
+      "example": {
+        "request": {
+          "enabled": false
+        }
+      },
+      "inputContractScope": "native_caller_supported_subset",
+      "inputContractReferences": [
+        {
+          "module": "WAWebBizAiReengagementUpdateMutation",
+          "sha256": "15a127f30bf24361f4c4d1669f5a946b25edc00f3b839cf4b325c51b21b4b908"
+        },
+        {
+          "module": "WAWebBizAIFollowUpModal.react",
+          "sha256": "cad7108c35026139320eba7207df423097c09f57e45717adaabec086d91a7c02"
+        }
+      ],
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "schedule-update": {
+      "documentId": "26104383745927952",
+      "nativeName": "WAWebBizAiReplyBotEnabledTimeUpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_update_bot_enabled_time",
+          "type": "XFBMetaAIBizAgentWAReplyBotEnabledTimeUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/response-settings/schedule",
+      "summary": "Atualizar horário de respostas",
+      "inputContract": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "enabled_time": {
+                "type": "string",
+                "enum": [
+                  "ANYTIME",
+                  "SELECTIVE_HOURS"
+                ]
+              },
+              "time_zone": {
+                "type": "string"
+              },
+              "from_sec_in_day": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86399
+              },
+              "to_sec_in_day": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 86399
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "enabled_time"
+            ],
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "enabled_time": {
+                    "enum": [
+                      "ANYTIME"
+                    ]
+                  }
+                },
+                "required": [
+                  "enabled_time"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "enabled_time": {
+                    "enum": [
+                      "SELECTIVE_HOURS"
+                    ]
+                  }
+                },
+                "required": [
+                  "enabled_time",
+                  "time_zone",
+                  "from_sec_in_day",
+                  "to_sec_in_day"
+                ]
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "input"
+        ]
+      },
+      "example": {
+        "input": {
+          "enabled_time": "ANYTIME"
+        }
+      },
+      "inputContractScope": "native_caller_supported_subset",
+      "inputContractReferences": [
+        {
+          "module": "WAWebBizAiReplyBotEnabledTimeUpdateMutation",
+          "sha256": "864e9bacc387e89f6ef084f9d990233cf2789df3964e711cfd75e7ba469f149d"
+        },
+        {
+          "module": "WAWebBizAiResponseSettingsV2ScheduleModel",
+          "sha256": "de66f72ee420eb73b7e46b9b355ba7aa74ea1bd1a88acab43b4dafaff6ae6751"
+        }
+      ],
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "audience-update": {
+      "documentId": "25994322200250984",
+      "nativeName": "WAWebBizAiReplyChatTriggerUpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_update_reply_chat_trigger",
+          "type": "XFBMetaAIBizAgentWAReplyChatTriggerUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/response-settings/audience",
+      "summary": "Atualizar público de respostas",
+      "inputContract": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "trigger_chat_type": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "trigger_chat_type"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "input"
+        ]
+      },
+      "example": {
+        "input": {
+          "trigger_chat_type": "ALL_CHATS"
+        }
+      },
+      "inputContractScope": "native_caller_supported_subset",
+      "inputContractReferences": [
+        {
+          "module": "WAWebBizAiReplyChatTriggerUpdateMutation",
+          "sha256": "557feb24654c5c5203b11c67826d85e9d408bb653fbb4e6a2bcea9963570349e"
+        }
+      ],
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "response-settings-get": {
+      "documentId": "36824596957127390",
+      "nativeName": "WAWebBizAIResponseSettingsDrawerQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_reply_chat_trigger",
+          "type": "XFBMetaAIBizAgentWAReplyChatTrigger",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "trigger_chat_type"
+            },
+            {
+              "kind": "linked",
+              "name": "bot_enabled_time",
+              "type": "XFBMetaAIBizAgentWAReplyBotEnabledTime",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "enabled_time"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "from_sec_in_day"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "to_sec_in_day"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/response-settings",
+      "summary": "Consultar público e horário de respostas",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "rule-create": {
+      "documentId": "35226836873596446",
+      "nativeName": "WAWebBizAiRuleCreateMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_create_rule",
+          "type": "XFBMetaAIBizAgentWARuleUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "linked",
+              "name": "rule",
+              "type": "XFBMetaAIBusinessAgentWhatsAppRule",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "id"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "rule_type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "custom_rule"
+                },
+                {
+                  "kind": "linked",
+                  "name": "emojis_config",
+                  "type": "XFBMetaAIBusinessAgentWhatsAppRuleEmojisConfig",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "emojis_freq"
+                    }
+                  ]
+                },
+                {
+                  "kind": "linked",
+                  "name": "price_config",
+                  "type": "XFBMetaAIBusinessAgentWhatsAppRulePriceConfig",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "price_sharing"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/rules",
+      "summary": "Criar instrução do agente",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "rule-delete": {
+      "documentId": "35650188977905810",
+      "nativeName": "WAWebBizAiRuleDeleteMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_delete_rule",
+          "type": "XFBMetaAIBizAgentWARuleUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "DELETE",
+      "path": "/business/ai/rules",
+      "summary": "Excluir instrução do agente",
+      "inputContract": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "properties": {
+              "rule_id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "rule_id"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "request"
+        ]
+      },
+      "example": {
+        "request": {
+          "rule_id": "RULE_ID"
+        }
+      },
+      "inputContractScope": "native_caller_supported_subset",
+      "inputContractReferences": [
+        {
+          "module": "WAWebBizAiRuleDeleteMutation",
+          "sha256": "185ff9709d019a762425760c83d9af5493f4b8ba085b627d8dc54cc4a8526ba1"
+        }
+      ],
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "rules-generate": {
+      "documentId": "26834104662892554",
+      "nativeName": "WAWebBizAiRulesGenMutation",
+      "kind": "mutation",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_gen_rules",
+          "type": "XFBMetaAIBizAgentWARuleResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "linked",
+              "name": "rules",
+              "type": "XFBMetaAIBusinessAgentWhatsAppRule",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "id"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "rule_type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "custom_rule"
+                },
+                {
+                  "kind": "linked",
+                  "name": "emojis_config",
+                  "type": "XFBMetaAIBusinessAgentWhatsAppRuleEmojisConfig",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "emojis_freq"
+                    }
+                  ]
+                },
+                {
+                  "kind": "linked",
+                  "name": "price_config",
+                  "type": "XFBMetaAIBusinessAgentWhatsAppRulePriceConfig",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "price_sharing"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "linked",
+              "name": "reengagement",
+              "type": "XFBMetaAIBizAgentWAReengagementResponse",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "enabled"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "amount"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "POST",
+      "path": "/business/ai/rules/generate",
+      "summary": "Consultar geração nativa de instruções",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "rule-update": {
+      "documentId": "26525955470399173",
+      "nativeName": "WAWebBizAiRuleUpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "request"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_update_rule",
+          "type": "XFBMetaAIBizAgentWARuleUpdateResponse",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "linked",
+              "name": "rule",
+              "type": "XFBMetaAIBusinessAgentWhatsAppRule",
+              "plural": false,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "id"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "rule_type"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "custom_rule"
+                },
+                {
+                  "kind": "linked",
+                  "name": "emojis_config",
+                  "type": "XFBMetaAIBusinessAgentWhatsAppRuleEmojisConfig",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "emojis_freq"
+                    }
+                  ]
+                },
+                {
+                  "kind": "linked",
+                  "name": "price_config",
+                  "type": "XFBMetaAIBusinessAgentWhatsAppRulePriceConfig",
+                  "plural": false,
+                  "selections": [
+                    {
+                      "kind": "scalar",
+                      "name": "price_sharing"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/rules",
+      "summary": "Atualizar instrução do agente",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "eligibility": {
+      "documentId": "27140128522251730",
+      "nativeName": "WAWebBizAiToolsTileEligibilityQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_onboarding_eligibility",
+          "type": "XFBMetaAIBizAgentWAOnboardingEligibility",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "eligible"
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/eligibility",
+      "summary": "Consultar elegibilidade da conta",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "availability": {
+      "documentId": "27287965697525752",
+      "nativeName": "WAWebFetchBizAiLargeScreensGateQuery",
+      "kind": "query",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_large_screens_gate",
+          "type": "XFBMetaAIBizAgentWAQEBoolResult",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "value"
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/availability",
+      "summary": "Consultar liberação do recurso no Web",
+      "validation": {
+        "liveValidated": true,
+        "date": "2026-11-24",
+        "scope": "one_eligible_business_qr_account"
+      }
+    },
+    "response-settings-v2-get": {
+      "documentId": "28169016829397830",
+      "nativeName": "WAWebBizAiResponseSettingsV2FetchMutation",
+      "kind": "mutation",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_fetch_response_settings_v2",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "linked",
+              "name": "audience_rules",
+              "plural": true,
+              "selections": [
+                {
+                  "kind": "scalar",
+                  "name": "mode"
+                },
+                {
+                  "kind": "scalar",
+                  "name": "selector_type"
+                }
+              ]
+            },
+            {
+              "kind": "scalar",
+              "name": "status"
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/response-settings/v2",
+      "summary": "Consultar estado global e audiência da IA V2",
+      "reference": {
+        "resourceUrl": "https://static.whatsapp.net/rsrc.php/v4iC6b4/yF/l/en_US-j/dlmcmg1qjGG.js",
+        "retrievedDate": "2026-11-24",
+        "scope": "native_web_callers",
+        "inputTypes": "supported_subset",
+        "callerSha256": "6f9dbcd58292012fde2b6bb8619ab526147385f5dfdb7d735ef10d812233cba3"
+      },
+      "effect": "read",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "response-settings-v2-update": {
+      "documentId": "27987559807539263",
+      "nativeName": "WAWebBizAiResponseSettingsV2UpdateMutation",
+      "kind": "mutation",
+      "variables": [
+        "input"
+      ],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_update_response_settings_v2",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            }
+          ]
+        }
+      ],
+      "method": "PATCH",
+      "path": "/business/ai/response-settings/v2",
+      "summary": "Alterar respostas globais ou audiência da IA V2",
+      "reference": {
+        "resourceUrl": "https://static.whatsapp.net/rsrc.php/v4iC6b4/yF/l/en_US-j/dlmcmg1qjGG.js",
+        "retrievedDate": "2026-11-24",
+        "scope": "native_web_callers",
+        "inputTypes": "supported_subset",
+        "callerSha256": "c2cf44dcc4aed303814ec276ec2c3c8775e30a8329d0ef6dcf2a4b50f766722e"
+      },
+      "inputContract": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ENABLED",
+                  "MUTED"
+                ]
+              },
+              "audience_rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "MUTED",
+                        "SUGGESTED_REPLIES",
+                        "UNMUTED"
+                      ]
+                    },
+                    "selector_type": {
+                      "type": "string",
+                      "enum": [
+                        "CONTACTS",
+                        "ADS",
+                        "ALL"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "mode",
+                    "selector_type"
+                  ]
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "minProperties": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "input"
+        ]
+      },
+      "example": {
+        "input": {
+          "status": "MUTED"
+        }
+      },
+      "inputContractScope": "native_caller_supported_subset",
+      "inputContractReferences": [
+        {
+          "module": "useWAWebBizAiResponseSettingsV2Update",
+          "sha256": "d7b2682775945169b56dc6c8406176547f6449ac9927205bd875dac0cb16165a"
+        },
+        {
+          "module": "WAWebBizAiResponseSettingsV2Model",
+          "sha256": "3d142a2bdf2c21cf913ae192e7caba7670914edfe5e4a2a1b56771e0e85bc13b"
+        }
+      ],
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    },
+    "response-settings-v2-availability": {
+      "documentId": "38891021877207639",
+      "nativeName": "WAWebFetchBizAiResponseSettingsV2GateMutation",
+      "kind": "mutation",
+      "variables": [],
+      "response": [
+        {
+          "kind": "linked",
+          "name": "xfb_meta_ai_biz_agent_wa_fetch_qe_bool",
+          "plural": false,
+          "selections": [
+            {
+              "kind": "scalar",
+              "name": "success"
+            },
+            {
+              "kind": "scalar",
+              "name": "value"
+            }
+          ]
+        }
+      ],
+      "method": "GET",
+      "path": "/business/ai/response-settings/v2/availability",
+      "summary": "Consultar liberação das configurações V2",
+      "reference": {
+        "resourceUrl": "https://static.whatsapp.net/rsrc.php/v4iC6b4/yF/l/en_US-j/dlmcmg1qjGG.js",
+        "retrievedDate": "2026-11-24",
+        "scope": "native_web_callers",
+        "inputTypes": "supported_subset",
+        "callerSha256": "b38fad17bc199a315e80e5ed20d0762a9c1d47f2165c82cb4d648c56c9bb615c"
+      },
+      "effect": "read",
+      "validation": {
+        "liveValidated": false,
+        "date": null,
+        "scope": "not_executed"
+      }
+    }
+  }
+}

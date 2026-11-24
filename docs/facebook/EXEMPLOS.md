@@ -4,7 +4,19 @@ Os exemplos do pacote são programas PHP locais. Ajuda não conecta nem abre arm
 
 ## Primeiro login e restauração
 
-A partir do checkout:
+Para autenticação nativa do checkout em desenvolvimento, use a configuração privada descrita no [guia Android](AUTENTICACAO-ANDROID.md):
+
+```php
+/** @var \MVO\Facebook\FacebookConnection $facebook Mesmo dono da aplicação. */
+/** @var \MVO\Messenger\Auth\AndroidLoginProfile $nativeProfile Configuração privada. */
+$facebook->loginAndroid($email, $password, $nativeProfile);
+// Após eventual confirmLogin($code) ou checkLoginApproval() e sessão confirmada:
+$facebook->connect();
+```
+
+No 406, mantenha o objeto/processo vivo durante a entrada privada. O código acima mostra a sequência sem desafio; trate a exceção antes de encerrar. `GET /me` confirma o UID por JSON com token de usuário em RAM; esse novo verificador tem fixtures e validação real pendente. 405 é recusado, sem HTML ou navegador. O inbox/DGW e os serviços de Fanpage continuam Web; `e2ee_ready=false`.
+
+**Exemplos CLI Web opcionais:** os comandos abaixo usam o método separado `login()`, não implementam o fluxo Android e não devem ser selecionados como fallback automático:
 
 ```sh
 php packages/facebook/examples/session.php --help
@@ -16,6 +28,18 @@ No primeiro comando de login, as variáveis `MVO_FACEBOOK_EMAIL` e `MVO_FACEBOOK
 
 O exemplo `session.php` diagnostica desafios e encerra a tentativa; não mantém um formulário de 2FA nem implementa um bridge de navegador. Para continuar um desafio no mesmo objeto/processo, siga [conexão e sessão](CONEXAO.md). Não inicie outro processo com o mesmo lock enquanto o primeiro permanece ativo.
 
+### Escolher a verificação em duas etapas
+
+No fluxo Android, `methods=[]`: não chame o exemplo de seleção Web para fabricar alternativas. Código já recebido usa `confirmLogin()` com `ready/requires_code`; aprovação pessoal usa `checkLoginApproval()` com `can_check`. `requestLoginSms()` é um pedido experimental explícito, uma tentativa do 406 corrente, com `delivery_confirmed=false`; `can_request_sms` não comprova disponibilidade. Veja [conexão](CONEXAO.md).
+
+**Alternativa Web isolada:** O [exemplo `login-methods.php`](../../packages/facebook/examples/login-methods.php) mostra como ligar entradas privadas da aplicação ao login e à escolha de método, mantendo o mesmo objeto vivo. Consulte a ajuda sem conectar:
+
+```sh
+php packages/facebook/examples/login-methods.php --help
+```
+
+A aplicação fornece callbacks para apresentar somente os métodos oferecidos, receber a escolha do dono e obter código ou decisão de conferir uma aprovação. O exemplo não extrai cookies de perfis existentes, não fabrica opções de SMS/e-mail/aplicativo nem repete pedidos automaticamente. CAPTCHA exige continuação humana separada. A entrada privada pertence à aplicação; códigos e credenciais não vão para argumentos, logs ou exemplos públicos. Essa integração da branch de desenvolvimento tem testes locais, sem prova de envio de SMS/e-mail ou aprovação real.
+
 ## Descobrir recursos sem alterações
 
 ```sh
@@ -25,6 +49,14 @@ php packages/facebook/examples/discover.php --session=demo --auth-dir=/diretorio
 ```
 
 `discover.php` restaura uma sessão salva e consulta Páginas. `--ads` acrescenta a descoberta **parcial** de contas publicitárias. `--ad-ids`, junto de `--ads`, consulta anúncios por IDs já conhecidos; confira a ajuda. Os programas não selecionam automaticamente uma Página/conta ou assumem que as listas são exaustivas.
+
+## Consultar o inbox da Fanpage selecionada
+
+```sh
+php packages/facebook/examples/page-inbox-snapshot.php --help
+```
+
+Inclua esse helper na aplicação que já possui `FacebookConnection` conectado. Depois de descobrir e selecionar uma Página, chame `consultarInboxPaginaSelecionada($facebook)`. Para uma conversa escolhida no retorno, passe seu `selection_id` como segundo argumento. O helper mantém actor e Página delegada separados e consulta apenas os dados carregados pelo documento nativo atual, sem enviar mensagens. Veja [inbox](INBOX.md) para completude e limites.
 
 ## Monitor sintético
 

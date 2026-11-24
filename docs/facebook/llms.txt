@@ -13,7 +13,8 @@
 
 - [Introdução](INTRODUCAO.md): estrutura da biblioteca e caminhos de integração.
 - [Instalação](INSTALACAO.md): PHP/extensões, dependências e Composer local.
-- [Login e sessão](CONEXAO.md): e-mail/senha, armazenamento confirmado, restauração, 2FA, verificação humana e loop.
+- [Login e sessão](CONEXAO.md): autenticação Android sem fallback Web, código/aprovação 406, pedido experimental de SMS e restauração; alternativa Web isolada.
+- [Login Android experimental](AUTENTICACAO-ANDROID.md): `loginAndroid` sem HTML/navegador, verificação JSON `GET /me` com token em RAM e 405 sem continuação nativa. `requestLoginSms()` é experimental, uma tentativa e sem entrega confirmada; novo verificador tem fixtures e validação real pendente; um pedido SMS real foi rejeitado com HTTP 400/erro nativo 3, sem entrega confirmada. Inbox/DGW continuam Web; E2EE permanece bloqueado.
 - [Exemplos PHP](EXEMPLOS.md): conexão, retomada e scripts disponíveis no checkout.
 
 ## Serviços
@@ -33,7 +34,8 @@
 ## Regras do contrato
 
 - Leia as assinaturas em `packages/facebook/src/` antes de gerar código. Caminhos de implementação são relativos à raiz do checkout, e não ao diretório deste índice.
-- `login()` salva somente uma sessão confirmada e não inicia o transporte. `connect()` restaura/inicia; `poll()` mantém; `stop()` preserva os dados e libera o único dono do lock.
+- `loginAndroid()` salva somente sessão confirmada por identidade nativa; `login()` é opção Web separada. Nenhum inicia automaticamente o transporte. `connect()` restaura/inicia; `poll()` mantém; `stop()` preserva os dados e libera o único dono do lock.
+- Android 406 usa `confirmLogin()` com `ready/requires_code`, aprovação com `can_check` e pedido experimental explícito `requestLoginSms()` com `can_request_sms`. `methods=[]`; disponibilidade e entrega não são inferidas. 405 é recusado sem browser. Catálogo/bridge Web pertence somente à opção separada `login()`.
 - Login, autenticação em duas etapas e sessão salva não significam dispositivo Messenger E2EE pronto. Conversas criptografadas não têm fallback para plaintext.
 - Consultas e comandos pertencem ao loop externo, depois dos callbacks. Credenciais, cookies, desafios privados e respostas brutas não pertencem ao contexto de um modelo.
 - Preserve os IDs Facebook exatos. Não use QR, JIDs ou schemas MCP WhatsApp nesta biblioteca. Os contextos de cada canal são separados.
@@ -46,3 +48,5 @@
 ## Outra biblioteca
 
 - [Documentação WhatsApp](../index.html#inicio) e [contexto WhatsApp](../llms-full.txt): contrato independente de `MVO\WaClient` e seu MCP.
+
+- Login Android 406 pode oferecer código e consulta de aprovação juntos. Com `can_check=true`, `checkLoginApproval()` consulta a máquina real e troca somente o token temporário recebido, sem senha original. Cinco segundos entre consultas; prazo original e incerteza impedem reenvio. Aprovação e restauração foram demonstradas em uma conta autorizada em 20/10/2026 pela implementação anterior com verificação de identidade Web; não validam o novo `/me`, SMS ou checkpoint 405.

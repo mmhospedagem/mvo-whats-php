@@ -42,24 +42,31 @@ Ajuste o caminho à localização deste checkout, execute `composer install` na 
 
 ## Sessão e primeiro exemplo
 
-O fluxo principal recebe **e-mail e senha da própria conta Facebook** por uma entrada privada da aplicação. `MessengerClient::login()` obtém a página atual de `www.messenger.com`, extrai o formulário e sua chave pública, cifra a senha no formato `#PWD_BROWSER` e só salva a sessão depois de confirmar cookies e identidade. A senha não é persistida pelo cliente. Os cookies mantêm seus domínios reais; não são copiados artificialmente entre Facebook e Messenger.
+No checkout em desenvolvimento, o fluxo sem Web usa `loginAndroid()` com e-mail/senha da própria conta recebidos pela entrada privada e um perfil de aplicativo fornecido pelo operador. A autenticação usa endpoints nativos JSON; não descobre formulário HTML nem abre navegador. O SDK não inclui a configuração Meta do aplicativo.
 
 ```php
-// E-mail e senha devem vir de uma entrada privada da aplicação, sem hardcode.
+// E-mail e senha vêm da entrada privada, sem hardcode, logs ou argumentos CLI.
 // Execute somente na primeira autenticação ou renovação, com a conexão parada.
-$client->login($email, $password);
+/** @var \MVO\Messenger\Auth\AndroidLoginProfile $nativeProfile Configuração privada. */
+$client->loginAndroid($email, $password, $nativeProfile);
 $client->connect();
 ```
 
-A aplicação fornece sua própria entrada privada de credenciais. A biblioteca não exige painel ou importação de JSON para esse fluxo. O laboratório utilizado na validação é privado e não integra a distribuição pública.
+A sequência acima mostra o caso sem desafio. No406, trate a exceção e conserve o mesmo objeto/processo/lock enquanto recebe código para `confirmLogin()` ou consulta uma aprovação pessoal com `checkLoginApproval()`, conforme as capacidades de `loginChallenge()`. Não encerre o dono antes de continuar. O prazo original é de até dez minutos; expiração, reinício e `stop()` descartam a tentativa. Códigos e tokens de resultado incerto não são repetidos.
 
-Quando há autenticação em duas etapas por aplicativo autenticador, `login()` retorna `login_two_factor_required` e preserva o desafio em memória por até dez minutos. Consulte `loginChallenge()`; com `ready=true`, receba o código em uma entrada privada e chame `confirmLogin($code)`, mantendo os zeros iniciais. O código não deve ir para logs ou argumentos CLI. `ready=false` bloqueia um formato desconhecido. A sessão só é salva depois de confirmar cookies e identidade, e `connect()` continua sendo uma etapa separada.
+`GET /me` confirma o UID por JSON antes de salvar cookies, com token de usuário somente em RAM. Esse novo verificador tem fixtures e validação real própria pendente. O405 retorna `login_native_verification_unsupported`, com browser indisponível. O pedido experimental `requestLoginSms()` não é catálogo nem prova de entrega; veja o contrato abaixo.
 
-`stop()` cancela o desafio; expiração ou reinício do processo exigem novo login. CAPTCHA, checkpoint e consentimento retornam motivos específicos para o operador verificar no aplicativo/site. A biblioteca não contorna desafios e não inventa formulário, chave ou endpoint quando a página muda. A entrada de credenciais por CAA/Relay sem formulário ainda não está implementada. O fluxo real com continuação humana foi validado em 18/10/2026; isso não garante login sem desafio nem suporte a todos os formatos de verificação.
+A conta não muda dentro do mesmo ID. Retome uma sessão válida somente com `connect()`, mesmo ID/diretório, sem repetir senha/perfil. O transporte posterior ainda faz bootstrap Web e DGW; a autenticação nativa não converte inbox ou Fanpages e não habilita E2EE. O método separado `login()` conserva a alternativa Web explícita, sem fallback automático por `loginAndroid()`.
 
-A aplicação pode integrar uma **continuação humana opcional no navegador isolado**, usando o contexto da tentativa pendente em uma janela isolada. `exportPrivateLoginChallenge()` entrega URL/cookies/expiração somente ao bridge privado da aplicação; nunca serialize esse resultado em HTTP, eventos, ferramentas ou logs. Após a verificação oficial, `completeBrowserLogin(CookieJar $cookies)` confirma por HTTPS que o `USER_ID` positivo corresponde ao `c_user`, antes de persistir. A conta de uma sessão existente continua imutável. Esse auxiliar desktop não lê perfis pessoais existentes nem é dependência do protocolo Messenger; o operador conclui os desafios oficiais, e o PHP verifica a sessão. A transferência seguida da restauração nativa foi confirmada em 18/10/2026, sem comprovar outros desafios ou contas.
+### Autenticação Android em desenvolvimento
 
-A conta não pode mudar dentro do mesmo ID de sessão. Para retomar uma sessão válida, chame apenas `connect()` com o mesmo ID/diretório, sem fornecer a senha de novo. Para outra conta, crie outro ID.
+`loginAndroid()` autentica somente por endpoints nativos JSON: chave dinâmica, `/auth/login`, código/aprovação 406 e `GET /me` com autorização pelo token do usuário mantido somente em RAM. Não consulta HTML nem abre ou exporta navegador durante a autenticação. O 405 retorna `login_native_verification_unsupported`, com `browser_continuation_available=false`; não existe conversão para 406. A nova verificação JSON de identidade tem fixtures e ainda precisa de validação real própria. Bootstrap, metadados, inbox e serviços de Fanpage continuam no protocolo Web/DGW, com `e2ee_ready=false`.
+
+`loginAndroid($email, $password, AndroidLoginProfile $profile, ?AndroidLoginTransport $transport = null)` compartilha ID, lock e armazenamento. O SDK não inclui configuração Meta de aplicativo. O [guia Android](../../docs/facebook/AUTENTICACAO-ANDROID.md) contém a configuração privada, as rotas, os estados e os limites. Código recebido continua por `confirmLogin()`; aprovação feita pelo dono pode ser consultada com `checkLoginApproval()` quando `can_check=true`.
+
+`requestLoginSms()` é um pedido nativo experimental e explícito para o 406 corrente, uma única tentativa: `can_request_sms=true` não comprova oferta de SMS pela conta; `delivery_confirmed=false` permanece. Não há catálogo nativo de meios (`methods=[]`). A verificação `GET /me` e esse pedido têm testes sintéticos; sua validação real própria ainda está pendente. Código/aprovação e restauração em uma conta foram demonstrados em 20/10/2026 pela implementação anterior, cuja verificação de identidade ainda era Web.
+
+O método separado `login()` usa `WebLoginService` como alternativa opcional. O construtor interno `AndroidLoginService(..., allowWebCheckpoint: true)` mantém compatibilidade legada explícita; `loginAndroid()` não habilita HTTP de checkpoint nem navegador. Nenhum desses caminhos deve ser selecionado automaticamente como fallback da política nativa.
 
 ### Alternativa avançada: importar uma sessão existente
 
@@ -77,6 +84,8 @@ php packages/messenger/examples/connect.php --session=demo --auth-dir=/caminho/p
 Para restaurar, use o mesmo `--session` e `--auth-dir` sem `--cookies-file`. O exemplo faz conexão, mantém o loop pelo intervalo escolhido e imprime projeções de diagnóstico sem conteúdo de mensagens. **Ele não envia mensagens.** `--cookies-file` recebe apenas o caminho local; nunca passe os valores dos cookies na linha de comando.
 
 ## Contrato PHP
+
+As operações de autenticação dependem da entrada escolhida: `loginAndroid()` usa somente endpoints nativos e não oferece catálogo Web; `login()` conserva a alternativa Web opcional. As duas compartilham o dono da sessão, sem fallback automático entre elas.
 
 ```php
 <?php
@@ -121,8 +130,13 @@ Mantenha `var/private-auth` fora do diretório HTTP público. Cada sessão ativa
 | Método | Comportamento atual |
 | --- | --- |
 | `login(string $email, string $password): void` | Autentica pelo formulário Web atual e salva somente a sessão confirmada; não inicia DGW. |
-| `loginChallenge(): ?array` | Projeta `type`, `expires_at` e `ready` do desafio pendente, sem tokens; `null` quando ausente/expirado. |
-| `confirmLogin(string $code): void` | Continua a confirmação pelo código real do autenticador; verifica a sessão antes de salvá-la. Não inicia DGW. |
+| `loginAndroid(string $email, string $password, AndroidLoginProfile $profile, ?AndroidLoginTransport $transport = null): void` | Login nativo sem HTML/navegador; código/aprovação 406 e verificação JSON `GET /me` antes de salvar. O novo verificador tem fixtures, com validação real pendente. |
+| `requestLoginSms(): array` | Pedido experimental explícito do 406 corrente, uma tentativa; não confirma entrega, disponibilidade ou autenticação. |
+| `loginChallenge(): ?array` | Projeta `type`, `expires_at`, `ready`, `methods`, `selected_method`, `requires_code` e `can_check`, sem tokens; `null` quando ausente/expirado. |
+| `refreshLoginMethods(): array` | Consulta as alternativas reconhecidas oferecidas na tentativa atual, sem solicitar código. |
+| `requestLoginMethod(string $methodId): array` | Solicita a alternativa escolhida pelo dono, usando um ID atual; pode provocar envio de SMS/e-mail ou pedido de aprovação. |
+| `checkLoginApproval(): bool` | Consulta a aprovação em outro aplicativo quando `can_check=true`; `false` pendente, `true` identidade verificada e sessão salva. Não inicia DGW. |
+| `confirmLogin(string $code): void` | Confirma o código do método selecionado quando `requires_code=true` e `ready=true`; verifica a sessão antes de salvá-la. Não inicia DGW. |
 | `exportPrivateLoginChallenge(): array` | Handoff privado da tentativa pendente para um browser bridge local; contém segredos e nunca pode ser resposta pública. |
 | `completeBrowserLogin(CookieJar $cookies): void` | Verifica a identidade por HTTPS antes de salvar os cookies vindos do contexto isolado. Exige desafio pendente e lock; não inicia DGW. |
 | `importCookies(CookieJar $cookies): void` | Importa/renova a mesma conta, com conexão parada. |

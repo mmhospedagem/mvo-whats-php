@@ -9,6 +9,8 @@ use MVO\Facebook\Protocol\WebGraphQL;
 use MVO\Facebook\Protocol\PageInboxSender;
 use MVO\Facebook\Protocol\PageMailboxSender;
 use MVO\Facebook\Protocol\PageMailboxBootstrapReader;
+use MVO\Facebook\Protocol\PageInboxContextLoader;
+use MVO\Facebook\Protocol\PageInboxBootstrapSnapshotReader;
 use MVO\Facebook\Storage\CommandLedger;
 use MVO\Messenger\Auth\WebSession;
 use MVO\Messenger\Protocol\{BootstrapParser,TaskBuilder};
@@ -18,6 +20,24 @@ use MVO\Messenger\Transport\PublicBundleLoader;
 final class InboxService
 {
     public function __construct(private readonly WebGraphQL $graph, private readonly ?WebSession $session = null, private readonly ?CommandLedger $commands = null) {}
+
+    /** Current native Business Suite bootstrap, with only the conversations/messages it actually loaded.
+     * This read does not send a message, mark a thread read, open a Page gateway or establish complete history.
+     * The optional thread ID only filters this loaded snapshot; it is never sent as a native route selection.
+     * @return array<string,mixed>
+     */
+    public function snapshot(string $actorId, string $pageId, ?string $threadId = null): array
+    {
+        self::scope($actorId, $pageId, 1, null);
+        if ($threadId !== null) ServiceInput::actor($threadId);
+        if ($this->session === null) throw new FacebookException('facebook_inbox_session_required', 'A current Page snapshot requires the connected account WebSession');
+        if ($this->session->accountId() !== $this->graph->accountId()) throw new FacebookException('facebook_inbox_session_mismatch', 'The Page bootstrap and services must retain the same account owner');
+        $document = (new PageInboxContextLoader($this->session))->document($pageId);
+        if (!in_array($actorId, [$document->context->actorId, $document->context->profileActorId], true)) {
+            throw new FacebookException('facebook_inbox_actor_mismatch', 'The requested actor does not match the Page actor or its native profile mapping');
+        }
+        return (new PageInboxBootstrapSnapshotReader())->read($document, $threadId);
+    }
 
     /** Experimental legacy Mercury send. Context must come from the current Page composer.
      * Preserve it with the idempotency key; no generated message identity changes on retry.
@@ -93,6 +113,7 @@ final class InboxService
             'loadThreads' => true, 'loadThreadItems' => false, 'load_messages' => false,
         ]);
         $data = $this->graph->execute('BizInboxUnifiedThreadsQuery', $arguments, $actorId);
+        self::responsePage($data, $pageId);
         $connection = $data['xfb_biz_inbox_unified_thread_list']['msgr_threads'] ?? null;
         if (!is_array($connection) || !is_array($connection['nodes'] ?? null)) ServiceInput::unexpected();
         $items = [];
@@ -115,6 +136,7 @@ final class InboxService
             'loadThreadItems' => false, 'load_messages' => true, 'load_read_receipts' => true,
         ]);
         $data = $this->graph->execute('BizInboxUnifiedThreadsQuery', $arguments, $actorId);
+        self::responsePage($data, $pageId);
         $thread = $data['xfb_biz_inbox_unified_thread_list']['selected_thread']['selected_message_thread'] ?? null;
         if (!is_array($thread) || !is_array($thread['messages']['nodes'] ?? null)) ServiceInput::unexpected();
         $projected = self::thread($thread);
@@ -134,6 +156,20 @@ final class InboxService
                 'unread' => is_bool($row['unread'] ?? null) ? $row['unread'] : null];
         }
         return ['thread' => $projected, 'items' => $items, 'has_more' => null];
+    }
+
+    /** A supplied Page identity must agree with the requested mailbox.
+     * Older response shapes can omit selected_page; omission is not permission evidence.
+     * @param array<string,mixed> $data
+     */
+    private static function responsePage(array $data, string $pageId): void
+    {
+        $list = $data['xfb_biz_inbox_unified_thread_list'] ?? null;
+        if (!is_array($list) || !array_key_exists('selected_page', $list)) return;
+        $page = $list['selected_page'];
+        $id = is_array($page) ? ServiceInput::scalarId($page['id'] ?? null) : null;
+        if ($id === null) throw new FacebookException('facebook_inbox_context_unconfirmed', 'Facebook did not confirm the selected Page mailbox');
+        if ($id !== $pageId) throw new FacebookException('facebook_inbox_page_mismatch', 'Facebook returned a different Page mailbox than requested');
     }
 
     private static function scope(string $actorId, string $pageId, int $limit, ?string $before): void

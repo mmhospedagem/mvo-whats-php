@@ -116,10 +116,13 @@ final class TwoFactorService
         }
         if (($spec['kind'] ?? null) !== 'graphql' || !is_string($spec['url'] ?? null) || !is_array($spec['fields'] ?? null) || !is_array($spec['variables'] ?? null)) self::unavailable();
         WebLoginCurlTransport::validateUrl($spec['url']);
-        $code = str_replace(' ', '', trim($code));
-        if (preg_match('/^[0-9]{6}$/D', $code) !== 1) throw new MessengerException('login_two_factor_invalid_code', 'Informe os seis dígitos atuais do aplicativo autenticador.');
         $variables = $spec['variables'];
-        if (($variables['method'] ?? null) !== 'TOTP' || ($variables['flow'] ?? null) !== 'TWO_FACTOR_LOGIN' || !is_string($variables['encryptedContext'] ?? null) || $variables['encryptedContext'] === '') self::unavailable();
+        $method = $variables['method'] ?? null;
+        if (!in_array($method, ['TOTP', 'SMS', 'EMAIL'], true) || ($variables['flow'] ?? null) !== 'TWO_FACTOR_LOGIN' || !is_string($variables['encryptedContext'] ?? null) || $variables['encryptedContext'] === '') self::unavailable();
+        $contact = $variables['maskedContactPoint'] ?? null;
+        if ($contact !== null && (!is_string($contact) || strlen($contact) > 512 || preg_match('/[\x00-\x1f\x7f]/', $contact))) self::unavailable();
+        $code = str_replace(' ', '', trim($code));
+        if (preg_match($method === 'TOTP' ? '/^[0-9]{6}$/D' : '/^[0-9]{6,8}$/D', $code) !== 1) throw new MessengerException('login_two_factor_invalid_code', $method === 'TOTP' ? 'Informe os seis dígitos atuais do aplicativo autenticador.' : 'Informe os seis a oito dígitos recebidos pelo método escolhido.');
         $fields = $spec['fields'];
         foreach ($fields as $name => $value) if (!is_string($name) || !is_string($value)) self::unavailable();
         if (($fields['fb_api_req_friendly_name'] ?? null) !== self::OPERATION || !is_string($fields['doc_id'] ?? null) || preg_match('/^[1-9][0-9]{0,24}$/D', $fields['doc_id']) !== 1) self::unavailable();
@@ -143,7 +146,7 @@ final class TwoFactorService
         }
         if (count($results) !== 1 || !is_bool($results[0]['is_code_valid'] ?? null)) self::unavailable();
         $result = $results[0];
-        if ($result['is_code_valid'] !== true) throw new MessengerException('login_two_factor_invalid_code', 'O Facebook não confirmou o código; confira o código atual do aplicativo autenticador.');
+        if ($result['is_code_valid'] !== true) throw new MessengerException('login_two_factor_invalid_code', 'O Facebook não confirmou o código; confira o código atual do método escolhido.');
         $next = $result['next'] ?? null;
         if ($next !== null && (!is_string($next) || $next === '')) self::unavailable();
         if (is_string($next)) $next = WebLoginPageParser::resolveUrl($pageUrl, $next);

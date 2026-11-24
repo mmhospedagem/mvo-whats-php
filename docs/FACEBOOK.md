@@ -10,7 +10,7 @@ A entrega é uma biblioteca. Não acrescenta rotas REST, painel, daemon de produ
 
 ## Conectar, salvar e restaurar
 
-`FacebookConnection` é a entrada principal da biblioteca: recebe e-mail/senha no primeiro login, salva a sessão confirmada e depois restaura com `connect()`. A aplicação não precisa instanciar um Messenger separado nem importar JSON de cookies.
+`FacebookConnection` é a entrada principal da biblioteca. No checkout, `loginAndroid()` recebe e-mail/senha e perfil privado e autentica por endpoints nativos JSON, sem HTML/navegador; depois restaura a sessão confirmada com `connect()`. O método separado `login()` conserva uma alternativa Web opcional. A aplicação não precisa instanciar um Messenger separado nem importar JSON de cookies.
 
 ```php
 use MVO\Facebook\FacebookConnection;
@@ -22,7 +22,8 @@ $facebook = new FacebookConnection(
 );
 
 // Primeiro acesso: valores recebidos por uma entrada privada da aplicação.
-$facebook->login($email, $password);
+/** @var \MVO\Messenger\Auth\AndroidLoginProfile $nativeProfile Configuração privada. */
+$facebook->loginAndroid($email, $password, $nativeProfile);
 
 try {
     $facebook->connect();
@@ -43,11 +44,21 @@ Cookies confirmados e estado ficam em `<authDirectory>/messenger/<sessionId>/sta
 
 ### Autenticação em duas etapas e verificação humana
 
-`login()` pode lançar `MVO\Messenger\MessengerException` e deixar uma verificação pendente no mesmo processo por até dez minutos. `loginChallenge()` retorna somente `type`, `expires_at` e `ready`. Com `type=two_factor` e `ready=true`, receba o código real como string por entrada privada e chame `confirmLogin($code)`; depois, `connect()`. Preserve zeros iniciais. Não use TOTP em `type=captcha`, não envie códigos quando `ready=false` e não repita login/códigos automaticamente.
+No 406 reconhecido, conserve o mesmo objeto/processo e lock por até dez minutos. `ready=true` e `requires_code=true` permitem confirmar código privado com `confirmLogin()`, preservando zeros iniciais. Depois da aprovação pessoal no aplicativo, `can_check=true` permite consultar `checkLoginApproval()`, respeitando cinco segundos entre consultas. A notificação isolada não confirma a sessão: ainda são necessários resultado nativo e identidade JSON coerente.
 
-`stop()`, expiração e reinício cancelam o desafio ainda pendente. CAPTCHA/checkpoints continuam exigindo a ação humana no Facebook. O método `exportPrivateLoginChallenge()` fornece URL/cookies/expiração **secretos** somente para um bridge privado opcional da aplicação; nunca o exponha por HTTP, eventos, logs ou ferramentas. Após a verificação no mesmo contexto isolado, `completeBrowserLogin(CookieJar $cookies)` confirma a identidade por HTTPS antes de salvar. A biblioteca não abre o navegador nem resolve o desafio automaticamente. O [contrato compartilhado de autenticação](FACEBOOK-MESSENGER.md) descreve os formatos atualmente reconhecidos e seus limites.
+`requestLoginSms()` é um pedido experimental explícito, uma tentativa do 406 corrente, com `delivery_confirmed=false`. `can_request_sms` não prova que a conta oferece SMS, `methods=[]` não é catálogo e o pedido não autentica. Erros/incerteza não autorizam repetição automática ou manual nessa tentativa.
 
-Senha e código pertencem à entrada privada da aplicação. O exemplo [session.php](../packages/facebook/examples/session.php) aceita `--login` com as variáveis privadas `MVO_FACEBOOK_EMAIL`/`MVO_FACEBOOK_PASSWORD` ou restaura sem `--login`; use `--help`. Ele diagnostica desafios, cuja continuação pertence aos métodos PHP descritos acima. Não forneça senhas/códigos em argumentos CLI ou logs. O exemplo [discover.php](../packages/facebook/examples/discover.php) restaura a sessão e lista recursos somente para leitura.
+405/CAPTCHA/Google sem continuação nativa estabelecida retorna `login_native_verification_unsupported`, com browser indisponível e sem consulta HTML. `confirmLogin()`/SMS não transformam esse estágio em 406. O catálogo Web e o bridge humano existem somente na opção separada `login()`; a compatibilidade interna `allowWebCheckpoint: true` não é ativada pelas fachadas `loginAndroid()`. Credenciais, código e handoff privado não vão para HTTP/logs/LLMs.
+
+Os exemplos CLI `session.php` e `login-methods.php` conservam a alternativa Web do SDK; não são o cliente Android nem fallback da política nativa. O exemplo `discover.php` restaura uma sessão salva e consulta recursos. Veja [conexão Facebook](facebook/CONEXAO.md).
+
+### Login Android experimental
+
+`loginAndroid($email, $password, AndroidLoginProfile $profile, ?AndroidLoginTransport $transport = null)` usa o mesmo dono e armazenamento, com configuração privada do aplicativo fora do SDK. Antes de salvar cookies, `GET /me` recebe somente o token de usuário do resultado em `Authorization: OAuth`, mantido em RAM; exige UID JSON coerente com resultado/cookies/conta vinculada. Não usa HTML nem o perfil de autorização do aplicativo nessa consulta.
+
+A rota tem evidência APK; o schema de identidade e o pedido SMS têm fixtures, com validação real própria pendente. Código/aprovação 406, metadados e restauração foram demonstrados em uma conta em 20/10/2026 pela implementação anterior, que verificava a identidade Web. Isso não valida o novo `/me` nem entrega de SMS. Consulte [autenticação Android](facebook/AUTENTICACAO-ANDROID.md).
+
+Autenticação nativa não converte bootstrap, inbox ou Fanpages: esses serviços continuam no protocolo Web/DGW. `e2ee_ready=false`; os componentes experimentais não habilitam mensagens criptografadas sem verificador remoto ICDC de produção e validação real.
 
 ### Compartilhar um cliente Messenger existente
 
@@ -148,3 +159,5 @@ Consulte [contrato e exemplo do monitor](../packages/facebook/src/Monitoring/REA
 Os testes locais cobrem persistência/rollback, idempotência, isolamento de conta e identidade, paginação, normalização e formatos representados nas fixtures. Artefatos públicos fornecem evidência de documentos e procedimentos específicos. Nenhuma dessas verificações comprova execução de uma publicação, comentário, reação ou alteração de anúncios em uma conta real.
 
 A autenticação e a sincronização de metadados Messenger já observadas são outra evidência, com alcance descrito no seu guia. Não as extrapole para gestão de Páginas, inbox comercial, anúncios ou monitoramento de eventos reais. A distribuição pública contém somente SDKs, exemplos e documentação; sessões, capturas autenticadas, a API consumidora e o laboratório privado não são distribuídos.
+
+Em uma validação separada de 19/10/2026, `inbox()->snapshot()` leu o documento nativo de uma Página autorizada, retornando 8 conversas e 8 mensagens carregadas. A consulta e o filtro local de uma thread preservaram o escopo da Página. Isso cobre somente o snapshot atual, sem histórico completo, envio ou acompanhamento realtime contínuo. Consulte [Inbox](facebook/INBOX.md).

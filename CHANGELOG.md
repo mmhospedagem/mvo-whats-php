@@ -4,6 +4,13 @@ As versões da biblioteca seguem versionamento semântico. Mudanças no protocol
 
 ## Em desenvolvimento — WhatsApp
 
+- Adaptador experimental `businessAgent()` para 39 documentos nativos por sessão QR, com allowlist, guard e projeção de resposta; token/cooldown compartilhados com formulários. Autenticação e dez consultas validadas em uma conta; inclui controle global V2, seis subconjuntos de entrada tipados e confirmação de reengajamento por valores aplicados. Não cobre todo o produto Meta Business Agent.
+
+- Avisos de mensagens indisponíveis emitem `message_unavailable` com `kind`, incluindo `sender_drop` para conversas restritas ao celular principal. Placeholders individuais e de grupo recebem ACK, evitando retry por ausência de conteúdo cifrado.
+- `group()->joinGroupViaLink()` retorna o JID e o resultado da entrada por convite. A prévia do convite indica solicitações pendentes.
+- MEX decodifica respostas Argo com tipos de protocolo incluídos para `FetchReachoutTimelock` e `FetchNewChatMessageCappingInfo`.
+- Versão Web padrão atualizada para `2.3000.1054821409`.
+
 - `historySink` opcional em `WaClient`, com registros `HistorySync` incrementais, controle de fluxo síncrono, `commit`/`abort`, ID estável e checkpoint antes do recibo. Mídia e compressão são verificadas antes dos callbacks; leitura por spool não acumula mensagens da conversa.
 - `historyPersist: false` permite persistência externa sem projeções bulk locais de sync, mantendo estado necessário ao protocolo. Inclui exemplo SQLite com staging/idempotência, proteção de ciclo de vida e testes locais de falha, replay e memória; sem validação em aparelho real.
 - Pareamento aguarda o reinício solicitado pelo servidor após a confirmação ADV, com retomada por `515`/fechamento transitório, fallback de 15 segundos e cancelamento vinculado ao ciclo de vida da conexão.

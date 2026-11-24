@@ -1,17 +1,39 @@
 <?php
 declare(strict_types=1);
 namespace MVO\Service;
-use MVO\Protocol\{BinaryNode,ArgoDecoder};
+use MVO\Protocol\{BinaryNode,ArgoDecoder,MexArgoWireTypes};
 
 /** GraphQL persisted operations from the pinned WhatsApp Web reference specification. */
 final class MexService
 {
     /** @var array<string,array{docId:string,clientDocId:string}>|null */
     private static ?array $operations=null;
+    /** @var array<string,array<string,mixed>> */
+    private static array $argoWireTypes=[];
     public function __construct(private readonly ServiceTransport $transport) {}
     /**
      * @return list<string> */
     public function operations(): array { return array_keys(self::manifest()); }
+
+    /**
+     * Registers a response wire type for an operation, replacing its built-in type if present.
+     * @param array<string,mixed> $wire Ordered response type as used by MexArgoWireTypes.
+     */
+    public static function registerArgoWireType(string $operation,array $wire):void
+    {
+        if ($operation==='') throw new \InvalidArgumentException('MEX operation name is empty');
+        self::$argoWireTypes[$operation]=$wire;
+    }
+
+    /** @return list<string> */
+    public static function argoWireTypeNames():array
+    {
+        $registered=array_map(strval(...),array_keys(self::$argoWireTypes));
+        $names=array_values(array_unique([...MexArgoWireTypes::names(),...$registered]));
+        sort($names,SORT_STRING);
+        return $names;
+    }
+
     /**
      * @param array<string,mixed> $variables
      * @return array<string,mixed>|null */
@@ -30,7 +52,11 @@ final class MexService
         $result=$r->child('result') ?? throw new \UnexpectedValueException('MEX result missing');
         $format=$result->attrs['format'] ?? 'json';
         $payload=ServiceTransport::text($result) ?? throw new \UnexpectedValueException('MEX payload missing');
-        $json=match($format) { 'json'=>json_decode($payload,true,512,JSON_THROW_ON_ERROR|JSON_BIGINT_AS_STRING),'argo'=>ArgoDecoder::decode($payload),default=>throw new \UnexpectedValueException('Unsupported MEX response format: '.$format) };
+        $json=match($format) {
+            'json'=>json_decode($payload,true,512,JSON_THROW_ON_ERROR|JSON_BIGINT_AS_STRING),
+            'argo'=>ArgoDecoder::decode($payload,self::$argoWireTypes[$operation] ?? MexArgoWireTypes::get($operation)),
+            default=>throw new \UnexpectedValueException('Unsupported MEX response format: '.$format),
+        };
         if (!is_array($json)) throw new \UnexpectedValueException('Invalid MEX envelope');
         if (!empty($json['errors'])) {
             $codes=[]; $details=[]; foreach ($json['errors'] as $error) { $codes[]=(string)($error['extensions']['error_code'] ?? $error['extensions']['code'] ?? '?'); $details[]=($error['message'] ?? 'GraphQL operation rejected').(isset($error['extensions']['severity']) ? ' '.$error['extensions']['severity'] : ''); }

@@ -4,7 +4,7 @@ Este documento é autocontido para o pacote `mmhospedagem/mvo-facebook-php`, nam
 
 **Versão deste contexto: branch de desenvolvimento, ainda sem release das extensões descritas abaixo. Facebook 0.1.0 e Messenger 0.1.1 publicados não contêm provisionamento de dispositivo, envio Page Lightspeed, upload, criação/gestão ampliada de Páginas, edição/moderação e os novos serviços de administração/insights.** Para esses contratos, use os checkouts dos dois pacotes via Composer `path`; instalar `^0.1` pode resolver releases anteriores. Publicação no Git, implementação e testes sintéticos não comprovam operação em uma conta real.
 
-O entregável Facebook é somente biblioteca PHP, exemplos e documentação. Não existe uma nova API REST, painel obrigatório ou servidor MCP Facebook. O laboratório loopback de validação é privado e não faz parte do repositório ou dos pacotes distribuídos. PHP executa autenticação, bootstrap, WebSocket DGW e sincronização Lightspeed; Node.js e Go não são runtimes do conector. O navegador isolado pode auxiliar uma verificação humana, mas não substitui o protocolo PHP.
+O entregável Facebook é somente biblioteca PHP, exemplos e documentação. Não existe uma nova API REST, painel obrigatório ou servidor MCP Facebook. O laboratório loopback de validação é privado e não faz parte do repositório ou dos pacotes distribuídos. PHP executa autenticação, bootstrap, WebSocket DGW e sincronização Lightspeed; Node.js e Go não são runtimes do conector. A autenticação Android não abre navegador; o `login()` Web opcional tem contrato separado. Bootstrap, DGW e serviços de Fanpage ainda utilizam o protocolo Web, sem significar que todo o conector foi convertido em Android.
 
 ## Instalação independente
 
@@ -44,6 +44,8 @@ Execute `composer install` na aplicação e use seu `vendor/autoload.php`. Os ca
 
 ## Entrada principal, login e restauração
 
+Os eventos `message` do runtime Messenger podem representar linhas nativas sem texto: `text=null`, `type=unknown`. Não substitua por string vazia nem deduza imagem, vídeo ou figurinha sem projeção específica de anexo. IDs/timestamp e commit/rollback da sincronização continuam obrigatórios; isso não habilita E2EE.
+
 ```php
 <?php
 declare(strict_types=1);
@@ -60,7 +62,8 @@ $facebook = new FacebookConnection(
 
 // No primeiro acesso ou renovação explícita:
 // $email e $password devem vir de entrada privada da aplicação.
-// $facebook->login($email, $password);
+// $nativeProfile é AndroidLoginProfile privado da aplicação.
+// $facebook->loginAndroid($email, $password, $nativeProfile);
 
 try {
     // Com uma sessão já confirmada, restaura sem e-mail/senha ou JSON de cookies.
@@ -76,26 +79,40 @@ try {
 }
 ```
 
-`login()` autentica, verifica a identidade e salva apenas a sessão confirmada; `connect()` é a etapa seguinte. Não chame `login()` a cada reinício. Use o mesmo ID e as mesmas pastas para retomar; outro usuário exige outro ID. Um dono mantém o lock por sessão. Não inicie um `MessengerClient` concorrente para a mesma sessão usada por `FacebookConnection`.
+`loginAndroid()` autentica nativamente, verifica a identidade por `/me` e salva apenas a sessão confirmada; `connect()` é a etapa seguinte. Não chame `loginAndroid()` ou `login()` a cada reinício. Use o mesmo ID e as mesmas pastas para retomar; outro usuário exige outro ID. Um dono mantém o lock por sessão. Não inicie um `MessengerClient` concorrente para a mesma sessão usada por `FacebookConnection`.
 
 Persistência privada: `<authDirectory>/messenger/<sessionId>/state.sqlite`. A pasta interna `messenger` reflete o runtime compartilhado, sem exigir outro cliente. Os serviços mantêm comandos, escolhas e monitor em `<privateStorageDirectory>/<accountId>/`. `stop()` fecha localmente e libera o lock; preserva sessão confirmada e dados. Não há `logout()`, `run()`, `sendText()` ou `importCookies()` público em `FacebookConnection`: não proponha esses métodos como se existissem. `poll()` mantém o trabalho.
 
-A sessão contém cookies e dados privados. Não guardar em raiz HTTP, Git, exemplos, filas em texto claro ou logs. Senha e código do autenticador não são credenciais persistidas. Não coloque esses valores no contexto de um modelo, argumentos CLI ou código público.
+A sessão contém cookies e dados privados. Não guardar em raiz HTTP, Git, exemplos, filas em texto claro ou logs. Senha e código de verificação não são credenciais persistidas. Não coloque esses valores no contexto de um modelo, argumentos CLI ou código público.
 
 ## Verificações de login
 
-Login e ciclo de vida podem lançar `MVO\Messenger\MessengerException`, com `reason` e `retryable`. Se houver desafio, `loginChallenge()` retorna somente `{type, expires_at, ready}`. O contexto real fica em memória por até dez minutos, no processo que iniciou a tentativa e conserva o lock. Reinício, expiração ou `stop()` cancelam a tentativa pendente.
+No checkout de 21/10/2026, `loginAndroid()` autentica somente por endpoints nativos JSON, sem HTML, WebView, browser ou fallback Web. A sequência é POST `/pwd_key_fetch` (`method=GET` no formulário), cifra `#PWD_MSGR`, POST `/auth/login`, continuação 406 por código ou aprovação e GET `/me` sem query/corpo com `Authorization: OAuth <token do usuário>` e friendly name `getMeUser`. O token existe somente em RAM, não é salvo/exposto e não usa `AndroidApplicationProfile::authorize()`. O perfil privado autoriza as chamadas de aplicativo; não é uma chave de integração pública do consumidor.
 
-Somente `type=two_factor` com `ready=true` permite receber o código privadamente e chamar `confirmLogin(string $code)`. Preserve zeros iniciais e chame `connect()` depois da confirmação. CAPTCHA/checkpoint exige ação humana; não enviar TOTP como CAPTCHA, resolver automaticamente ou repetir credenciais/códigos. `ready=false` não é um formulário de confirmação implementado. Formatos de login/desafio não reconhecidos permanecem bloqueados.
+As assinaturas de `MessengerClient` e `FacebookConnection` são `loginAndroid(string $email, string $password, AndroidLoginProfile $profile, ?AndroidLoginTransport $transport = null): void`, `confirmLogin(string $code): void`, `checkLoginApproval(): bool`, `requestLoginSms(): array` e `loginChallenge(): ?array`. Use o mesmo ID/pasta/objeto/processo e lock, conexão parada e nenhuma verificação pendente antes do novo login. O contexto pendente fica em RAM por até dez minutos; `stop()`, expiração e reinício o descartam. A senha original não é conservada para continuar.
 
-`exportPrivateLoginChallenge()` é avançado e **secreto**, com `{url, cookies, expires_at}`, apenas para um bridge privado da aplicação. Não o publicar por HTTP, logs, eventos ou ferramentas. Após a verificação humana no mesmo contexto, `completeBrowserLogin(CookieJar $cookies)` verifica a identidade por HTTPS antes de salvar. A biblioteca não abre navegador automaticamente e não lê perfis existentes para extrair sessões.
+No 406 reconhecido, `ready=true` e `requires_code=true` permitem `confirmLogin($code)` com uma string privada, preservando zeros iniciais. Código e aprovação podem estar disponíveis juntos. UID, máquina e `auth_token` reais habilitam `can_check`: depois da aprovação pessoal no aplicativo, `checkLoginApproval()` consulta `GET /check_approved_machine`, no máximo a cada cinco segundos. `approved=true` permite uma única troca `credentials_type=transient_token`, usando UID/token da mesma tentativa, nunca a senha original ou o primeiro fator. `true` só é retornado depois de verificar identidade e salvar; `false` conserva a espera. Resultado incerto bloqueia repetição de código/token.
+
+**SMS experimental explícito:** `can_request_sms=true` indica apenas que há UID/primeiro fator 406 locais para tentar `requestLoginSms()`. Não prova disponibilidade de SMS para a conta. Essa ação deve ser escolhida pessoalmente, nunca disparada na descoberta/poll. Faz POST `/{UID}/twofacsms`, com `first_factor` corrente e friendly name `login_approval_resend_code`. UID é decimal positivo de 1–25 dígitos, sem zeros iniciais, caminho exato nas duas origens fixas. O pedido não autentica, não solicita outro login e não fornece catálogo/destinatários. Uma resposta reconhecida retorna `outcome=request_submitted`, `experimental=true`, `delivery_confirmed=false`; `sms_request_state` registra `not_requested`, `submitted`, `rejected` ou `uncertain`. Uma tentativa de envio por 406; resultados incertos/rejeitados não são repetidos. Um código realmente recebido usa o mesmo `confirmLogin()`. Em 21/10/2026, uma tentativa autorizada recebeu 406 e o único pedido explícito retornou HTTP 400, erro nativo 3, com estado `rejected` e sem reenvio. Não houve entrega confirmada; o motivo exato da rejeição não foi estabelecido. Não inferir senha errada, mudar a autorização ou repetir com campos especulativos.
+
+**Sem catálogo Android:** `methods=[]`, `selected_method=null`, `can_refresh=false`. `refreshLoginMethods()` e `requestLoginMethod()` não fabricam ofertas de SMS/e-mail/app. `loginChallenge()` também pode projetar `native_only`, `native_code`, `continuation`, `verification_supported`, `can_request_sms` e `sms_request_state`, sem UID, tokens privados, HTML ou cookies.
+
+**405/CAPTCHA/Google sem continuação nativa estabelecida:** `login_native_verification_unsupported`, com `native_only=true`, `continuation=unsupported_native_checkpoint`, `verification_supported=false`, `browser_continuation_available=false`, `ready=false`, `can_refresh=false`, `can_check=false`. Não consultar páginas, abrir navegador, enviar SMS ou código para transformar 405 em 406. `exportPrivateLoginChallenge()`/`completeBrowserLogin()` não estão habilitados nesse fluxo; retornam `login_native_browser_unavailable`.
+
+A rota `/me`/`getMeUser` tem evidência estática no APK; o SDK exige JSON objeto com `id` decimal positivo coerente com UID/cookies/conta vinculada. Esse schema é uma validação por fixtures desta revisão, com teste real próprio ainda pendente; o parser `MCe.BSl` observado retorna `null` e não prova o schema. As autenticações 406 e restaurações reais de 20/10/2026 usavam a verificação Web anterior e não validam a nova etapa `/me` nem entrega de SMS. Uma tentativa real do pedido SMS foi rejeitada por HTTP 400/erro nativo 3 nesta revisão; isso não valida disponibilidade ou entrega.
+
+Erros de identidade nativa usam `login_native_identity_unconfirmed` para resposta/formato não confirmado e `login_identity_mismatch` para divergência de conta; não salvam a sessão. Códigos/tokens já consumidos não voltam a ser reutilizáveis se a etapa posterior falhar. `login_sms_outcome_uncertain`, `login_sms_already_requested` e `login_native_sms_rejected` não significam entrega. Não registrar objetos, respostas brutas, argumentos, senha, código ou token. Chame `connect()` somente depois de a sessão ser confirmada.
+
+**Compatibilidade Web separada:** `login()` ainda pode usar `WebLoginService` por escolha explícita da aplicação. O construtor de baixo nível `AndroidLoginService(..., allowWebCheckpoint: true)` conserva testes/integrações legadas de HTTP 405, mas as fachadas `loginAndroid()` e a política nativa da API consumidora não o habilitam. Somente no fluxo Web opcional há catálogo reconhecido com `refreshLoginMethods()`/`requestLoginMethod()`, formulários de código e handoff privado de navegador. Isso não autoriza fallback automático, resolução de CAPTCHA ou rejeições do Google; nenhum contexto privado vai para HTTP/logs/LLMs.
+
+O login nativo não converte o restante do conector: após persistência, bootstrap, metadados DGW, inbox e recursos de Fanpage permanecem Web. `e2ee_ready=false`, sem verificador remoto ICDC de produção e sem mensagens E2EE validadas. Veja `docs/facebook/AUTENTICACAO-ANDROID.md` para configuração e evidências.
 
 ## Estado, eventos e fronteira de mensagens
 
 - `isConnected()` verifica estado `metadata_connected` e transporte ativo. Isso não comprova dispositivo criptográfico ou permissões comerciais.
 - `accountInfo()` fornece `channel`, `provider`, `session_id`, `account_id`, `display_name`, `state`, `connected`, `transport`, `lightspeed_version`, `e2ee_ready`, `has_saved_session`, `capabilities`, `login_challenge`.
 - `channel=messenger`, `transport=dgw_websocket` identificam o runtime interno. `has_saved_session` indica armazenamento local, não validade no servidor. `e2ee_ready=false`: provisionar um dispositivo não implementa mensagens pessoais E2EE. Não há fallback plaintext de uma thread criptografada/migrada.
-- Estados comuns: `stopped`, `session_imported`, `awaiting_two_factor`, `awaiting_captcha`, `login_challenge_expired`, `authenticating`, `connecting_transport`, `metadata_connected`, `disconnected`. Falhas podem usar seu `reason` específico como estado.
+- Estados comuns: `stopped`, `session_imported`, `awaiting_login`, `awaiting_two_factor`, `awaiting_captcha`, `login_challenge_expired`, `authenticating`, `connecting_transport`, `metadata_connected`, `disconnected`. Falhas podem usar seu `reason` específico como estado.
 - `on(string $event, callable $handler): static` recebe callbacks; não executar consultas/escritas neles. `events(int $after=0, int $limit=100): array` consulta eventos persistidos do runtime. Eventos de monitor são outra coleção.
 - O runtime Messenger possui seus próprios métodos experimentais de texto sem criptografia em threads reconhecidas. Eles não equivalem ao inbox de Página. A Página usa `inbox()->sendTextLightspeed()` com um grupo DGW vinculado ao asset; `FacebookConnection` continua sem um `sendText()` genérico.
 
@@ -133,9 +150,24 @@ Não implementar nem sugerir fallback para Marketing Graph API/`graph.facebook.c
 
 ## Inbox de Página: contexto e envio atuais
 
+`inbox()->snapshot($actorId,$pageId,$threadId=null)` consulta o documento atual do Business Suite pelo mesmo dono WebSession PHP. Confirma conta, rota, mailbox, perfil delegado e assets nativos; decodifica atomicamente as respostas LS correlacionadas com os preloaders/epochs. Retorna somente conversas e mensagens carregadas pelo documento, com completude desconhecida (`has_more=null`). Não é histórico completo nem assinatura realtime, não marca conversas lidas, não envia mensagens e não registra dispositivo E2EE. Passe apenas `selection_id` retornado para a mesma Página. Exemplo: `packages/facebook/examples/page-inbox-snapshot.php`.
+
+O leitor de contexto separa `hrp.jsmods` de worker somente no limite `AsyncData.resolve` comprovado com ambos os inicializadores nativos de worker. O worker não pode fornecer identidade/Relay/CSRF/Página/gates ao documento; outros AsyncData e conflitos documentais continuam verificados. Em 20/10/2026, a sessão do login Android com autenticador foi restaurada em novo worker e leu oito conversas de uma Página autorizada (sete nomes, oito URLs de fotos); uma consulta filtrada retornou uma mensagem com remetente e anexo `file`. Não houve download do arquivo nem envio de mensagens.
+
+`threads()`/`messages()` continuam separados, usando o documento unificado catalogado; sua recusa pelo Business Suite atual não é resposta vazia nem autorização para acessar o inbox pessoal. Nunca copie HTML ou campos privados de `PageInboxContext`/`PageInboxDocument` para HTTP, logs ou exemplos.
+
+No snapshot, `selection_id` é o `thread_key.thread_fbid` real usado como filtro local, com `selection_source=snapshot_thread_key`. Não o envie como `selected_item_id` de rota nem como seleção dos métodos unificados ou Mercury. O ID comercial `comm_item_id` permanece separado. O terceiro argumento de `snapshot()` apenas filtra as mensagens carregadas depois da confirmação do mesmo documento/Página.
+
+Apresentação do snapshot: contatos são projetados dos procedimentos LS do mesmo lote Page, sem consultar o Messenger pessoal. Threads podem trazer `name`/`photo_url`; mensagens podem trazer `sender_name`/`sender_photo_url` e `attachments`. Nome/foto explícitos de grupo não são substituídos pelo contato arbitrário de um participante. Anexos são correlacionados por thread e mensagem antes do filtro local, com tipos reconhecidos `image`, `video`, `audio`, `sticker`, `file`; metadados/URLs ausentes não são fabricados. A aplicação renderiza texto literal e mídia com controles, sem autoplay. Apenas URLs HTTPS dos CDNs Meta reconhecidos (`fbcdn.net`, `fbsbx.com`, incluindo subdomínios), sem credenciais, porta explícita ou fragmento; manter `img-src`/`media-src` coerentes e desativar referência/cookies da sessão no carregamento. URLs assinadas podem expirar e não devem entrar em logs ou exemplos públicos. A presença de suporte a um formato não comprova que esse tipo exista no snapshot carregado; histórico completo permanece ausente.
+
+`threads.participants` preserva `{id,name,photo_url,is_page}` dos participantes confirmados. Para Marketplace/grupo sem título, a aplicação pode descrever os participantes sem renomear `thread.name`. Anexos trazem `availability`/`unavailable_reason`, e XMA pode trazer `native_type=xma`, título/descrição sem mídia. Nunca transformar URLs action/story/CTA em URL de mídia. `attachment_coverage` contém `partial` e procedimentos não reconhecidos; manter o aviso global separado das mensagens. Validação real desta projeção: 8 conversas com participantes/avatares e 8 remetentes identificados; HEAD de um avatar HTTP 200. Uma prévia XMA real não continha URL/miniatura. Reprodução de imagem/vídeo/áudio/sticker de mensagem permanece coberta por fixtures/DOM, sem demonstração real nessa conta; não contar avatar como anexo.
+
+Nas consultas `threads()` e `messages()`, uma identidade `selected_page` fornecida pela resposta deve conter o mesmo ID do `$pageId` solicitado. Divergência ou identificação fornecida sem ID bloqueia o resultado. Formatos que omitem esse campo continuam sem essa confirmação adicional. A aplicação deve isolar a seleção e os caches por conta, actor e Página e descartar a conversa anterior ao mudar de Página.
+
 Assinaturas de `InboxService`:
 
 ```text
+snapshot(string $actorId, string $pageId, ?string $threadId = null): array;
 lightspeedContext(string $actorId, string $pageId, string $selectedItemId, ?callable $bundleLoader = null): array;
 sendTextLightspeed(string $actorId, string $pageId, string $selectedItemId, string $text, string $idempotencyKey, array $context): array;
 sendText(string $actorId, string $pageId, string $selectedItemId, string $text, string $idempotencyKey, array $context): array;
@@ -281,7 +313,9 @@ Se necessário, use `php -c /caminho/php.ini ...`. O bootstrap acima pertence ao
 
 Em 18/10/2026, foram confirmados em uma conta: autenticação com continuação humana, identidade verificada pelo PHP, cookies salvos e restauração em `metadata_connected`; metadados de 13 conversas, WebSocket observado por 12 segundos. Uma captura autenticada do launchpoint de Páginas foi reconhecida pelo parser, projetando sete Páginas modernas, sem afirmar completude. Isso não comprova todos os desafios/contas, estabilidade prolongada ou permissões comerciais.
 
-Testes locais cobrem conexão/persistência simuladas, parsing, catálogo de documentos, projeções, ledger, escolhas isoladas e monitor SQLite. Os serviços de publicação, comentários, reações, inbox comercial, anúncios e eventos reais ainda não foram validados em conta nesta etapa. Não transformar implementação, fixture ou fonte estática em promessa de sucesso real.
+Em 19/10/2026, a descoberta PHP restaurada retornou 7 Páginas; `inbox()->snapshot()` leu o documento atual de uma Página autorizada, retornando 8 conversas, 8 mensagens carregadas e 1 mensagem ao filtrar uma thread. Foram somente GETs, sem envio, marcação de leitura ou gateway Page. A coleção é parcial; isso não comprova histórico completo, realtime contínuo ou envio Page. As consultas unificadas catalogadas foram recusadas e continuam separadas.
+
+Testes locais cobrem conexão/persistência simuladas, parsing, catálogo de documentos, projeções, ledger, escolhas isoladas e monitor SQLite. Publicação, comentários, reações, envio comercial, anúncios e eventos reais ainda não foram validados em conta nesta etapa. Não transformar implementação, fixture ou fonte estática em promessa de sucesso real.
 
 As extensões da branch de desenvolvimento têm contratos e testes de provisionamento explícito, envio Page LS/Mercury, upload de fotos, edição/exclusão de texto, ocultação de comentários, campos da Página, pessoas/permissões e métricas. **Não houve registro de dispositivo, envio Page, upload, publicação, convite, mudança de cargo ou exclusão em conta real nesta validação.** Aquisição automática do contexto Page também foi validada com fixtures, sem comprovar o HTML autenticado atual.
 

@@ -205,6 +205,8 @@ final class WebLoginTwoFactorIntegrationTest extends TestCase
         self::assertFailure('login_two_factor_outcome_uncertain', static fn () => $service->confirm('012345'));
         self::assertFalse($service->challenge()['ready']);
         self::assertFailure('login_challenge_unavailable', static fn () => $service->confirm('012345'));
+        self::assertFailure('login_continuation_required', static fn () => $service->refreshMethods());
+        self::assertFailure('login_continuation_required', static fn () => $service->requestMethod('unoffered-method'));
         self::assertCount(4, $transport->requests);
         self::assertPasswordPosts($transport, 1);
     }
@@ -212,6 +214,19 @@ final class WebLoginTwoFactorIntegrationTest extends TestCase
     public function testHttp500AfterPostingOtpIsUncertainAndCannotRepostTheCode(): void
     {
         self::assertUnknownOtpResponseCannotReplay(new WebLoginResponse(500, '{"error":"Synthetic server failure after POST"}'));
+    }
+
+    public function testOversizedResponseAfterPostingOtpCannotRearmTheCodeThroughDiscovery(): void
+    {
+        $steps = self::baseSteps(self::challengePage());
+        $steps[] = ['method' => 'POST', 'url' => 'https://www.facebook.com/api/graphql/', 'error' => new MessengerException('login_response_too_large', 'Synthetic response limit after POST')];
+        $transport = new LoginContinuationFixtureTransport($steps); $loaded = [];
+        $service = self::service($transport, $loaded); self::assertPending($service);
+        self::assertFailure('login_two_factor_outcome_uncertain', static fn () => $service->confirm('012345'));
+        self::assertFalse($service->challenge()['ready']);
+        self::assertFailure('login_challenge_unavailable', static fn () => $service->confirm('012345'));
+        self::assertFailure('login_continuation_required', static fn () => $service->refreshMethods());
+        self::assertCount(4, $transport->requests); self::assertPasswordPosts($transport, 1);
     }
 
     public function testUnknownHttp200JsonAfterPostingOtpIsUncertainAndCannotRepostTheCode(): void
@@ -251,7 +266,7 @@ final class WebLoginTwoFactorIntegrationTest extends TestCase
     {
         self::assertFailure($reason, static fn () => $service->login('owner@example.test', 'SYNTHETIC-PRIVATE-PASSWORD'));
         $projection = $service->challenge(); self::assertNotNull($projection);
-        self::assertSame(['type', 'expires_at', 'ready'], array_keys($projection));
+        self::assertSame(['type', 'expires_at', 'ready', 'methods', 'selected_method', 'requires_code', 'can_refresh', 'can_check', 'request_retry_after', 'check_retry_after', 'outcome_uncertain'], array_keys($projection));
         self::assertGreaterThan(time(), $projection['expires_at']);
         self::assertLessThanOrEqual(time() + 600, $projection['expires_at']);
         self::assertStringNotContainsString('synthetic-current-context', json_encode($projection, JSON_THROW_ON_ERROR));

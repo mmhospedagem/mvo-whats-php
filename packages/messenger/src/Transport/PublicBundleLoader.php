@@ -21,6 +21,15 @@ final class PublicBundleLoader
     {
         return $this->load($urls,static fn(string $source):bool=>str_contains($source,'useTwoFactorLoginValidateCodeMutation_facebookRelayOperation'));
     }
+    /** Load the bounded set of current method-picker/send/poll bundles, without cookies.
+     * A single validate-code module does not establish the other operations.
+     * @param list<string> $urls
+     * @return list<string>
+     */
+    public function loadLoginMethodBundles(array $urls):array
+    {
+        return $this->load($urls,static fn(string $source):bool=>false);
+    }
     /** @param list<string> $urls
      * @param callable(string):bool $containsTarget
      * @return list<string>

@@ -42,6 +42,55 @@ final class PagesBootstrapReaderTest extends TestCase
         $result=(new PagesBootstrapReader())->read($this->html(['viewer'=>['admined_pages'=>['nodes'=>[]]]]),'10001');
         self::assertSame([],$result['items']);self::assertFalse($result['exhaustive']);
     }
+    public function testModernLaunchpointCollectionPreservesProfileAndDelegateWithoutClaimingExhaustion():void
+    {
+        $html=$this->html(['viewer'=>['actor'=>['additional_profiles_with_biz_tools'=>[
+            'edges'=>[['node'=>['id'=>'30003','name'=>'Synthetic modern Page','delegate_page_id'=>'40004']],
+                ['node'=>['id'=>'50005','name'=>'Synthetic profile without delegate']],['node'=>null]],
+            'page_info'=>['end_cursor'=>'EXACT+/==','has_next_page'=>true],
+        ]]]]);
+        $result=(new PagesBootstrapReader())->read($html,'10001');
+        self::assertCount(2,$result['items']);
+        self::assertSame(['id'=>'30003','name'=>'Synthetic modern Page','type'=>'profile_plus','actor_id'=>'30003','delegate_page_id'=>'40004'],$result['items'][0]);
+        self::assertSame('50005',$result['items'][1]['actor_id']);
+        self::assertNull($result['items'][1]['delegate_page_id']);
+        self::assertFalse($result['exhaustive']);
+        // Bootstrap discovery does not implement cursor continuation; managed()/next() do.
+        self::assertSame(['end_cursor'=>null,'has_next_page'=>null],$result['page_info']);
+    }
+    public function testRecognizedEmptyModernAndSwitcherCollectionsAreNotUnknownFormats():void
+    {
+        foreach([
+            ['additional_profiles_with_biz_tools'=>['edges'=>[]]],
+            ['profile_switcher_eligible_profiles'=>['nodes'=>[]]],
+            ['profile_switcher_eligible_profiles'=>['nodes'=>[['profile'=>['id'=>'50005','name'=>'Synthetic personal profile']]]]],
+        ]as $actor){
+            $result=(new PagesBootstrapReader())->read($this->html(['viewer'=>['actor'=>$actor]]),'10001');
+            self::assertSame([],$result['items']);
+            self::assertFalse($result['exhaustive']);
+            self::assertNull($result['page_info']['has_next_page']);
+        }
+    }
+    public function testModernCollectionOutsideTheNativeRelayViewerCannotIntroduceSelectableResources():void
+    {
+        foreach([
+            ['unrelated'=>['actor'=>['additional_profiles_with_biz_tools'=>['edges'=>[['node'=>['id'=>'30003','name'=>'Not a Page']]]]]]],
+            ['viewer'=>['unrelated'=>['additional_profiles_with_biz_tools'=>['edges'=>[['node'=>['id'=>'30003','name'=>'Not a Page']]]]]]],
+            ['viewer'=>['actor'=>['additional_profiles_with_biz_tools'=>['edges'=>['unrecognized'=>['node'=>['id'=>'30003','name'=>'Not a Page']]]]]]],
+        ]as $data){
+            try{(new PagesBootstrapReader())->read($this->html($data),'10001');self::fail('Unknown paths must not become Pages');}
+            catch(FacebookException $error){self::assertSame('facebook_pages_unavailable',$error->reason);}
+        }
+    }
+    public function testModernCollectionStillRequiresMatchingAccountIdentity():void
+    {
+        $html=$this->html(['viewer'=>['actor'=>['additional_profiles_with_biz_tools'=>['edges'=>[
+            ['node'=>['id'=>'30003','name'=>'Synthetic modern Page','delegate_page_id'=>'40004']],
+        ]]]]],'90009');
+        $this->expectException(FacebookException::class);
+        $this->expectExceptionMessage('The Pages document did not confirm the connected account');
+        (new PagesBootstrapReader())->read($html,'10001');
+    }
     public function testTransportFailuresAreTypedAndDoNotExposeThePrivateCause():void
     {
         $session=new class implements WebSession{

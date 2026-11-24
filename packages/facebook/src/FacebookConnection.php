@@ -5,7 +5,7 @@ namespace MVO\Facebook;
 
 use MVO\Facebook\Monitoring\SnapshotMonitor;
 use MVO\Facebook\Service\{AdsService,CommentsService,InboxService,PagesService,PostsService,ReactionsService,MediaService,PageAdministrationService,InsightsService,AlbumService,ModerationService,ContentInsightsService};
-use MVO\Messenger\Auth\{CookieJar,WebLoginService};
+use MVO\Messenger\Auth\{CookieJar,LoginService};
 use MVO\Messenger\MessengerClient;
 use MVO\Messenger\Transport\{HttpClient,Socket};
 
@@ -39,7 +39,7 @@ final class FacebookConnection
     /** Saves only the confirmed account session. Call connect() afterwards.
      * The optional service is an isolated authentication transport for tests.
      */
-    public function login(#[\SensitiveParameter] string $email,#[\SensitiveParameter] string $password,?WebLoginService $service=null):void
+    public function login(#[\SensitiveParameter] string $email,#[\SensitiveParameter] string $password,?LoginService $service=null):void
     {
         try{$this->owner->login($email,$password,$service);}
         finally{
@@ -47,11 +47,44 @@ final class FacebookConnection
             if(!$this->owner->isConnected())$this->closeServices();
         }
     }
+    /** Experimental native authentication using the existing Messenger owner. */
+    public function loginAndroid(
+        #[\SensitiveParameter] string $email,
+        #[\SensitiveParameter] string $password,
+        #[\SensitiveParameter] \MVO\Messenger\Auth\AndroidLoginProfile $profile,
+        ?\MVO\Messenger\Transport\AndroidLoginTransport $transport=null,
+    ):void {
+        try{$this->owner->loginAndroid($email,$password,$profile,$transport);}
+        finally{if($password!=='')sodium_memzero($password);if(!$this->owner->isConnected())$this->closeServices();}
+    }
 
-    /** @return array{type:string,expires_at:int,ready:bool}|null */
+    /** Safe metadata for the current attempt; no cookies or private protocol fields.
+     * @return array<string,mixed>|null
+     */
     public function loginChallenge():?array{return $this->owner->loginChallenge();}
 
-    /** Continues a supported authenticator challenge and saves its confirmed session. */
+    /** Explicitly discovers methods actually offered by Facebook for this attempt.
+     * @return array<string,mixed>
+     */
+    public function refreshLoginMethods():array{return $this->owner->refreshLoginMethods();}
+
+    /** Selects/requests one opaque ID returned by the current challenge.
+     * @return array<string,mixed>
+     */
+    public function requestLoginMethod(string $methodId):array{return $this->owner->requestLoginMethod($methodId);}
+    /** Experimental explicit native406 SMS request; no delivery guarantee.
+     * @return array<string,mixed>
+     */
+    public function requestLoginSms():array{return $this->owner->requestLoginSms();}
+
+    /** Checks the owner's approval in another app, then verifies and saves the session. */
+    public function checkLoginApproval():bool
+    {
+        try{return $this->owner->checkLoginApproval();}
+        finally{if(!$this->owner->isConnected())$this->closeServices();}
+    }
+
+    /** Continues the selected supported code challenge and saves its confirmed session. */
     public function confirmLogin(#[\SensitiveParameter] string $code):void
     {
         try{$this->owner->confirmLogin($code);}
@@ -63,6 +96,12 @@ final class FacebookConnection
      * @return array{url:string,cookies:list<array<string,mixed>>,expires_at:int}
      */
     public function exportPrivateLoginChallenge():array{return $this->owner->exportPrivateLoginChallenge();}
+
+    /** Private handoff for an explicit browser login without a prior password submission.
+     * @return array{url:string,cookies:list<array<string,mixed>>,expires_at:int}
+     */
+    public function beginBrowserLogin():array{return $this->owner->beginBrowserLogin();}
+    public function cancelBrowserLogin():void{$this->owner->cancelBrowserLogin();}
 
     /** Verifies the identity via HTTPS before saving the human-confirmed session. */
     public function completeBrowserLogin(#[\SensitiveParameter] CookieJar $cookies):void

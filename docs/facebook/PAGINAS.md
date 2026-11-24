@@ -1,6 +1,6 @@
 # Páginas: descoberta, informações e edição
 
-Após conectar, `listPages()` consulta o launchpoint Web autenticado e projeta os recursos reconhecidos. O SDK confirma que o bootstrap pertence à mesma conta. Não é uma lista exaustiva de todo recurso comercial da conta.
+Após conectar, `listPages()` consulta o launchpoint Web autenticado e projeta os recursos reconhecidos: Páginas clássicas, perfis elegíveis identificados como Páginas e a coleção moderna `viewer.actor.additional_profiles_with_biz_tools.edges`, quando incluída nos resultados Relay. O SDK confirma que o bootstrap pertence à mesma conta e preserva separadamente o perfil (`actor_id`) e sua Página delegada (`delegate_page_id`), sem inferir um ID ausente a partir do outro. Não é uma lista exaustiva de todo recurso comercial da conta.
 
 ```php
 use MVO\Facebook\FacebookConnection;
@@ -51,7 +51,7 @@ A seleção não troca `c_user`, não muda a conta autenticada e não concede pe
 
 Na projeção atual, `exhaustive=false` e o indicador de próxima página pode ser desconhecido. Lista vazia significa que o formato reconhecido não devolveu recursos naquela consulta; não prova ausência de Páginas na conta. Não invente cursor para completar a lista e não remova escolhas antigas por causa de uma resposta parcial.
 
-`pages()->managed()` usa a coleção Web `additional_profiles_with_biz_tools` e devolve `page_info.end_cursor` e `has_next_page`. A continuação ocorre com `pages()->next($cursor)`. Cada resposta mantém `exhaustive=false`: chegar ao fim dessa coleção não comprova o inventário de todos os ativos comerciais da conta. `listPages()` conserva o caminho anterior de bootstrap.
+`pages()->managed()` usa a coleção Web `additional_profiles_with_biz_tools` e devolve `page_info.end_cursor` e `has_next_page`. A continuação ocorre com `pages()->next($cursor)`. Cada resposta mantém `exhaustive=false`: chegar ao fim dessa coleção não comprova o inventário de todos os ativos comerciais da conta. `listPages()` lê o bootstrap, incluindo essa coleção quando presente, mas não oferece sua paginação; para continuar, use os métodos próprios `managed()`/`next()`.
 
 ## Criar uma Página pelo perfil pessoal
 

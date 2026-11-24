@@ -226,15 +226,30 @@ final class WaClientFormsTest extends TestCase
         $forms=$this->client->forms();$nodes=[];
         $this->client->on('node',static function(array $event)use(&$nodes):void{$nodes[]=$event;});
         $auth=(new \ReflectionProperty($this->client,'businessFormsAuthentication'))->getValue($this->client);
-        self::assertSame('FIXTURE-TOKEN',$auth->token());self::assertTrue($forms->authenticationStatus()['authenticated']);
+        $token=new \ReflectionMethod($this->client,'businessAuthenticationToken');
+        $guard=static function():void{};
+        self::assertSame('FIXTURE-TOKEN',$token->invoke($this->client,$auth,$guard));self::assertTrue($forms->authenticationStatus()['authenticated']);
         $requests=array_values(array_filter($peer->sent,static fn(BinaryNode $node):bool=>($node->attrs['xmlns']??null)==='fb:thrift_iq'));
         self::assertCount(2,$requests);self::assertSame('118',$requests[0]->attrs['smax_id']);self::assertSame('104',$requests[1]->attrs['smax_id']);
         self::assertSame('get',$requests[0]->attrs['type']);self::assertSame('get',$requests[1]->attrs['type']);
         self::assertSame('FIXTURE-NONCE',$requests[1]->child('parameters')->child('code')->content);
         foreach($nodes as$event){self::assertNull($event['node']->child('wa_ad_account_nonce'));self::assertNull($event['node']->child('access_token'));self::assertNull($event['node']->child('session_cookies'));}
-        self::assertSame('FIXTURE-TOKEN',$auth->token());
+        self::assertSame('FIXTURE-TOKEN',$token->invoke($this->client,$auth,$guard));
         self::assertCount(2,array_filter($peer->sent,static fn(BinaryNode $node):bool=>($node->attrs['xmlns']??null)==='fb:thrift_iq'));
         $this->client->stop();self::assertFalse($auth->status()['authenticated']);
+    }
+
+    public function testAgentAndFormsShareTheServerAuthenticationCooldown():void
+    {
+        $peer=$this->connected();$peer->smbError='429';
+        $forms=$this->client->forms();$agent=$this->client->businessAgent();
+        try{$agent->run('status');self::fail('Native authentication refusal was ignored');}
+        catch(ServiceException $error){self::assertSame('429',$error->serverCode);}
+        $before=count($peer->sent);
+        self::assertSame('cooldown',$forms->authenticationStatus()['state']);
+        try{$forms->generate('Atendimento de uma livraria');self::fail('Form bypassed the agent cooldown');}
+        catch(ServiceException $error){self::assertSame('429',$error->serverCode);}
+        self::assertCount($before,$peer->sent,'Switching Business features must not send another nonce request');
     }
 }
 

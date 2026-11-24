@@ -54,6 +54,18 @@ final class FacebookConnectionTest extends TestCase
         self::assertSame([],$http->urls);self::assertFalse($client->accountInfo()['has_saved_session']);
     }
 
+    public function testVerificationMethodActionsRequireTheSamePendingLogin():void
+    {
+        $http=new FacebookConnectionHttp();$client=$this->client($http);
+        foreach(['refreshLoginMethods','requestLoginMethod','checkLoginApproval'] as $method){
+            try{
+                if($method==='requestLoginMethod')$client->$method('unoffered-method');else $client->$method();
+                self::fail('An action without a challenge must not authenticate implicitly');
+            }catch(MessengerException $error){self::assertSame('login_challenge_expired',$error->reason);}
+        }
+        self::assertSame([],$http->urls);self::assertFalse($client->accountInfo()['has_saved_session']);
+    }
+
     public function testLoginPersistsTheSessionAndANewConnectionRestoresItWithoutAnotherPasswordPost():void
     {
         $firstPeer=new FacebookConnectionPeer();$first=$this->client(peer:$firstPeer);

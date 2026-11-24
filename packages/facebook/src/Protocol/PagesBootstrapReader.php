@@ -50,10 +50,22 @@ final class PagesBootstrapReader
             }
             $rows=$viewer['actor']['profile_switcher_eligible_profiles']['nodes']??null;
             if(is_array($rows)&&array_is_list($rows)){
+                $this->collectionSeen=true;
                 foreach($rows as $row){
                     $profile=is_array($row)?($row['profile']??null):null;
                     if(!is_array($profile)||(($profile['is_profile_plus']??false)!==true&&($profile['can_manage_classic_page_in_pages_tab']??false)!==true))continue;
-                    $this->collectionSeen=true;$this->page($profile,($profile['is_profile_plus']??false)===true?'profile_plus':'classic');
+                    $this->page($profile,($profile['is_profile_plus']??false)===true?'profile_plus':'classic');
+                }
+            }
+            // The modern launchpoint uses this exact collection, also consumed
+            // by PagesService::managed(). Membership supplies the profile type;
+            // unrelated objects with numeric IDs are not selectable Pages.
+            $edges=$viewer['actor']['additional_profiles_with_biz_tools']['edges']??null;
+            if(is_array($edges)&&array_is_list($edges)){
+                $this->collectionSeen=true;
+                foreach($edges as $edge){
+                    $profile=is_array($edge)?($edge['node']??null):null;
+                    if(is_array($profile))$this->page($profile,'profile_plus');
                 }
             }
         }

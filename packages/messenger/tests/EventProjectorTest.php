@@ -5,6 +5,7 @@ namespace MVO\Messenger\Tests;
 use MVO\Messenger\Auth\SessionStore;
 use MVO\Messenger\MessengerException;
 use MVO\Messenger\Protocol\EventProjector;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class EventProjectorTest extends TestCase
@@ -50,6 +51,75 @@ final class EventProjectorTest extends TestCase
         self::assertNull($store->get('receipt.'.self::RECEIPT));
         $database=new \PDO('sqlite:'.$this->root.'/messenger/test/state.sqlite');
         self::assertSame(0,(int)$database->query('SELECT COUNT(*) FROM batches')->fetchColumn());unset($database);
+    }
+    /** @return array<string,array{string}> */
+    public static function messageProcedures():array
+    {
+        return ['insert'=>['LSInsertMessage'],'upsert'=>['LSUpsertMessage']];
+    }
+    #[DataProvider('messageProcedures')]
+    public function testNullTextCommitsMetadataCursorAndAckWithoutInventingContent(string $procedure):void
+    {
+        $store=$this->prepare();$projector=new EventProjector($store,'123');$calls=$this->calls(current:'cursor-original');
+        $calls[2]['name']=$procedure;$calls[2]['args'][0]=null;
+        // A sticker slot alone must not make the nullable body a text or guessed media message.
+        $calls[2]['args'][11]='70007';
+        $result=$projector->apply($calls,self::RECEIPT);
+        self::assertSame([1],$result['completed']);self::assertSame([1=>'cursor-next'],$result['cursors']);
+        self::assertSame('cursor-next',$store->get('cursor.1'));self::assertSame('committed',$store->get('receipt.'.self::RECEIPT));
+        self::assertSame(['thread','message','message_ack'],array_column($result['events'],'type'));
+        $message=$result['events'][1]['payload'];
+        self::assertSame('unknown',$message['type']);self::assertNull($message['text']);
+        self::assertSame('mid.transactional',$message['id']);self::assertSame('10001',$message['thread_id']);self::assertSame('222',$message['sender_id']);
+        self::assertSame(1792356000000,$message['timestamp_ms']);self::assertFalse($message['from_me']);self::assertFalse($message['encrypted']);
+        self::assertArrayNotHasKey('attachments',$message);self::assertArrayNotHasKey('sticker',$message);
+        self::assertSame('server_ack',$store->outgoing('500')['state']);
+        self::assertSame(['events'=>[],'cursors'=>[],'completed'=>[],'unknown'=>[]],$projector->apply($calls,str_repeat('b',64)));
+        self::assertCount(3,$store->events());
+        // Different procedure names can repeat the same message, without repeating the event.
+        $row=$calls[2];$row['name']=$procedure==='LSInsertMessage'?'LSUpsertMessage':'LSInsertMessage';
+        self::assertSame([],$projector->apply([$row])['events']);self::assertCount(3,$store->events());
+    }
+    #[DataProvider('messageProcedures')]
+    public function testNullTextAndEmptyTextHaveDistinctMessageEvents(string $procedure):void
+    {
+        $store=$this->store??throw new \LogicException('Missing test store');$projector=new EventProjector($store,'123');
+        $row=$this->calls()[2];$row['name']=$procedure;$row['args'][0]=null;
+        $unknown=$projector->apply([$row]);self::assertNull($unknown['events'][0]['payload']['text']);
+        $row['args'][0]='';$text=$projector->apply([$row]);
+        self::assertCount(1,$text['events']);self::assertSame('text',$text['events'][0]['payload']['type']);self::assertSame('',$text['events'][0]['payload']['text']);
+        self::assertSame([],$projector->apply([$row])['events']);self::assertCount(2,$store->events());
+    }
+    #[DataProvider('messageProcedures')]
+    public function testNullTextDoesNotWeakenTransactionValidation(string $procedure):void
+    {
+        $store=$this->prepare();$calls=$this->calls(current:'cursor-original',finalEpoch:'43');$calls[2]['name']=$procedure;$calls[2]['args'][0]=null;
+        try{(new EventProjector($store,'123'))->apply($calls,self::RECEIPT);self::fail('Expected epoch mismatch');}
+        catch(MessengerException $error){self::assertSame('invalid_sync_transaction',$error->reason);}
+        $this->assertNoPartialProjection($store);
+    }
+    /** @return iterable<string,array{string,int,mixed,string}> */
+    public static function malformedMessageRows():iterable
+    {
+        foreach(['LSInsertMessage','LSUpsertMessage']as $procedure){
+            foreach(['boolean'=>false,'integer'=>0,'float'=>1.5,'array'=>[]]as $kind=>$text)yield $procedure.' text '.$kind=>[$procedure,0,$text,'invalid_message_row'];
+            yield $procedure.' empty message ID'=>[$procedure,8,'','invalid_message_row'];
+            yield $procedure.' oversized message ID'=>[$procedure,8,str_repeat('m',513),'invalid_message_row'];
+            yield $procedure.' numeric message ID'=>[$procedure,8,123,'invalid_message_row'];
+            yield $procedure.' missing thread ID'=>[$procedure,3,null,'invalid_native_id'];
+            yield $procedure.' missing sender ID'=>[$procedure,10,null,'invalid_native_id'];
+            yield $procedure.' missing timestamp'=>[$procedure,5,null,'invalid_native_value'];
+            yield $procedure.' invalid timestamp'=>[$procedure,5,'not-a-time','invalid_native_value'];
+        }
+    }
+    #[DataProvider('malformedMessageRows')]
+    public function testMalformedRowsRollBackEarlierMessageAckThreadCursorAndReceipt(string $procedure,int $offset,mixed $value,string $reason):void
+    {
+        $store=$this->prepare();$calls=$this->calls(current:'cursor-original');$bad=$calls[2];$bad['name']=$procedure;$bad['args'][0]=null;$bad['args'][$offset]=$value;
+        array_splice($calls,4,0,[$bad]);
+        try{(new EventProjector($store,'123'))->apply($calls,self::RECEIPT);self::fail('Expected malformed message row');}
+        catch(MessengerException $error){self::assertSame($reason,$error->reason);}
+        $this->assertNoPartialProjection($store);
     }
     public function testFinalizerEpochMismatchRollsBackMessageThreadAckCursorAndDedupBatch():void
     {

@@ -101,22 +101,43 @@ final class GroupService
     private function invite(string $jid,string $type): BinaryNode { return $this->iq('invite',$type,$jid,[new BinaryNode('invite')]); }
     /**
      * @return array<string,mixed> */
-    public function queryGroupInviteInfo(string $code): array { return $this->inviteInfo($code,'get'); }
-    /**
-     * @return array<string,mixed> */
-    public function joinGroupViaInvite(string $code): array { return $this->inviteInfo($code,'set'); }
-    /**
-     * @return array<string,mixed> */
-    private function inviteInfo(string $code,string $type): array
+    public function queryGroupInviteInfo(string $code): array
     {
-        if (!preg_match('/^[A-Za-z0-9_-]+$/D',$code)) throw new \InvalidArgumentException('Invalid invite code');
-        $result=$this->iq('inviteInfo',$type,'g.us',[new BinaryNode('invite',['code'=>$code])]);
+        $result=$this->queryInvite('inviteInfo','get',$code);
+        return self::metadata($result)+[
+            'hasPendingMembershipRequest'=>$result->child('group')?->child('membership_approval_request')!==null,
+        ];
+    }
+
+    /** @return array{status:'joined'|'pending',groupJid:string} */
+    public function joinGroupViaLink(string $code): array
+    {
+        $result=$this->queryInvite('joinViaLink','set',$code);
         $pending=$result->child('membership_approval_request');
-        if($type==='set' && $pending!==null) {
+        $target=$pending ?? $result->child('group')
+            ?? throw new \UnexpectedValueException('Invite join response missing group or membership approval request');
+        $jid=$target->attrs['jid'] ?? throw new \UnexpectedValueException('Invite join response missing group JID');
+        return ['status'=>$pending===null ? 'joined' : 'pending','groupJid'=>ServiceTransport::jid($jid,'g.us')];
+    }
+    /**
+     * @deprecated Use joinGroupViaLink() for an explicit status and group JID.
+     * @return array<string,mixed>
+     */
+    public function joinGroupViaInvite(string $code): array
+    {
+        $result=$this->queryInvite('inviteInfo','set',$code);
+        $pending=$result->child('membership_approval_request');
+        if($pending!==null) {
             $jid=$pending->attrs['jid'] ?? throw new \UnexpectedValueException('Membership approval response missing group JID');ServiceTransport::jid($jid,'g.us');
             return ['jid'=>$jid,'status'=>'pending','raw'=>$pending];
         }
-        $metadata=self::metadata($result);return $type==='set' ? $metadata+['status'=>'joined'] : $metadata;
+        return self::metadata($result)+['status'=>'joined'];
+    }
+
+    private function queryInvite(string $operation,string $type,string $code): BinaryNode
+    {
+        if (!preg_match('/^[A-Za-z0-9_-]+$/D',$code)) throw new \InvalidArgumentException('Invalid invite code');
+        return $this->iq($operation,$type,'g.us',[new BinaryNode('invite',['code'=>$code])]);
     }
     public function deactivateCommunity(string $jid): void { $this->iq('deactivateCommunity','set',$jid,[new BinaryNode('delete_parent')]); }
     /**

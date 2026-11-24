@@ -194,6 +194,9 @@ final class LightspeedDecoder
             case 55: // MAP_SET mutates and returns the same map identity.
                 $this->arity($args,3);$map=$get(0);$this->resolved($map);if(!$map instanceof LightspeedDictionary)$this->invalid();
                 $key=$get(1);$this->resolved($key);return $map->set($key,$get(2));
+            case 61: // NATIVE_OP_JSON_STRINGIFY delegates to LSJson, not ordinary JSON.stringify.
+                $this->arity($args,1);
+                return $this->jsonValue($get(0),0,new \SplObjectStorage());
             case 97: // TERNARY
                 $this->arity($args,3); return $this->truthy($get(0))?$get(1):$get(2);
             case 99: // NULLISH_COALESCE
@@ -253,6 +256,66 @@ final class LightspeedDecoder
     private function exportValue(mixed $value): mixed
     {
         return $this->boundaryValue($value,false,0,new \SplObjectStorage());
+    }
+
+    /** LSJson.stringify preserves unquoted i64s and serializes booleans as 1/0.
+     * Undefined becomes null even in dictionaries; native map keys must be strings.
+     * @param \SplObjectStorage<object,null> $active
+     */
+    private function jsonValue(mixed $value,int $depth,\SplObjectStorage $active):string
+    {
+        $this->spend(1);if($depth>$this->maximumDepth)throw new MessengerException('lightspeed_limit','Lightspeed JSON exceeds the local depth budget');
+        $this->resolved($value);
+        if($value===null||$value instanceof LightspeedUndefinedValue)return 'null';
+        if(is_bool($value))return $value?'1':'0';
+        if($value instanceof LightspeedIntegerValue)return $value->decimal;
+        if(is_string($value)){
+            try{$result=json_encode($value,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_LINE_TERMINATORS);}
+            catch(\JsonException){throw new MessengerException('invalid_lightspeed_expression','Lightspeed JSON contains an unsupported string');}
+            $this->jsonSize(strlen($result));return $result;
+        }
+        if(is_int($value)||is_float($value)){
+            if(!is_finite((float)$value)||abs((float)$value)>9007199254740991)throw new MessengerException('invalid_lightspeed_number','Lightspeed JSON requires a safe native number or a typed i64');
+            if($value==0)return '0';
+            $number=json_encode($value,JSON_THROW_ON_ERROR);
+            // PHP and ECMAScript use different fixed/exponent formatting thresholds.
+            if(preg_match('/^(-?)([0-9]+)(?:\.([0-9]+))?[eE]([+-]?[0-9]+)$/D',$number,$parts)===1){
+                $fraction=$parts[3];$exponent=(int)$parts[4];
+                $digits=$parts[2].$fraction;$position=strlen($parts[2])+$exponent;
+                if($exponent>=-6&&$exponent<21){
+                    if($position<=0)return $parts[1].'0.'.str_repeat('0',-$position).rtrim($digits,'0');
+                    if($position>=strlen($digits))return $parts[1].$digits.str_repeat('0',$position-strlen($digits));
+                    return $parts[1].substr($digits,0,$position).'.'.rtrim(substr($digits,$position),'0');
+                }
+                $fraction=rtrim($fraction,'0');
+                return $parts[1].$parts[2].($fraction===''?'':'.'.$fraction).'e'.($exponent>=0?'+':'').$exponent;
+            }
+            return $number;
+        }
+        if(!$value instanceof LightspeedVector&&!$value instanceof LightspeedDictionary)$this->invalid();
+        if($active->offsetExists($value))throw new MessengerException('invalid_lightspeed_expression','Lightspeed JSON cannot serialize a container cycle');
+        $active->offsetSet($value,null);
+        try{
+            $result=$value instanceof LightspeedVector?'[':'{';$separator='';
+            $entries=$value instanceof LightspeedVector?$value->values:$value->entries();
+            foreach($entries as $entry){
+                $prefix='';
+                if($value instanceof LightspeedDictionary){
+                    [$key,$entry]=$entry;
+                    if(!is_string($key))throw new MessengerException('invalid_lightspeed_map_key','Lightspeed JSON dictionary keys must be strings');
+                    $prefix=$this->jsonValue($key,$depth+1,$active).':';
+                }
+                $encoded=$this->jsonValue($entry,$depth+1,$active);
+                $this->jsonSize(strlen($result)+strlen($separator)+strlen($prefix)+strlen($encoded)+1);
+                $result.=$separator.$prefix.$encoded;$separator=',';
+            }
+            return $result.($value instanceof LightspeedVector?']':'}');
+        }finally{$active->offsetUnset($value);}
+    }
+
+    private function jsonSize(int $bytes):void
+    {
+        if($bytes>16777216)throw new MessengerException('lightspeed_limit','Lightspeed JSON exceeds the local size limit');
     }
 
     private function importResult(mixed $value,int $depth): mixed

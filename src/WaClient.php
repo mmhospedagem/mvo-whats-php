@@ -20,7 +20,7 @@ use MVO\Transport\{ConnectionFailure,NodeSession,NoiseSession,WebSocket,SessionR
 /** Blocking PHP client. Credentials and Signal state survive transport and process restarts. */
 final class WaClient
 {
-    public const VERSION = '2.3000.1043028647';
+    public const VERSION = '2.3000.1054821409';
     private CredentialStore $store;
     /** @var array<string,mixed> */
     private array $credentials = [];
@@ -86,6 +86,11 @@ final class WaClient
     private ?\MVO\Service\HistoryFeaturesService $historyFeaturesService=null;
     private ?\MVO\Service\GalaxyResponseService $galaxyResponseService=null;
     private ?\MVO\Service\BusinessFormsService $businessFormsService=null;
+    private ?\MVO\Service\BusinessAgentService $businessAgentService=null;
+    /** Guard of the operation currently acquiring the shared Business token. */
+    private ?\Closure $businessAuthenticationGuard=null;
+    /** @var \Closure():void|null */
+    private ?\Closure $businessAgentGuard=null;
     private ?\MVO\Service\BusinessFormAuthenticationService $businessFormsAuthentication=null;
     private int $businessFormsGeneration=0;
     /** @var \Closure():void|null */
@@ -408,24 +413,11 @@ final class WaClient
         $services=$this->services();
         if($this->businessFormsService!==null)return $this->businessFormsService;
         $store=$this->stateStore??throw new \LogicException('Wait for authenticated login before managing Business forms');
-        $auth=$this->businessFormsAuthentication??=new \MVO\Service\BusinessFormAuthenticationService(
-            new \MVO\Service\ServiceTransport(
-                function(BinaryNode $node,float $timeout):BinaryNode{
-                    $this->assertBusinessFormsAuthorized();
-                    $reply=$this->query($node,$timeout,true,false);
-                    $this->assertBusinessFormsAuthorized();return $reply;
-                },
-                function(BinaryNode $node):void{$this->sendNode($node);},
-                fn():array=>$this->credentials,
-            ),
-            function(float $timeout):void{$this->assertBusinessFormsAuthorized();$this->poll($timeout);$this->assertBusinessFormsAuthorized();},
-            fn():bool=>$this->isConnected(),
-            fn():float=>$this->now(),
-        );
+        $auth=$this->businessAuthentication();
         $generation=$this->businessFormsGeneration;
         $guard=function()use($generation):void{$this->assertBusinessFormsAuthorized($generation);};
         $http=new \MVO\Service\BusinessFormHttpTransport(
-            fn():string=>$generation===$this->businessFormsGeneration&&$this->businessFormsAuthentication===$auth?$auth->token():throw new \LogicException('Business forms facade expired; obtain forms() after reconnecting'),
+            fn():string=>$generation===$this->businessFormsGeneration&&$this->businessFormsAuthentication===$auth?$this->businessAuthenticationToken($auth,$guard):throw new \LogicException('Business forms facade expired; obtain forms() after reconnecting'),
             proxy:$this->proxy,
             authorizationGuard:$guard,
         );
@@ -464,6 +456,72 @@ final class WaClient
     {
         if(($generation!==null&&$generation!==$this->businessFormsGeneration)||!$this->isConnected())throw new \LogicException('Business forms facade expired or disconnected; obtain forms() after connecting');
         ($this->businessFormsGuard)?->__invoke();
+    }
+    /** Native Business Agent HTTPS operations, authenticated by the connected Business session. */
+    public function businessAgent():\MVO\Service\BusinessAgentService
+    {
+        $this->assertBusinessAgentAuthorized();
+        if ($this->businessAgentService!==null) return $this->businessAgentService;
+        $auth=$this->businessAuthentication();
+        $generation=$this->connectionGeneration;
+        $guard=function() use($generation):void{$this->assertBusinessAgentAuthorized($generation);};
+        $http=new \MVO\Service\BusinessFormHttpTransport(
+            fn():string=>$this->businessAuthenticationToken($auth,$guard),
+            proxy:$this->proxy,authorizationGuard:$guard,
+            documents:array_column(\MVO\Service\BusinessAgentService::operations(),'documentId'),
+        );
+        return $this->businessAgentService=new \MVO\Service\BusinessAgentService(
+            static function(string $document,array $variables) use($http,$auth,$guard):array {
+                try {
+                    $response=$http->request($document,$variables);
+                    try { $guard(); }
+                    catch (\Throwable) { throw new \RuntimeException('Business Agent operation outcome requires inspection after authorization changed'); }
+                    return $response;
+                }
+                catch (\MVO\Service\ServiceException $error) {
+                    if (in_array($error->serverCode,['190','401'],true)) $auth->invalidate();
+                    throw new \MVO\Service\ServiceException('business.ai.graphql',$error->serverCode,'Business Agent request was refused',$error->errorKind);
+                }
+            },
+        );
+    }
+    /** @param callable():void|null $guard */
+    public function setBusinessAgentGuard(?callable $guard):void{$this->businessAgentGuard=$guard===null?null:\Closure::fromCallable($guard);}
+    private function assertBusinessAgentAuthorized(?int $generation=null):void
+    {
+        if (($generation!==null && $generation!==$this->connectionGeneration) || !$this->isConnected())
+            throw new \LogicException('Business Agent facade expired or disconnected; obtain businessAgent() after connecting');
+        ($this->businessAgentGuard)?->__invoke();
+    }
+    /** One native authentication, replay memory and cooldown for all Business features. */
+    private function businessAuthentication():\MVO\Service\BusinessFormAuthenticationService
+    {
+        return $this->businessFormsAuthentication??=new \MVO\Service\BusinessFormAuthenticationService(
+            new \MVO\Service\ServiceTransport(
+                function(BinaryNode $node,float $timeout):BinaryNode {
+                    $this->assertBusinessAuthenticationAuthorized();
+                    $reply=$this->query($node,$timeout,true,false);
+                    $this->assertBusinessAuthenticationAuthorized();return $reply;
+                },
+                function(BinaryNode $node):void{$this->sendNode($node);},
+                fn():array=>$this->credentials,
+            ),
+            function(float $timeout):void{$this->assertBusinessAuthenticationAuthorized();$this->poll($timeout);$this->assertBusinessAuthenticationAuthorized();},
+            fn():bool=>$this->isConnected(),
+            fn():float=>$this->now(),
+        );
+    }
+    private function businessAuthenticationToken(\MVO\Service\BusinessFormAuthenticationService $auth,\Closure $guard):string
+    {
+        $guard();
+        $previous=$this->businessAuthenticationGuard;
+        $this->businessAuthenticationGuard=$guard;
+        try{return $auth->token();}
+        finally{$this->businessAuthenticationGuard=$previous;}
+    }
+    private function assertBusinessAuthenticationAuthorized():void
+    {
+        ($this->businessAuthenticationGuard??throw new \LogicException('No authorized Business operation is authenticating'))();
     }
     public function catalog():\MVO\Service\CatalogService { return $this->services()->catalog(); }
     public function businessTools():\MVO\Service\BusinessToolsService { return new \MVO\Service\BusinessToolsService($this->chat(),$this->appStateData(),$this->history()); }
@@ -1518,7 +1576,7 @@ final class WaClient
         $this->shortcake=null;$this->offline=null;
         // Secrets expire with the connection; account lockout memory survives an
         // automatic reconnect in this client. Old facades cannot start new work.
-        ++$this->businessFormsGeneration;$this->businessFormsService=null;
+        ++$this->businessFormsGeneration;$this->businessFormsService=null;$this->businessAgentService=null;
         $this->stateStore=null; $this->appState=null; $this->appStateData=null; $this->modernState=null; $this->channelScheduler=null; $this->messageScheduler=null; $this->historyFeaturesService=null; $this->galaxyResponseService=null; $this->publicationBatchService=null; $this->services=null; $this->mediaTransfer=null;
         $this->mobile=null; $this->mobileInitialized=false;
         $this->newsletterInbox=null;

@@ -2,13 +2,24 @@
 declare(strict_types=1);
 namespace MVO\Tests;
 use PHPUnit\Framework\TestCase;
-use MVO\Protocol\ArgoDecoder;
+use MVO\Protocol\{ArgoDecoder,MexArgoWireTypes};
 final class ArgoDecoderTest extends TestCase {
     public function testCapturedWhatsAppGraphQlErrorFixture():void {
         $bytes=base64_decode('BK4CVGhlIHNjaGVtYSBzcGVjaWZpZXMgdGhlIGZpZWxkIGlzIG5vbi1udWxsLCBidXQgYSBudWxsIHZhbHVlIHdhcyByZXR1cm5lZCBieSB0aGUgYmFja2VuZGNvZGVudWxsX3ZhbHVlQmFkIFJlcXVlc3RlcnJvcl9jb2RlaXNfcmV0cnlhYmxlc2V2ZXJpdHlDUklUSUNBTAgAAKAGNAEEsAEDAgAEAggIFBYDAgAEBhQMGAAQCBAD',true);
         $result=ArgoDecoder::decode($bytes); self::assertNull($result['data']); self::assertCount(2,$result['errors']);
         self::assertSame('null_value',$result['errors'][0]['extensions']['code']); self::assertSame('Bad Request',$result['errors'][1]['message']); self::assertSame('CRITICAL',$result['errors'][1]['extensions']['severity']);
         self::assertSame([0],$result['errors'][0]['path']); self::assertSame([0],$result['errors'][1]['path']); self::assertSame(400,$result['errors'][1]['extensions']['error_code']);
+        $wire=['type'=>'RECORD','fields'=>[
+            'data'=>['type'=>'NULLABLE','of'=>['type'=>'RECORD','fields'=>[
+                'xwa2_ent_get_certificates'=>['type'=>'NULLABLE','of'=>['type'=>'DESC']],
+            ]]],
+            'errors'=>['type'=>'ARRAY','of'=>['type'=>'ERROR'],'optional'=>true],
+            'extensions'=>['type'=>'EXTENSIONS','optional'=>true],
+        ]];
+        $typed=ArgoDecoder::decode($bytes,$wire);
+        self::assertNull($typed['data']);
+        self::assertSame([['xwa2_ent_get_certificates'],['xwa2_ent_get_certificates']],array_column($typed['errors'],'path'));
+        self::assertSame(400,$typed['errors'][1]['extensions']['error_code']);
     }
     public function testInlineObjectsScalarsAndStringBackreferences():void {
         // flags inline+self-describing; {name:'PHP',again:'PHP',value:1.5,raw:0xff}
@@ -37,6 +48,32 @@ final class ArgoDecoderTest extends TestCase {
         $core=self::label(2).self::label(0).self::label(0).self::label(-2);
         $bytes="\x04".self::label(0).self::label(strlen($core)).$core;
         self::assertSame(['data'=>[],'errors'=>[]],ArgoDecoder::decode($bytes));
+    }
+    public function testMessageCappingKeepsIntegerAndEnumBlocksSeparate():void
+    {
+        $core=implode('',array_map(self::label(...),[0,0,3,3,-4,1,1,1,-2,-2]));
+        $segments=[self::label(100).self::label(17),'nowend','A','B','C',$core];
+        $bytes="\x04".implode('',array_map(static fn(string $v):string=>self::label(strlen($v)).$v,$segments));
+        self::assertSame(['data'=>['xwa2_message_capping_info'=>[
+            'total_quota'=>100,'used_quota'=>17,'cycle_start_timestamp'=>'now','cycle_end_timestamp'=>'end',
+            'server_sent_timestamp'=>'now','ote_status'=>'A','mv_status'=>'B','capping_status'=>'C',
+        ]],'errors'=>[]],ArgoDecoder::decode($bytes,MexArgoWireTypes::get('FetchNewChatMessageCappingInfo')));
+    }
+
+    public function testModernHeaderAndMalformedTypedValues():void
+    {
+        self::assertSame(['data'=>['ok'=>true],'errors'=>[]],ArgoDecoder::decode(base64_decode('AgRvawgEAgQC',true)));
+        $wire=MexArgoWireTypes::get('FetchReachoutTimelock');
+        $bytes=base64_decode('BBQxNzg4MTMyNzYzDkRFRkFVTFQMAAIUDgMD',true);
+        $badBoolean=substr_replace($bytes,"\x04",-5,1);
+        foreach ([$badBoolean,substr($bytes,0,-1),$bytes."\x00"] as $invalid) {
+            try {
+                ArgoDecoder::decode($invalid,$wire);
+                self::fail('Accepted malformed schema-driven Argo');
+            } catch (\UnexpectedValueException|\LengthException) {
+                self::addToAssertionCount(1);
+            }
+        }
     }
     private static function label(int $n):string { $v=$n>=0 ? $n*2 : -$n*2-1;$out='';do {$b=$v & 127;$v=intdiv($v,128);$out.=chr($b|($v>0 ? 128 : 0));}while($v>0);return $out; }
 }

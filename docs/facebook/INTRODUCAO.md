@@ -1,6 +1,6 @@
 # Facebook PHP
 
-A biblioteca `MVO\Facebook` conecta uma conta Facebook por e-mail e senha, guarda a sessão confirmada e a restaura nas próximas execuções. Os serviços da conta usam o protocolo Web em PHP; não exigem aplicativo Meta, OAuth ou a API Graph oficial.
+A biblioteca `MVO\Facebook` conecta uma conta Facebook, guarda a sessão confirmada e a restaura nas próximas execuções. No checkout, `loginAndroid()` autentica por endpoints nativos JSON, sem HTML/navegador; `login()` permanece uma alternativa Web separada. Os serviços da conta usam o protocolo Web em PHP; não exigem aplicativo Meta, OAuth ou a API Graph oficial.
 
 O pacote é `mmhospedagem/mvo-facebook-php`. Ele tem instalação, namespace e armazenamento separados do [SDK WhatsApp](../CONEXAO.md). A classe principal é `FacebookConnection`; o runtime Messenger é uma dependência interna, sem exigir outro cliente na aplicação.
 
@@ -9,7 +9,7 @@ O pacote é `mmhospedagem/mvo-facebook-php`. Ele tem instalação, namespace e a
 ## Caminho recomendado
 
 1. [Instale o pacote](INSTALACAO.md) e prepare diretórios privados.
-2. [Conecte e guarde a sessão](CONEXAO.md); futuros processos usam apenas `connect()`.
+2. [Autentique nativamente e guarde a sessão](AUTENTICACAO-ANDROID.md), com perfil privado e tratamento de 406; futuros processos usam apenas `connect()`.
 3. [Descubra as Páginas e escolha a identidade](PAGINAS.md).
 4. Consulte os serviços de que sua aplicação precisa e mantenha `poll()` no loop externo.
 
@@ -17,7 +17,7 @@ O pacote é `mmhospedagem/mvo-facebook-php`. Ele tem instalação, namespace e a
 
 | Área | Implementação atual | Guia |
 | --- | --- | --- |
-| Autenticação | Login, persistência, restauração e continuação de desafios reconhecidos. | [Conexão e sessão](CONEXAO.md) |
+| Autenticação | Android nativo sem fallback Web; código/aprovação 406, SMS experimental e identidade JSON antes de salvar. Nova identidade/SMS com fixtures e validação real pendente. | [Conexão e sessão](CONEXAO.md) |
 | Páginas | Descoberta/paginação, criação com categorias no perfil pessoal, cinco campos editáveis e solicitação de exclusão. | [Páginas](PAGINAS.md) |
 | Publicações | Timeline, criação de texto, edição de texto e exclusão, com contexto atual obrigatório. | [Publicações](PUBLICACOES.md) |
 | Comentários e reações | Leitura, criação, edição/exclusão e ocultação de comentários; reações e contadores separados. | [Comentários e reações](COMENTARIOS-REACOES.md) |
@@ -32,7 +32,7 @@ O pacote é `mmhospedagem/mvo-facebook-php`. Ele tem instalação, namespace e a
 
 ## O que significa estar conectado
 
-`login()` salva somente uma sessão cuja identidade foi confirmada. `connect()` restaura essa sessão e inicia o transporte compartilhado. `metadata_connected` confirma metadados utilizáveis; não comprova acesso a todas as Páginas nem a todas as conversas. Dispositivo e runtime Messenger E2EE são componentes explícitos separados desse login. As mensagens criptografadas continuam bloqueadas pela ausência do verificador remoto ICDC de produção e de validação real: `e2ee_ready=false`, sem fallback plaintext.
+`loginAndroid()` salva somente uma sessão cuja identidade nativa foi confirmada. A nova verificação JSON `GET /me` usa token de usuário em RAM e ainda exige validação real própria. 405 é recusado sem navegador. O login nativo não altera o protocolo Web/DGW dos serviços. `login()` mantém a alternativa Web opcional. `connect()` restaura essa sessão e inicia o transporte compartilhado. `metadata_connected` confirma metadados utilizáveis; não comprova acesso a todas as Páginas nem a todas as conversas. Dispositivo e runtime Messenger E2EE são componentes explícitos separados desse login. As mensagens criptografadas continuam bloqueadas pela ausência do verificador remoto ICDC de produção e de validação real: `e2ee_ready=false`, sem fallback plaintext.
 
 As operações comerciais têm cobertura parcial. Métodos que precisam de providers Relay, contexto do composer ou IDs opacos exigem os valores reais da sessão; não existe aquisição universal desses valores. Criação, foto/vídeo, inbox e tabela de conteúdo têm leitores próprios; outros documentos exigem contexto fornecido pela aplicação. A presença de um binding e de testes locais não comprova uma publicação ou alteração real. Consulte a [matriz de limites e evidências](LIMITES.md) antes de escolher um recurso.
 

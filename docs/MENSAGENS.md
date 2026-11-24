@@ -86,6 +86,18 @@ Portadores de distribuição de chaves acompanhados somente de `messageContextIn
 
 As atualizações do ratchet e o evento de entrada pendente são gravados na mesma transação. Se a aplicação cair antes de concluir o callback, o evento pendente pode ser reemitido com `replayed=true` após o reinício. Trate ações externas de forma idempotente pelo par `key.remoteJid`/`id`. Depois do callback concluído, o texto temporário do evento é descartado e fica um marcador de deduplicação; isso não é um arquivo completo do histórico de conversas.
 
+Avisos sem conteúdo cifrado com `<unavailable/>` emitem `message_unavailable`, com `kind` igual a `bot`, `hosted`, `view_once`, `sender_drop` ou `other`. A classificação prioriza o filho `bot`, depois `hosted="true"` e então o atributo `type`. `type="hosted"` isolado é `other`. `sender_drop` identifica conteúdo de conversa restrita disponível apenas no celular principal.
+
+O SDK também reconhece os subtipos `bot_unavailable_fanout`, `hosted_unavailable_fanout`, `view_once_unavailable_fanout` e `acp_unavailable_fanout` em placeholders sem o filho `unavailable`. O último corresponde a `sender_drop`. Esses avisos recebem ACK, inclusive em grupos, e o evento informa `key`, `id`, `from`, `chat`, `fromMe`, `timestamp`, `pushName`, `senderDevice` e `offline`. As identidades são metadados de roteamento fornecidos pelo servidor. Nesta revisão PHP, `resendRequested` é sempre `false`, inclusive para `other`.
+
+```php
+$client->on('message_unavailable', function (array $event): void {
+    echo $event['key']['id'].' '.$event['kind'].PHP_EOL;
+});
+```
+
+Um conteúdo cifrado recebido com o mesmo ID posteriormente continua elegível para o fluxo de mensagens autenticadas.
+
 ## API PHP
 
 ```php

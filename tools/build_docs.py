@@ -63,6 +63,7 @@ FACEBOOK_GROUPS['Facebook'].insert(1, ('ADMINISTRACAO', 'Pessoas e acesso', 'doc
 FACEBOOK_GROUPS['Facebook'].insert(3, ('MIDIA', 'Fotos e upload', 'docs/facebook/MIDIA.md'))
 FACEBOOK_GROUPS['Facebook'].insert(6, ('INSIGHTS', 'Insights e métricas', 'docs/facebook/INSIGHTS.md'))
 FACEBOOK_GROUPS['Avançado'].insert(0, ('DISPOSITIVO-E2EE', 'Dispositivo E2EE', 'docs/facebook/DISPOSITIVO-E2EE.md'))
+FACEBOOK_GROUPS['Avançado'].insert(0, ('AUTENTICACAO-ANDROID', 'Login Android experimental', 'docs/facebook/AUTENTICACAO-ANDROID.md'))
 
 PORTALS = [
     dict(key='whatsapp', label='WhatsApp', title='MVO WHATS PHP', output='docs/index.html', groups=GROUPS,

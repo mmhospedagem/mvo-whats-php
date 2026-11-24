@@ -79,7 +79,7 @@ final class WebLoginServiceTest extends TestCase
     {
         $responses = [
             ['response' => new WebLoginResponse(200, self::page())],
-            ['response' => new WebLoginResponse(302, '', ['location' => [$location]])],
+            ['response' => new WebLoginResponse(302, '', ['location' => [$location]]), 'cookies'=>[['name'=>'datr','value'=>'SYNTHETIC_CHALLENGE_DEVICE','domain'=>'.facebook.com']]],
         ];
         $twoFactor=$reason==='login_two_factor_required';
         if($twoFactor)$responses[]=['response'=>new WebLoginResponse(200,'<html>Private challenge document</html>')];
@@ -87,7 +87,12 @@ final class WebLoginServiceTest extends TestCase
         try { $service->login('demo@example.test', 'fake-pass'); self::fail('Expected challenge.'); }
         catch (MessengerException $error) { self::assertSame($reason, $error->reason); }
         self::assertCount($twoFactor?3:2, $fake->requests);
-        if($twoFactor){self::assertSame('two_factor',$service->challenge()['type']);self::assertStringNotContainsString('Private challenge document',print_r($service,true));$service->cancel();self::assertNull($service->challenge());}
+        $type=match($reason){'login_two_factor_required'=>'two_factor','login_captcha_required'=>'captcha','login_consent_required'=>'consent',default=>'checkpoint'};
+        self::assertSame($type,$service->challenge()['type']);
+        $handoff=$service->exportPrivateChallenge();self::assertSame($location,$handoff['url']);self::assertSame($fake->cookies(),$handoff['cookies']);
+        self::assertStringNotContainsString('SYNTHETIC_CHALLENGE_DEVICE',print_r($service,true));self::assertStringNotContainsString('Private challenge document',print_r($service,true));
+        if(!$twoFactor){self::assertFalse($service->challenge()['ready']);self::assertSame([],$service->challenge()['methods']);self::assertFalse($service->challenge()['requires_code']);self::assertFalse($service->challenge()['can_refresh']);}
+        $service->cancel();self::assertNull($service->challenge());
         self::assertSame([], $fake->cookies());
     }
 
